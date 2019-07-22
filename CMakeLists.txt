@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Name of the project (will be the name of the plugin)
-project(osmsplits2)
-
-add_subdirectory(ext/libosmium)
+project(geoutils)
 
 add_library(s2 STATIC
             ext/s2geometry/src/s2/base/stringprintf.cc
