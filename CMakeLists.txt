@@ -118,6 +118,24 @@ add_library(s2 STATIC
 target_include_directories(s2 PUBLIC ext/s2geometry/src)
 target_compile_options(s2 PRIVATE -Wno-attributes)
 
+add_library(gfxpoly STATIC
+      ext/gfxpoly/src/active.c
+      ext/gfxpoly/src/convert.c
+      ext/gfxpoly/src/dict.c
+      ext/gfxpoly/src/gfxline.c
+      ext/gfxpoly/src/moments.c
+      ext/gfxpoly/src/poly.c
+      ext/gfxpoly/src/render.c
+      ext/gfxpoly/src/stroke.c
+      ext/gfxpoly/src/wind.c
+      ext/gfxpoly/src/xrow.c
+)
+
+target_include_directories(gfxpoly PRIVATE ext/gfxpoly/src ext/gfxpoly)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPACKAGE_VERSION=\"1\"")
+
+
 add_executable(osms2split
   osms2split/src/main.cpp
   osms2split/src/s2splitter.cpp)
@@ -154,7 +172,7 @@ add_executable(osm2assimp
       osm2assimp/main.cpp
       osm2assimp/osmdata.cpp
       osm2assimp/osmfeature.cpp
-      osm2assimp/testtrig.cpp)
+      ext/common.cpp)
 
 target_include_directories(osm2assimp PUBLIC osm2assimp )
 target_include_directories(osm2assimp PUBLIC ext/libosmium/include )
@@ -164,4 +182,4 @@ target_include_directories(osm2assimp PUBLIC ext/gfxpoly)
 target_include_directories(osm2assimp PUBLIC ext/eigen )
 target_include_directories(osm2assimp PUBLIC ext/rapidjson/include )
 target_include_directories(osm2assimp PUBLIC ext )
-target_link_libraries(osm2assimp PUBLIC assimp)
+target_link_libraries(osm2assimp PUBLIC assimp bz2 z expat pthread gfxpoly)
