@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 # Name of the project (will be the name of the plugin)
 project(geoutils)
 
+add_subdirectory(ext/assimp)
+
 add_library(s2 STATIC
             ext/s2geometry/src/s2/base/stringprintf.cc
             ext/s2geometry/src/s2/base/strtoint.cc
@@ -162,3 +164,4 @@ target_include_directories(osm2assimp PUBLIC ext/gfxpoly)
 target_include_directories(osm2assimp PUBLIC ext/eigen )
 target_include_directories(osm2assimp PUBLIC ext/rapidjson/include )
 target_include_directories(osm2assimp PUBLIC ext )
+target_link_libraries(osm2assimp PUBLIC assimp)
