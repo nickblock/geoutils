@@ -1,17 +1,19 @@
 #include "args.hxx"
 #include "tinyformat.h"
 #include <stdint.h>
+#include <regex>
 
 using std::string;
 using std::cout;
 using std::endl;
+using std::cerr;
 
 int main(int argi, char** argv)
 {
-  args::ArgumentParser  parser("s2util. Assess s2 cell");
+  args::ArgumentParser  parser("s2util. Return coordinates of teh center of an s2 cell.");
   args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
 
-  args::Positional<string>  inputS2Cell(parser, "0x0", "Enter S2 Cell as Hex number");
+  args::Positional<string>  inputS2Cell(parser, "0x0", "Enter a string containing an 8 digit hex number");
 
   try
   {
@@ -32,10 +34,19 @@ int main(int argi, char** argv)
   uint64_t cellId;
 
   try {
-    cellId = std::stoul(args::get(inputS2Cell), nullptr, 16);
+    
+    std::smatch res; 
+    std::regex reg(".*([0-9a-f]{8}).*");
+    std::regex_match (args::get(inputS2Cell), res, reg);
+    if (res.size() > 1)
+      cout << "string object matched " << res[1] << endl;
+    else 
+      cerr << "failed to match" << endl;
+
+    cellId = std::stoul(res[1], nullptr, 16);
   }
-  catch (std::exception ex) {
-    std::cerr << "Couldn't decode input as hex number, " << ex.what() << endl;
+  catch (std::invalid_argument ex) {
+    std::cerr << "Couldn't decode input as hex number." << endl;
     std::exit(1);
   }
 
