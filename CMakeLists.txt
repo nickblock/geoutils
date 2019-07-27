@@ -9,6 +9,11 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRAPIDJSON_HAS_STDSTRING=1 -std=c++14")
 
+
+if (CMAKE_BUILD_TYPE EQUAL "DEBUG")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gdwarf-2")
+endif()
+
 option(BUILD_OSMS2SPLIT "Build osms2split" ON)
 
 if(BUILD_OSMS2SPLIT)
