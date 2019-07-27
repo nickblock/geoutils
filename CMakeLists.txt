@@ -231,5 +231,5 @@ if(BUILD_S2UTIL)
 
       target_include_directories(s2util PRIVATE ext)
       target_include_directories(s2util PRIVATE ext/s2geometry/src)
-      target_link_libraries(s2util PUBLIC s2)
+      target_link_libraries(s2util PUBLIC s2 ssl crypto bz2 pthread)
 endif()
