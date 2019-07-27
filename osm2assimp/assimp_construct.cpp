@@ -146,7 +146,7 @@ glm::vec3 AssimpConstruct::posFromLoc(double lon, double lat, double height)
     return glm::vec3(lon, lat, height);
   }
   else {
-    return glm::vec3(lon, height, lat);
+    return glm::vec3(-lon, height, lat);
   }
 }
 
@@ -298,6 +298,7 @@ aiMesh* AssimpConstruct::extrude2dMesh(const vector<glm::vec2>& in_vertices, flo
 
   newMesh->mFaces[0].mNumIndices = numBaseVertices;
   newMesh->mFaces[0].mIndices = new unsigned int[numBaseVertices];
+
   for(size_t i=0; i<numBaseVertices; i++) {
     newMesh->mFaces[0].mIndices[i] = numBaseVertices-i-1;
   }
@@ -306,6 +307,7 @@ aiMesh* AssimpConstruct::extrude2dMesh(const vector<glm::vec2>& in_vertices, flo
     
     newMesh->mFaces[1].mNumIndices = numBaseVertices;
     newMesh->mFaces[1].mIndices = new unsigned int[numBaseVertices];
+
     for(size_t i=0; i<numBaseVertices; i++) {
       newMesh->mFaces[1].mIndices[i] = numBaseVertices + i;
     }
@@ -317,14 +319,18 @@ aiMesh* AssimpConstruct::extrude2dMesh(const vector<glm::vec2>& in_vertices, flo
 
       int index = numBaseVertices*2 + 4*f;
       glm::vec3* corners = &vertices[index];
+
       corners[3] = vertices[fn+1];
       corners[2] = vertices[f+0];
       corners[1] = vertices[f+numBaseVertices+0];
       corners[0] = vertices[fn+numBaseVertices+1];
-      
       glm::vec3 v1 = corners[1] - corners[0];
       glm::vec3 v2 = corners[2] - corners[0];
       glm::vec3 n = glm::normalize(glm::cross(v1, v2));
+
+      if(!mZUp) {
+        n = -n;
+      }
 
       ASSERTM( (glm::isnan(n.x) || glm::isnan(n.y) || glm::isnan(n.z)) == false , "Normal calc failed!");
 
@@ -336,7 +342,7 @@ aiMesh* AssimpConstruct::extrude2dMesh(const vector<glm::vec2>& in_vertices, flo
 
       aiFace& face = newMesh->mFaces[2+f];
       face.mNumIndices = 4;
-      face.mIndices = new unsigned int[4];
+      face.mIndices = new unsigned int[4];   
       face.mIndices[0] = index+0;
       face.mIndices[1] = index+1;
       face.mIndices[2] = index+2;
