@@ -56,9 +56,9 @@ osmium::Location refPointFromArg(string refPointStr)
  osmium::Location location;
 
   int commaPos = refPointStr.find_first_of(",");
-  location.set_lon(std::stod(refPointStr.substr(0, commaPos)));
-  refPointStr = refPointStr.substr(commaPos+1, refPointStr.size());
   location.set_lat(std::stod(refPointStr));
+  refPointStr = refPointStr.substr(commaPos+1, refPointStr.size());
+  location.set_lon(std::stod(refPointStr.substr(0, commaPos)));
 
  return location;
 }
@@ -81,8 +81,9 @@ int main(int argi, char** argc)
   args::Flag  useMax(parser, "Max", "Use max instead of default mean value for heights", {'m'});
   args::Flag  consolidateArg(parser, "Consolidate", "Consolidate mesh data into single mesh", {'c'});
   args::Flag  highwayArg(parser, "Highways", "Include roads in export", {'r'});
+  args::Flag  exportZUpArg(parser, "Z Up", "Export Z up", {'z'});
   args::ValueFlag<string> extentsArg(parser, "Extents", "4 comma separated values; min lat, min long, max lat, max long", {'e'});
-  args::ValueFlag<string> refPointArg(parser, "RefPoint", "2 comma separated values; latLng coords. To be used as point of origin for geometry ", {'e'});
+  args::ValueFlag<string> refPointArg(parser, "RefPoint", "2 comma separated values; latLng coords. To be used as point of origin for geometry ", {'p'});
 
   try
   {
@@ -113,6 +114,10 @@ int main(int argi, char** argc)
 
   if(consolidateArg) {
     assimpConstruct.setConsolidateMesh(true);
+  }
+
+  if(exportZUpArg) {
+    assimpConstruct.setZUp(true);
   }
 
   string outputFile = args::get(outputFileArg);
@@ -197,6 +202,7 @@ int main(int argi, char** argc)
     EngineBlock::CenterEarthFixedConvert::refPoint = box.bottom_left();
 
     if(refPoint.valid()) {
+      cout << "using ref point " << refPoint.lat() << ", " << refPoint.lon() << endl;
       EngineBlock::CenterEarthFixedConvert::refPoint = refPoint;
     }
 

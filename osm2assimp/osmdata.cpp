@@ -27,7 +27,7 @@ using std::map;
 OSMDataImport::OSMDataImport(AssimpConstruct& ac, const osmium::Box& extents, int filter )
 : mCount(0), 
   mExtents(extents),
-  mRefPoint(EngineBlock::CenterEarthFixedConvert::to_coords(mExtents.bottom_left())),
+  mRefPoint(EngineBlock::CenterEarthFixedConvert::to_coords(EngineBlock::CenterEarthFixedConvert::refPoint)),
   mAssimpConstruct(ac),
   mFilter(filter)
 {

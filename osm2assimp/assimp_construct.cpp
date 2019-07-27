@@ -16,6 +16,8 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+bool AssimpConstruct::mZUp = false;
+
 AssimpConstruct::AssimpConstruct()
 : mMegaMesh(false)
 {
@@ -125,6 +127,28 @@ std::vector<glm::vec2> fromGFXPoly(gfxpoly_t* poly) {
   }
   return pointsEnd;
 }
+void AssimpConstruct::setZUp(bool z)
+{
+  mZUp = z;
+}
+glm::vec3 AssimpConstruct::upNormal()
+{
+  if(mZUp) {
+    return glm::vec3(0.f, 0.f, 1.f);
+  }
+  else {
+    return glm::vec3(0.f, 1.f, 0.f);
+  }
+}
+glm::vec3 AssimpConstruct::posFromLoc(double lon, double lat, double height)
+{
+  if(mZUp) {
+    return glm::vec3(lon, lat, height);
+  }
+  else {
+    return glm::vec3(lon, height, lat);
+  }
+}
 
 aiMesh* AssimpConstruct::polygonFromSpline(const std::vector<glm::vec2>& vertices, float width)
 {
@@ -140,7 +164,7 @@ aiMesh* AssimpConstruct::polygonFromSpline(const std::vector<glm::vec2>& vertice
     vector<glm::vec2> polyPoints = fromGFXPoly(poly);
     vector<glm::vec3> points3(polyPoints.size());
     for(size_t i=0; i<polyPoints.size(); i++) {
-      points3[i] = glm::vec3(polyPoints[i].x, polyPoints[i].y, 0.5);
+      points3[i] = posFromLoc(polyPoints[i].x, polyPoints[i].y, 0.5);
     }
 
     aiMesh* newMesh = new aiMesh;
@@ -149,8 +173,11 @@ aiMesh* AssimpConstruct::polygonFromSpline(const std::vector<glm::vec2>& vertice
     newMesh->mVertices = new aiVector3D[points3.size()];
     newMesh->mNormals = new aiVector3D[points3.size()];
 
+    glm::vec3 gUpNormal = AssimpConstruct::upNormal();
+    aiVector3D aiUpNormal(gUpNormal.x, gUpNormal.y, gUpNormal.z);
+
     for(size_t i=0; i<newMesh->mNumVertices; i++) {
-      newMesh->mNormals[i] = aiVector3D(0.0f, 0.0f, 1.0f);
+      newMesh->mNormals[i] = aiUpNormal;
     }
 
     memcpy(newMesh->mVertices, points3.data(), points3.size() * sizeof(glm::vec3));
@@ -256,11 +283,11 @@ aiMesh* AssimpConstruct::extrude2dMesh(const vector<glm::vec2>& in_vertices, flo
   for(size_t v=0; v<numBaseVertices; v++) {
     const glm::vec2& nv = baseVertices[v];
 
-    vertices[v] = glm::vec3(nv.x, nv.y, 0.0);
-    normals[v] = glm::vec3(0.0, 0.0, -1.0);
+    vertices[v] = posFromLoc(nv.x, nv.y, 0.0);
+    normals[v] = -upNormal();
     if(height > 0.f) {
-      vertices[v+numBaseVertices] = glm::vec3(nv.x, nv.y, height);
-      normals[v+numBaseVertices] = glm::vec3(0.0, 0.0, 1.0);
+      vertices[v+numBaseVertices] = posFromLoc(nv.x, nv.y, height);
+      normals[v+numBaseVertices] = upNormal();
     }
   }
 
