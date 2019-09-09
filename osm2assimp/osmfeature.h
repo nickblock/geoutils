@@ -11,8 +11,8 @@ struct OSMFeature {
   static const int HIGHWAY = 8;
   static const int LOCATION = 16;
 
-  OSMFeature(const osmium::Way& way, const WorldCoord& ref);
-  OSMFeature(const osmium::Node& node, const WorldCoord& ref);
+  OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool findName = false);
+  OSMFeature(const osmium::Node& node, const WorldCoord& ref, bool findName = false);
 
   int Type() const { return mType; }
 

@@ -76,9 +76,8 @@ int main(int argi, char** argc)
   args::HelpFlag help(parser, "HELP", "Show this help menu.", {'h', "help"});
   args::ValueFlag<std::string> inputFileArg(parser, "*.osm|*.pbf", "Specify input .osm file", {'i'});
   args::ValueFlag<std::string> outputFileArg(parser, assimpConstruct.formatsAvailableStr(), "Specify output file. The extension will be used to decide the output type. The type should be compatible with assimp", {'o'});
-  args::ValueFlag<float> fixedHeightArg(parser, "100.0", "Specify a default height to be used in absence of heights (.dbf) file", {'f'});
+  args::ValueFlag<float> fixedHeightArg(parser, "100.0", "Specify a default height to be used in absence of heights data", {'f'});
   args::ValueFlag<int> limitArg(parser, "0", "Specify an upper limit fo shapes to import", {'l'});
-  args::Flag  useMax(parser, "Max", "Use max instead of default mean value for heights", {'m'});
   args::Flag  consolidateArg(parser, "Consolidate", "Consolidate mesh data into single mesh", {'c'});
   args::Flag  highwayArg(parser, "Highways", "Include roads in export", {'r'});
   args::Flag  exportZUpArg(parser, "Z Up", "Export Z up", {'z'});

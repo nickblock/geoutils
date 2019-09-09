@@ -46,16 +46,21 @@ std::string getName(const osmium::Way& way)
   return name;
 }
 
-OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref)
-:mType(UNDEFINED), mHeight(0.f), mFloors(1), mMaterial("default"), mValid(true)
+OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool findName)
+:mType(UNDEFINED), mHeight(0.f), mFloors(3), mMaterial("default"), mValid(true)
 {
   try {
     
-    mName = getName(way);
+    if(findName) {
+      mName = getName(way);
+    }
+    else {
+      mName = std::to_string(way.id());
+    }
 
     bool setHeight = false;
 
-    mHeight = buildingFloorHeight;
+    mHeight = buildingFloorHeight * mFloors;
 
     if(way.tags().has_key("height")) {
 
@@ -166,7 +171,7 @@ OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref)
 }
 
 
-OSMFeature::OSMFeature(const osmium::Node& node, const WorldCoord& ref)
+OSMFeature::OSMFeature(const osmium::Node& node, const WorldCoord& ref, bool findName)
 
 : mType(LOCATION), mValid(true)
 
