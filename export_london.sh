@@ -18,5 +18,5 @@ osms2split -i $1 -o $2 -l $3 -x
 for filename in $2/*; do
   coords=`s2util $filename | sed 's/ //g'`
   geomFile=`echo $filename | sed s/\.osm/\.obj/`
-  osm2assimp -i $filename -o $geomFile -p $coords
+  osm2assimp -i $filename -o $geomFile -p $coords -r
 done
