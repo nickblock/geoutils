@@ -1,10 +1,7 @@
 #include "args.hxx"
 #include "tinyformat.h"
+#include "s2util.h"
 #include <stdint.h>
-#include <regex>
-#include "s2/s2cell.h"
-#include "s2/s2latlng.h"
-#include "s2/s2cell_id.h"
 
 using std::string;
 using std::cout;
@@ -36,22 +33,20 @@ int main(int argi, char** argv)
 
   try {
     
-    std::smatch res; 
-    std::regex reg(".*([0-9a-f]{16}).*");
-    std::regex_match (args::get(inputS2Cell), res, reg);
-    if (res.size() <= 1) {
+    uint64_t number = S2Util::getS2IdFromString(args::get(inputS2Cell));
+    
+    if (number < 1) {
       cerr << "failed to find cell id in " << endl;
       std::exit(1);
     }
 
-    uint64_t number = std::stoul(res[1], nullptr, 16);
-
     const S2CellId cellId(number);
 
     if(cellId.is_valid()) {
-      const S2LatLng cellCenter = cellId.ToLatLng();
+
+      auto cellCenter = S2Util::getS2Center(number);
         
-      cout << cellCenter.lat() << ", " << cellCenter.lng() << endl;
+      cout << std::get<0>(cellCenter) << ", " << std::get<1>(cellCenter) << endl;
     }
     else {
       std::cerr << "Invalid cell Id (" << number << ")" << endl;
