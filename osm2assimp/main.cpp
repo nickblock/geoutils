@@ -51,6 +51,19 @@ osmium::Box osmiumBox(string extentsStr)
   return box;
 }
 
+vector<string> getInputFiles(string input)
+{
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(input);
+  while (std::getline(tokenStream, token, ',')) {
+    if(token.size()) {
+      tokens.push_back(token);
+    }
+  }
+  return tokens;
+}
+
 osmium::Location refPointFromArg(string refPointStr) 
 {
  osmium::Location location;
@@ -74,7 +87,7 @@ int main(int argi, char** argc)
 
   args::ArgumentParser parser("osm2assimp, convert osm files to geometry to be saved in a assimp compatible format.", "You must at least specify an input and an output file");
   args::HelpFlag help(parser, "HELP", "Show this help menu.", {'h', "help"});
-  args::ValueFlag<std::string> inputFileArg(parser, "*.osm|*.pbf", "Specify input .osm file", {'i'});
+  args::ValueFlag<std::string> inputFileArg(parser, "*.osm|*.pbf", "Specify input .osm file or comma separated list of files.", {'i'});
   args::ValueFlag<std::string> outputFileArg(parser, assimpConstruct.formatsAvailableStr(), "Specify output file. The extension will be used to decide the output type. The type should be compatible with assimp", {'o'});
   args::ValueFlag<float> fixedHeightArg(parser, "100.0", "Specify a default height to be used in absence of heights data", {'f'});
   args::ValueFlag<int> limitArg(parser, "0", "Specify an upper limit fo shapes to import", {'l'});
@@ -130,86 +143,93 @@ int main(int argi, char** argc)
 
   int shapeLimit = limitArg ? args::get(limitArg) : 0;
 
-  string inputFile = args::get(inputFileArg);
-  string inputExt = inputFile.substr(inputFile.size() -3, 3);
+  vector<string> inputFiles = getInputFiles(args::get(inputFileArg));
 
-  osmium::Box box;
+  for(auto& inputFile : inputFiles) {
 
-  if(extentsArg) {
+    cout << inputFile << endl;
 
-    try {
+    string inputExt = inputFile.substr(inputFile.size() -3, 3);
 
-      string extentsStr = args::get(extentsArg);
+    osmium::Box box;
 
-      box = osmiumBox(extentsStr);
-    }
-    catch(std::invalid_argument) {
-      cout << "Failed to parse extents string '" << args::get(extentsArg) << "'" << endl;
-      std::exit(1);
-    }
-  }
+    if(extentsArg) {
 
-  osmium::Location refPoint;
+      try {
 
-  if(refPointArg) {
-    try {
+        string extentsStr = args::get(extentsArg);
 
-      refPoint = refPointFromArg(args::get(refPointArg));
-    }
-    catch(std::invalid_argument) {
-      cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
-      std::exit(1);
-    }
-  }
-
-  if(inputFile == "test") {
-
-    vector<glm::vec2> verts(4);
-    verts[0]= glm::vec2(-10, -10);
-    verts[1]= glm::vec2(-10, 10);
-    verts[2]= glm::vec2(10, 10);
-    verts[3]= glm::vec2(10, -10);
-
-    assimpConstruct.addMesh(assimpConstruct.extrude2dMesh(verts, 20.f), "testmesh");
-
-    cout << "added test mesh" << endl;
-  }
-
-
-  if(inputExt == "osm" || inputExt == "pbf") {
-
-    index_type index;
-
-    location_handler_type location_handler{index};
-    location_handler.ignore_errors();
-    
-    osmium::io::Reader reader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
-
-    if(!box.valid()) {
-      osmium::io::Header header = reader.header();
-      box = header.box();
+        box = osmiumBox(extentsStr);
+      }
+      catch(std::invalid_argument) {
+        cout << "Failed to parse extents string '" << args::get(extentsArg) << "'" << endl;
+        std::exit(1);
+      }
     }
 
-    int filter = OSMFeature::BUILDING;
-    if(highwayArg) {
-      filter |= OSMFeature::HIGHWAY;
+    osmium::Location refPoint;
+
+    if(refPointArg) {
+      try {
+
+        refPoint = refPointFromArg(args::get(refPointArg));
+      }
+      catch(std::invalid_argument) {
+        cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
+        std::exit(1);
+      }
     }
 
-    cout << "Extents : " << tfm::format("min(%2.2f, %2.2f) - max(%2.2f, %2.2f)", 
-      box.bottom_left().lon(), box.bottom_left().lat(), box.top_right().lon(), box.top_right().lat()) << endl;
+    if(inputFile == "test") {
 
-    EngineBlock::CenterEarthFixedConvert::refPoint = box.bottom_left();
+      vector<glm::vec2> verts(4);
+      verts[0]= glm::vec2(-10, -10);
+      verts[1]= glm::vec2(-10, 10);
+      verts[2]= glm::vec2(10, 10);
+      verts[3]= glm::vec2(10, -10);
 
-    if(refPoint.valid()) {
-      cout << "using ref point " << refPoint.lat() << ", " << refPoint.lon() << endl;
-      EngineBlock::CenterEarthFixedConvert::refPoint = refPoint;
+      assimpConstruct.addMesh(assimpConstruct.extrude2dMesh(verts, 20.f), "testmesh");
+
+      cout << "added test mesh" << endl;
     }
 
-    OSMDataImport osmReader(assimpConstruct, box, filter);
 
-    osmium::apply(reader, location_handler, osmReader);
+    if(inputExt == "osm" || inputExt == "pbf") {
 
-    cout << "Ways Exported: " << osmReader.exportCount() << endl;
+      index_type index;
+
+      location_handler_type location_handler{index};
+      location_handler.ignore_errors();
+      
+      osmium::io::Reader reader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
+
+      if(!box.valid()) {
+        osmium::io::Header header = reader.header();
+        box = header.box();
+      }
+
+      int filter = OSMFeature::BUILDING;
+      if(highwayArg) {
+        filter |= OSMFeature::HIGHWAY;
+      }
+
+      cout << "Extents : " << tfm::format("min(%2.2f, %2.2f) - max(%2.2f, %2.2f)", 
+        box.bottom_left().lon(), box.bottom_left().lat(), box.top_right().lon(), box.top_right().lat()) << endl;
+
+      EngineBlock::CenterEarthFixedConvert::refPoint = box.bottom_left();
+
+      if(refPoint.valid()) {
+        cout << "using ref point " << refPoint.lat() << ", " << refPoint.lon() << endl;
+        EngineBlock::CenterEarthFixedConvert::refPoint = refPoint;
+      }
+
+      OSMDataImport osmReader(assimpConstruct, box, filter);
+
+      osmium::apply(reader, location_handler, osmReader);
+
+      cout << "Ways Exported: " << osmReader.exportCount() << endl;
+    }
+
   }
 
   if(AI_SUCCESS != assimpConstruct.write(outputFile.c_str())){
