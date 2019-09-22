@@ -16,7 +16,7 @@ public:
   AssimpConstruct();
 
   int write(const std::string& filename);
-  void addMesh(aiMesh* mesh, std::string name = "");
+  void addMesh(aiMesh* mesh, std::string name = "", aiNode* parent = nullptr);
   void addLocator(aiNode* node);
   int addMaterial(std::string, glm::vec3 color);
 
@@ -49,6 +49,7 @@ protected:
   std::map<std::string, std::string> mExtMap;
   std::vector<aiMesh*> mMeshes;
   std::vector<std::string> mMeshNames;
+  std::vector<aiNode*> mMeshParents;
 
   std::vector<aiNode*> mLocatorNodes;
 

@@ -439,6 +439,9 @@ void AssimpConstruct::buildMultipleMeshes(aiScene* assimpScene)
 
     assimpScene->mRootNode->mChildren[i] = new aiNode();
     assimpScene->mRootNode->mChildren[i]->mParent = assimpScene->mRootNode;
+    if(mMeshParents[i] != nullptr) {
+      assimpScene->mRootNode->mChildren[i]->mParent = mMeshParents[i];
+    }
     assimpScene->mRootNode->mChildren[i]->mNumMeshes = 1;
     assimpScene->mRootNode->mChildren[i]->mMeshes = new unsigned int[1];
     assimpScene->mRootNode->mChildren[i]->mMeshes[0] = i;
@@ -496,10 +499,11 @@ int AssimpConstruct::write(const string& filename)
 }
 
 
-void AssimpConstruct::addMesh(aiMesh* mesh, std::string name)
+void AssimpConstruct::addMesh(aiMesh* mesh, std::string name, aiNode* parent)
 {
   mMeshes.push_back( mesh);
   mMeshNames.push_back(name);
+  mMeshParents.push_back(parent);
 }
 
 void AssimpConstruct::addLocator(aiNode* node)

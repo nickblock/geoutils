@@ -4,6 +4,7 @@
 #include "common_geo.h"
 #include "osmdata.h"
 #include "centerearthfixedconvert.h"
+#include "s2util.h"
 
 #include <string.h>
 #include <iostream>
@@ -141,58 +142,76 @@ int main(int argi, char** argc)
     return 1;
   }
 
+  osmium::Box box;
+
+  if(extentsArg) {
+
+    try {
+
+      string extentsStr = args::get(extentsArg);
+
+      box = osmiumBox(extentsStr);
+    }
+    catch(std::invalid_argument) {
+      cout << "Failed to parse extents string '" << args::get(extentsArg) << "'" << endl;
+      std::exit(1);
+    }
+  }
+
+  osmium::Location globalRefPoint;
+
+  if(refPointArg) {
+    try {
+
+      globalRefPoint = refPointFromArg(args::get(refPointArg));
+    }
+    catch(std::invalid_argument) {
+      cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
+      std::exit(1);
+    }
+  }
+
+  if(args::get(inputFileArg) == "test") {
+
+    vector<glm::vec2> verts(4);
+    verts[0]= glm::vec2(-10, -10);
+    verts[1]= glm::vec2(-10, 10);
+    verts[2]= glm::vec2(10, 10);
+    verts[3]= glm::vec2(10, -10);
+
+    assimpConstruct.addMesh(assimpConstruct.extrude2dMesh(verts, 20.f), "testmesh");
+
+    cout << "added test mesh" << endl;
+  }
+
   int shapeLimit = limitArg ? args::get(limitArg) : 0;
 
   vector<string> inputFiles = getInputFiles(args::get(inputFileArg));
 
   for(auto& inputFile : inputFiles) {
 
-    cout << inputFile << endl;
+    uint64_t s2Id = S2Util::getS2IdFromString(inputFile);
+    if(s2Id == 0)
+    {
+      cout << "Failed to get s2 cell id from '" << inputFile << "'" << endl;
+      exit(1);
+    }
+
+    S2Util::LatLng latLng = S2Util::getS2Center(s2Id); 
+
+    cout << inputFile << " " << std::get<0>(latLng) << "," << std::get<1>(latLng) << endl;
+
+    EngineBlock::CenterEarthFixedConvert::refPoint = globalRefPoint;
+    const osmium::geom::Coordinates s2Coord = EngineBlock::CenterEarthFixedConvert::to_coords(osmium::Location(std::get<0>(latLng), std::get<1>(latLng)));
+
+    aiNode* s2CellParentAINode = new aiNode(std::to_string(s2Id));
+
+    aiVector3t<float> asm_pos(s2Coord.x, 0.0f, s2Coord.y);
+    aiMatrix4x4t<float>::Translation(asm_pos, s2CellParentAINode->mTransformation);
+
+    assimpConstruct.addLocator(s2CellParentAINode);
 
     string inputExt = inputFile.substr(inputFile.size() -3, 3);
-
-    osmium::Box box;
-
-    if(extentsArg) {
-
-      try {
-
-        string extentsStr = args::get(extentsArg);
-
-        box = osmiumBox(extentsStr);
-      }
-      catch(std::invalid_argument) {
-        cout << "Failed to parse extents string '" << args::get(extentsArg) << "'" << endl;
-        std::exit(1);
-      }
-    }
-
-    osmium::Location refPoint;
-
-    if(refPointArg) {
-      try {
-
-        refPoint = refPointFromArg(args::get(refPointArg));
-      }
-      catch(std::invalid_argument) {
-        cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
-        std::exit(1);
-      }
-    }
-
-    if(inputFile == "test") {
-
-      vector<glm::vec2> verts(4);
-      verts[0]= glm::vec2(-10, -10);
-      verts[1]= glm::vec2(-10, 10);
-      verts[2]= glm::vec2(10, 10);
-      verts[3]= glm::vec2(10, -10);
-
-      assimpConstruct.addMesh(assimpConstruct.extrude2dMesh(verts, 20.f), "testmesh");
-
-      cout << "added test mesh" << endl;
-    }
-
 
     if(inputExt == "osm" || inputExt == "pbf") {
 
@@ -203,10 +222,8 @@ int main(int argi, char** argc)
       
       osmium::io::Reader reader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
-      if(!box.valid()) {
-        osmium::io::Header header = reader.header();
-        box = header.box();
-      }
+      osmium::io::Header header = reader.header();
+      box = header.box();
 
       int filter = OSMFeature::BUILDING;
       if(highwayArg) {
@@ -218,12 +235,9 @@ int main(int argi, char** argc)
 
       EngineBlock::CenterEarthFixedConvert::refPoint = box.bottom_left();
 
-      if(refPoint.valid()) {
-        cout << "using ref point " << refPoint.lat() << ", " << refPoint.lon() << endl;
-        EngineBlock::CenterEarthFixedConvert::refPoint = refPoint;
-      }
-
       OSMDataImport osmReader(assimpConstruct, box, filter);
+
+      osmReader.setParentNode(s2CellParentAINode);
 
       osmium::apply(reader, location_handler, osmReader);
 

@@ -195,7 +195,10 @@ if(BUILD_OSM2ASSIMP)
             ext/gfxpoly/src/wind.c
             ext/gfxpoly/src/xrow.c )
 
-      target_include_directories(gfxpoly PRIVATE ext/gfxpoly/src ext/gfxpoly)
+      target_include_directories(gfxpoly PRIVATE 
+            ext/gfxpoly/src 
+            ext/gfxpoly
+            ext/s2geometry/src)
 
       add_executable(osm2assimp
             osm2assimp/assimp_construct.cpp
@@ -206,23 +209,25 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp/osmfeature.cpp
             ext/common.cpp)
 
-      target_include_directories(osm2assimp PUBLIC osm2assimp )
-      target_include_directories(osm2assimp PUBLIC ext/libosmium/include )
-      target_include_directories(osm2assimp PUBLIC ext/protozero/include)
-      target_include_directories(osm2assimp PUBLIC ext/assimp/include)
-      target_include_directories(osm2assimp PUBLIC ext/gfxpoly)
-      target_include_directories(osm2assimp PUBLIC ext/eigen )
-      target_include_directories(osm2assimp PUBLIC ext/rapidjson/include )
-      target_include_directories(osm2assimp PUBLIC ext/glm )
-      target_include_directories(osm2assimp PUBLIC ext )
+      target_include_directories(osm2assimp PUBLIC 
+            osm2assimp 
+            ext/libosmium/include 
+            ext/protozero/include
+            ext/assimp/include
+            ext/gfxpoly
+            ext/eigen 
+            ext/rapidjson/include 
+            ext/glm 
+            ext 
+            s2util )
 
       if(MACOSX)
             target_link_libraries(osm2assimp PUBLIC assimp 
                   /usr/local/lib/libgeos.dylib
-                  bz2 z expat pthread gfxpoly)
+                  bz2 z expat pthread gfxpoly s2)
             target_include_directories(osm2assimp PUBLIC /usr/local/include )
       else()
-            target_link_libraries(osm2assimp PUBLIC assimp bz2 z expat pthread gfxpoly geos)
+            target_link_libraries(osm2assimp PUBLIC assimp bz2 z expat pthread gfxpoly geos s2)
       endif()
 
 endif()

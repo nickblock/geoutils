@@ -9,6 +9,7 @@
 #include <osmium/handler.hpp>
 
 class AssimpConstruct;
+class aiNode;
 
 namespace xmlpp {
   class Node;
@@ -21,6 +22,11 @@ public:
   void way(const osmium::Way& way);
 
   void node(const osmium::Node& node);
+
+  void setParentNode(aiNode* node)
+  {
+    mParentNode = node;
+  }
 
   int exportCount() {
     return mCount;
@@ -36,5 +42,6 @@ protected:
   std::map<std::string, glm::vec3>  mMatColors;
   std::vector<OSMFeature> mFeatures;
   AssimpConstruct& mAssimpConstruct;
+  aiNode* mParentNode;
 };
 #endif

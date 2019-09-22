@@ -29,7 +29,8 @@ OSMDataImport::OSMDataImport(AssimpConstruct& ac, const osmium::Box& extents, in
   mExtents(extents),
   mRefPoint(EngineBlock::CenterEarthFixedConvert::to_coords(EngineBlock::CenterEarthFixedConvert::refPoint)),
   mAssimpConstruct(ac),
-  mFilter(filter)
+  mFilter(filter),
+  mParentNode(nullptr)
 {
   std::locale::global(std::locale(""));
 
@@ -143,7 +144,7 @@ void OSMDataImport::process(const OSMFeature& feature)
       string nameSanitize = feature.mName;
       sanitizeName(nameSanitize);
 
-      mAssimpConstruct.addMesh(mesh, nameSanitize);
+      mAssimpConstruct.addMesh(mesh, nameSanitize, mParentNode);
       
       mCount++;
     }
