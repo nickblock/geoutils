@@ -89,6 +89,13 @@ void OSMDataImport::node(const osmium::Node& node)
   }
 }
 
+void OSMDataImport::setParentAINode(aiNode* node)
+{
+  mParentNode = node;
+
+  mAssimpConstruct.addLocator(node);
+}
+
 void sanitizeName(string& name) {
   
   EngineBlock::replaceAll(name, "&", "&amp;");

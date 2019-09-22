@@ -164,6 +164,7 @@ int main(int argi, char** argc)
     try {
 
       globalRefPoint = refPointFromArg(args::get(refPointArg));
+      EngineBlock::CenterEarthFixedConvert::refPoint = globalRefPoint;
     }
     catch(std::invalid_argument) {
       cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
@@ -190,26 +191,7 @@ int main(int argi, char** argc)
 
   for(auto& inputFile : inputFiles) {
 
-    uint64_t s2Id = S2Util::getS2IdFromString(inputFile);
-    if(s2Id == 0)
-    {
-      cout << "Failed to get s2 cell id from '" << inputFile << "'" << endl;
-      exit(1);
-    }
-
-    S2Util::LatLng latLng = S2Util::getS2Center(s2Id); 
-
-    cout << inputFile << " " << std::get<0>(latLng) << "," << std::get<1>(latLng) << endl;
-
-    EngineBlock::CenterEarthFixedConvert::refPoint = globalRefPoint;
-    const osmium::geom::Coordinates s2Coord = EngineBlock::CenterEarthFixedConvert::to_coords(osmium::Location(std::get<0>(latLng), std::get<1>(latLng)));
-
-    aiNode* s2CellParentAINode = new aiNode(std::to_string(s2Id));
-
-    aiVector3t<float> asm_pos(s2Coord.x, 0.0f, s2Coord.y);
-    aiMatrix4x4t<float>::Translation(asm_pos, s2CellParentAINode->mTransformation);
-
-    assimpConstruct.addLocator(s2CellParentAINode);
+    cout << inputFile << endl;
 
     string inputExt = inputFile.substr(inputFile.size() -3, 3);
 
@@ -230,14 +212,41 @@ int main(int argi, char** argc)
         filter |= OSMFeature::HIGHWAY;
       }
 
-      cout << "Extents : " << tfm::format("min(%2.2f, %2.2f) - max(%2.2f, %2.2f)", 
-        box.bottom_left().lon(), box.bottom_left().lat(), box.top_right().lon(), box.top_right().lat()) << endl;
-
-      EngineBlock::CenterEarthFixedConvert::refPoint = box.bottom_left();
-
       OSMDataImport osmReader(assimpConstruct, box, filter);
 
-      osmReader.setParentNode(s2CellParentAINode);
+      //spacial case: if the filename correlates to an S2 cell we use that as the relative center point of the file,
+      // create a locator as teh center of the s2 cell - this requires an global ref point to be set
+      uint64_t s2cellId = S2Util::getS2IdFromString(inputFile);
+      if(s2cellId > 0) {
+
+        cout << "Using S2 cell as origin" << endl;
+
+        if(!globalRefPoint) {
+          cout << "cannot use s2 cell without also having set a RefPoint flag" << endl;
+          exit(1); 
+        }
+
+        EngineBlock::CenterEarthFixedConvert::refPoint = globalRefPoint;
+
+        S2Util::LatLng latLng = S2Util::getS2Center(s2cellId);    
+        osmium::Location s2CellCenterLocation = osmium::Location(std::get<0>(latLng), std::get<1>(latLng));
+
+        //the coords are given relative to the globalRefPoint
+        const osmium::geom::Coordinates s2CellCenterCoord = EngineBlock::CenterEarthFixedConvert::to_coords(s2CellCenterLocation);
+        EngineBlock::CenterEarthFixedConvert::refPoint = s2CellCenterLocation;
+
+        aiNode* s2CellParentAINode = new aiNode(std::to_string(s2cellId));
+
+        aiVector3t<float> asm_pos(s2CellCenterCoord.x, 0.0f, s2CellCenterCoord.y);
+        aiMatrix4x4t<float>::Translation(asm_pos, s2CellParentAINode->mTransformation);
+
+        osmReader.setParentAINode(s2CellParentAINode);
+      }
+      else {
+        if(!globalRefPoint) {
+          EngineBlock::CenterEarthFixedConvert::refPoint = box.bottom_left();
+        }
+      }
 
       osmium::apply(reader, location_handler, osmReader);
 

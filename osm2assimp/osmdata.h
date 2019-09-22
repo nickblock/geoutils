@@ -23,10 +23,7 @@ public:
 
   void node(const osmium::Node& node);
 
-  void setParentNode(aiNode* node)
-  {
-    mParentNode = node;
-  }
+  void setParentAINode(aiNode* node);
 
   int exportCount() {
     return mCount;
