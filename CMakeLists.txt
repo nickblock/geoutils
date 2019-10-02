@@ -142,12 +142,11 @@ if(BUILD_OSMS2SPLIT)
       target_include_directories(osms2split PUBLIC ext)
 
       if(MACOSX)
-            target_include_directories(s2 PUBLIC /usr/local/opt/openssl@1.1/include/)
-            link_directories(/usr/local/opt/openssl@1.1/lib /usr/local/opt/bzip2/lib)
+            target_include_directories(s2 PUBLIC ext/openssl )
+            link_directories(/usr/local/opt/bzip2/lib ${CMAKE_CURRENT_LIST_DIR}/ext/openssl/mac)
             target_link_libraries(osms2split PUBLIC 
                   s2 
-                  /usr/local/opt/openssl@1.1/lib/libssl.dylib
-                  /usr/local/opt/openssl@1.1/lib/libcrypto.dylib 
+                  ${CMAKE_CURRENT_LIST_DIR}/ext/openssl/mac/libopenssl.a
                   -lz -lbz2 -lexpat -lpthread)
       else()
             target_link_libraries(osms2split PUBLIC s2 ssl crypto bz2 z expat pthread)
@@ -241,5 +240,9 @@ if(BUILD_S2UTIL)
 
       target_include_directories(s2util PRIVATE ext)
       target_include_directories(s2util PRIVATE ext/s2geometry/src)
-      target_link_libraries(s2util PUBLIC s2 ssl crypto bz2 pthread)
+      if(MACOSX)
+            target_link_libraries(s2util PUBLIC s2 bz2 pthread)
+      else()
+            target_link_libraries(s2util PUBLIC s2 ssl crypto bz2 pthread)
+      endif()
 endif()
