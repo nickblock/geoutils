@@ -143,7 +143,7 @@ if(BUILD_OSMS2SPLIT)
 
       if(MACOSX)
             target_include_directories(s2 PUBLIC ext/openssl )
-            link_directories(/usr/local/opt/bzip2/lib ${CMAKE_CURRENT_LIST_DIR}/ext/openssl/mac)
+            link_directories(/usr/local/opt/bzip2/lib ${CMAKE_CURRENT_LIST_DIR}/ext/openssl/mac /usr/local/lib)
             target_link_libraries(osms2split PUBLIC 
                   s2 
                   ${CMAKE_CURRENT_LIST_DIR}/ext/openssl/mac/libopenssl.a
@@ -170,8 +170,13 @@ if(BUILD_OSMSPLIT)
       target_include_directories(osmsplit PUBLIC ext/pnghpp )
       target_include_directories(osmsplit PUBLIC ext )
 
-      target_link_libraries(osmsplit PUBLIC pthread stdc++fs bz2 z expat png)
-
+      if(MACOSX)
+            target_include_directories(osmsplit PUBLIC /usr/local/include )
+            link_directories(/usr/local/lib)
+            target_link_libraries(osmsplit PUBLIC pthread bz2 z expat png)
+      else()
+            target_link_libraries(osmsplit PUBLIC pthread stdc++fs bz2 z expat png)
+      endif()
 endif()
 
 option(BUILD_OSM2ASSIMP "Build osm2assimp" ON)
