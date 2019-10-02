@@ -96,7 +96,7 @@ OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool findN
       mType = WATER;
     }
 
-    if(way.nodes().ends_have_same_id() && false) {
+    if(way.nodes().ends_have_same_id() && way.nodes().size() > 2) {
       
       mType |= CLOSED;
 
@@ -112,8 +112,15 @@ OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool findN
         }
 
         osmium::geom::GEOSFactory<EngineBlock::CenterEarthFixedConvert> factory;
-
-        const std::unique_ptr<geos::geom::MultiPolygon> mp{factory.create_multipolygon(out_buffer.get<osmium::Area>(0))};
+          
+        const auto& area = out_buffer.get<osmium::Area>(0);
+        
+        if(area.is_multipolygon()) {
+          mValid = false;
+          return;
+        }
+          
+        const std::unique_ptr<geos::geom::MultiPolygon> mp{factory.create_multipolygon(area)};
         
         if(mp->getNumGeometries()) {
 

@@ -165,6 +165,8 @@ int main(int argi, char** argc)
 
       globalRefPoint = refPointFromArg(args::get(refPointArg));
       EngineBlock::CenterEarthFixedConvert::refPoint = globalRefPoint;
+
+      cout << "Ref Point = " << globalRefPoint << endl;
     }
     catch(std::invalid_argument) {
       cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
@@ -229,7 +231,7 @@ int main(int argi, char** argc)
         EngineBlock::CenterEarthFixedConvert::refPoint = globalRefPoint;
 
         S2Util::LatLng latLng = S2Util::getS2Center(s2cellId);    
-        osmium::Location s2CellCenterLocation = osmium::Location(std::get<0>(latLng), std::get<1>(latLng));
+        osmium::Location s2CellCenterLocation = osmium::Location(std::get<1>(latLng), std::get<0>(latLng));
 
         //the coords are given relative to the globalRefPoint
         const osmium::geom::Coordinates s2CellCenterCoord = EngineBlock::CenterEarthFixedConvert::to_coords(s2CellCenterLocation);

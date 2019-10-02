@@ -123,18 +123,10 @@ void OSMDataImport::process(const OSMFeature& feature)
     else if(feature.mType & (OSMFeature::BUILDING | OSMFeature::WATER) && feature.mType & OSMFeature::CLOSED) {
         
       mesh = AssimpConstruct::extrude2dMesh(feature.worldCoords, feature.mHeight); 
-
-      if(!mesh) {
-        cout << "Failed to extrude mesh" << endl;
-      }
     }
     else if(feature.mType & OSMFeature::HIGHWAY & mFilter) {
       
       mesh = AssimpConstruct::polygonFromSpline(feature.worldCoords, 3.0);
-
-      if(!mesh) {
-        cout << "Failed to create spline" << endl;
-      }
     }
     if(mesh) {
 
@@ -144,7 +136,9 @@ void OSMDataImport::process(const OSMFeature& feature)
         color = colIter->second;
       }
 
-      assert(mesh->mNumFaces && mesh->mFaces[0].mNumIndices);
+      if(mesh->mNumFaces == 0 || mesh->mFaces[0].mNumIndices == 0) {
+        return;
+      }
 
       mesh->mMaterialIndex = mAssimpConstruct.addMaterial(feature.mMaterial, color); 
 

@@ -212,7 +212,9 @@ aiMesh* AssimpConstruct::extrude2dMesh(const vector<glm::vec2>& in_vertices, flo
     baseVertices.pop_back();
   }
   
-  assert(baseVertices.size() > 2);
+  if(baseVertices.size() < 3) {
+    return nullptr;
+  }
 
   size_t numBaseVertices = baseVertices.size();
 
