@@ -165,8 +165,6 @@ int main(int argi, char** argc)
 
       globalRefPoint = refPointFromArg(args::get(refPointArg));
       EngineBlock::CenterEarthFixedConvert::refPoint = globalRefPoint;
-
-      cout << "Ref Point = " << globalRefPoint << endl;
     }
     catch(std::invalid_argument) {
       cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
