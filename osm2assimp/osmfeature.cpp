@@ -124,11 +124,6 @@ OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool findN
           }
         }
 
-        // cout << "items = " << itemCount << endl;
-
-        // mValid = false;
-        // return;
-
         const std::unique_ptr<geos::geom::MultiPolygon> mp{factory.create_multipolygon(area)};
         
         if(mp->getNumGeometries()) {
