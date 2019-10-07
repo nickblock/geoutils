@@ -151,11 +151,14 @@ void OSMDataImport::process(const OSMFeature& feature)
     }
     else {
 
-      static bool failed = true;
-      if(failed) {
-        cout << "Failed to import some buildings, eg " << feature.mName << endl;
-        failed = false;
+      if(feature.mType & mFilter) {
+        static bool failed = true;
+        if(failed) {
+          cout << "Failed to import some buildings, eg " << feature.mName << endl;
+          failed = false;
+        }
       }
+
     }
   
   } catch (std::out_of_range) {
