@@ -202,7 +202,7 @@ int main(int argi, char** argc)
       index_type index;
 
       location_handler_type location_handler{index};
-      location_handler.ignore_errors();
+      // location_handler.ignore_errors();
       
       osmium::io::Reader reader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
