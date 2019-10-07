@@ -115,12 +115,14 @@ OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool findN
           
         const auto& area = out_buffer.get<osmium::Area>(0);
 
-        cout << "Name " << mName << endl;
-          
-        // int itemCount = 0;
-        // for (const auto& item : area) {
-        //   itemCount++;
-        // }
+        //check for undefined items
+        for (const auto& item : area) {
+          if(item.type() == osmium::item_type::undefined) {
+            cout << "Ignoring id " << mName << endl;
+            mValid = false;
+            return;
+          }
+        }
 
         // cout << "items = " << itemCount << endl;
 
