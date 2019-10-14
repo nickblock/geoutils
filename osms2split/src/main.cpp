@@ -44,10 +44,23 @@
 using std::string;
 using std::cout;
 using std::endl;
+using std::vector;
 
 using NodeLocatorMap = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<NodeLocatorMap>;
 
+vector<string> getKeysOfInterest(string input)
+{
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream tokenStream(input);
+  while (std::getline(tokenStream, token, ',')) {
+    if(token.size()) {
+      tokens.push_back(token);
+    }
+  }
+  return tokens;
+}
 int main(int argi, char* argv[]) {
 
   args::ArgumentParser  parser("osmsplits2. Take a single large osm file and split it into files defined by s2 cells", 
@@ -55,6 +68,7 @@ int main(int argi, char* argv[]) {
 
   args::ValueFlag<string>  inputFileArg(parser, "*.osm|*.pbf", "Specify input .osm file", {'i'});
   args::ValueFlag<string>  outputDirArg(parser, "/", "Specify output directory", {'o'});
+  args::ValueFlag<string>  keysOfInterestArg(parser, "key1,key2", "Comma separated keys to search for. If not set everything is included", {'k'});
   args::ValueFlag<int>     s2LevelArg(parser, "1", "Specify number of splits wanted", {'l'});
   args::Flag               outputXmlArg(parser, "x", "Output xml (.osm), default is pbf", {'x'});
 
@@ -73,7 +87,6 @@ int main(int argi, char* argv[]) {
       std::cout << parser;
       std::exit(1);
   }
-
   
   try {
 
@@ -90,6 +103,13 @@ int main(int argi, char* argv[]) {
       }
       if(args::get(outputXmlArg)) {
         s2Splitter.setOutputXml(true);
+      }
+      if(args::get(keysOfInterestArg).size())
+      {
+        vector<string> keysOfInterest = getKeysOfInterest(args::get(keysOfInterestArg));
+        for(auto& key : keysOfInterest) {
+          s2Splitter.setKeyOfInterest(key);
+        }
       }
 
       osmium::io::Reader reader{args::get(inputFileArg), osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};

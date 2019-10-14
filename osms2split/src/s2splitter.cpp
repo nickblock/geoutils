@@ -43,6 +43,11 @@ void S2Splitter::flush()
   }
 }
 
+void S2Splitter::setKeyOfInterest(std::string key)
+{
+  mKeysOfInterest.push_back(key);
+}
+
 S2Splitter::S2CellDetails& S2Splitter::getS2CellDetails(uint64_t cellId)
 {
   const auto& iter = mS2CellDetails.find(cellId);
@@ -81,6 +86,20 @@ std::string S2Splitter::fileNameOfS2Cell(uint64_t cellId)
 }
 void S2Splitter::way(osmium::Way& way)
 {
+  bool import = true;
+  if(mKeysOfInterest.size()) {
+    import = false;
+    for(auto& key : mKeysOfInterest) {
+      if(way.tags().has_key(key.c_str())) {
+        import = true;
+        break;
+      }
+    }
+  }
+  if(!import) {
+    return;
+  }
+
   auto& nodeList = way.nodes();
 
   std::unordered_set<uint64_t> cellsCovered;

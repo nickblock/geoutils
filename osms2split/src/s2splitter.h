@@ -24,6 +24,7 @@ public:
   void setOutputXml(bool xml);
 
   void way(osmium::Way& way);
+  void setKeyOfInterest(std::string key);
 
   void flush();
 
@@ -47,5 +48,7 @@ private:
   int mS2Level = 10;
   std::string mOutputDirectory;
   bool mOutXml = false;
+
+  std::vector<std::string> mKeysOfInterest;
 
 };
