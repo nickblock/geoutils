@@ -23,6 +23,10 @@ public:
   const std::string& formatsAvailableStr();
   bool checkFormat(std::string);
 
+  size_t numMeshes() {
+    return mMeshes.size();
+  }
+
 
   static aiMesh* extrude2dMesh(const std::vector<glm::vec2>& baseVertices, float height);
   static aiMesh* polygonFromSpline(const std::vector<glm::vec2>& baseVertices, float width);
