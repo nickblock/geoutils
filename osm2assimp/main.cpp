@@ -260,10 +260,9 @@ int main(int argi, char** argc)
       cout << "Failed to write out to '" << outputFile << "'" << endl;
       return 1;
     }
-    else
-    {
-      cout << "No geometry found, nothing to write" << endl;
-    }
+  }
+  else {
+    cout << "No geometry found, nothing to write" << endl;
   }
 
   double elapsed = (std::clock() - start)/(double)CLOCKS_PER_SEC; 
