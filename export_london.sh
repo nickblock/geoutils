@@ -18,7 +18,7 @@ echo "input $1, output $2, level $3"
 inputFiles=""
 num=0
 for filename in $2/*; do
-  # coords=`s2util $filename | sed 's/ //g'`
+  # coords=`s2util --c $filename`
   # geomFile=`echo $filename | sed s/\.osm/\.obj/`
   inputFiles="$inputFiles,$filename"
   let num=num+1

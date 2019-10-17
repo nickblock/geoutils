@@ -18,7 +18,19 @@ public:
     };
 
     return {0.0,0.0};
+  }
 
+  static uint64_t getParent(uint64_t id)
+  {
+    const S2CellId cellId(id);
+
+    if(cellId.is_valid()) 
+    {
+      S2CellId parent = cellId.parent();
+
+      return parent.id();
+    }
+    return 0;
   }
 
   static uint64_t getS2IdFromString(std::string str)

@@ -10,11 +10,13 @@ using std::cerr;
 
 int main(int argi, char** argv)
 {
-  args::ArgumentParser  parser("s2util. Return coordinates of teh center of an s2 cell.");
+  args::ArgumentParser  parser("s2util. Return coordinates of the center of an s2 cell.");
   args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
 
   args::Positional<string>  inputS2Cell(parser, "0x0", "Enter a string containing an 8 digit hex number representing a valid s2 cell id");
-
+  args::Flag gpsArg(parser, "GPS Coordinates", "Returns center of S2 cell as Lat Lng", {"c"});
+  args::Flag parentArg(parser, "Parent Id", "Returns parent cell id of input cell", {"p"});
+  
   try
   {
       parser.ParseCLI(argi, argv);
@@ -25,7 +27,7 @@ int main(int argi, char** argv)
       std::exit(1);
   }
 
-  if(args::get(inputS2Cell).size() == 0) {
+  if(args::get(inputS2Cell).size() == 0 || !(gpsArg || parentArg)) {
     
       std::cout << parser;
       std::exit(1); 
@@ -44,13 +46,23 @@ int main(int argi, char** argv)
 
     if(cellId.is_valid()) {
 
-      auto cellCenter = S2Util::getS2Center(number);
-        
-      cout << std::get<0>(cellCenter) << ", " << std::get<1>(cellCenter) << endl;
+      if(gpsArg)
+      {
+        auto cellCenter = S2Util::getS2Center(number);
+          
+        cout << std::get<0>(cellCenter) << "," << std::get<1>(cellCenter) << " ";
+      }
+
+      if(parentArg) {
+        uint64_t parentId = S2Util::getParent(number);
+
+        cout << std::hex << parentId << " ";
+      }
     }
     else {
       std::cerr << "Invalid cell Id (" << number << ")" << endl;
     }
+
   }
   catch (const std::exception& ex) {
     std::cerr << "Couldn't decode input as hex number. " << ex.what() << endl;
