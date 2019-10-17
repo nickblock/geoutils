@@ -24,3 +24,7 @@ cd into into it and build with cmake
 On systems that dont have c++ filesystem (MacOS), you need to avoid one of the tools:
 
 `cmake -DBUILD_OSMSPLIT=OFF ..`
+
+## Convert OSM to obj
+
+`osm2assimp -i example.osm -o example.obj`
