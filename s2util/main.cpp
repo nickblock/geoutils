@@ -45,9 +45,9 @@ int main(int argi, char** argv)
     const S2CellId cellId(number);
 
     if(cellId.is_valid()) {
-
-      if(gpsArg)
-      {
+      
+      if(gpsArg) {
+        
         auto cellCenter = S2Util::getS2Center(number);
           
         cout << std::get<0>(cellCenter) << "," << std::get<1>(cellCenter) << " ";
