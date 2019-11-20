@@ -159,23 +159,29 @@ option(BUILD_OSMSPLIT "Build osmsplit" ON)
 
 if(BUILD_OSMSPLIT)
 
-      add_executable(osmsplit
-            osmsplit/main.cpp 
+      add_library(osmsplitlib STATIC
             osmsplit/osmsplitconfig.cpp 
-            osmsplit/osmsplitwriter.cpp)
+            osmsplit/osmsplitwriter.cpp )
 
-      target_include_directories(osmsplit PUBLIC ext/libosmium/include )
-      target_include_directories(osmsplit PUBLIC ext/protozero/include)
-      target_include_directories(osmsplit PUBLIC ext/rapidjson/include )
-      target_include_directories(osmsplit PUBLIC ext/pnghpp )
-      target_include_directories(osmsplit PUBLIC ext )
+      add_executable(osmsplit
+            osmsplit/main.cpp )
+
+      set(OSMSPLIT_INCLUDES
+            ext/libosmium/include 
+            ext/protozero/include
+            ext/rapidjson/include 
+            ext/pnghpp 
+            ext )
+
+      target_include_directories(osmsplitlib PUBLIC ${OSMSPLIT_INCLUDES} )
+      target_include_directories(osmsplit PUBLIC ${OSMSPLIT_INCLUDES})
 
       if(MACOSX)
             target_include_directories(osmsplit PUBLIC /usr/local/include )
             link_directories(/usr/local/lib)
-            target_link_libraries(osmsplit PUBLIC pthread bz2 z expat png)
+            target_link_libraries(osmsplit PUBLIC osmsplitlib pthread bz2 z expat png)
       else()
-            target_link_libraries(osmsplit PUBLIC pthread stdc++fs bz2 z expat png)
+            target_link_libraries(osmsplit PUBLIC osmsplitlib pthread stdc++fs bz2 z expat png)
       endif()
 endif()
 
