@@ -16,6 +16,8 @@ endif()
 
 option(BUILD_OSMS2SPLIT "Build osms2split" ON)
 
+add_subdirectory(ext/geos)
+
 if(BUILD_OSMS2SPLIT)
 
       add_library(s2 STATIC
