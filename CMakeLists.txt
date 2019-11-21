@@ -16,8 +16,6 @@ endif()
 
 option(BUILD_OSMS2SPLIT "Build osms2split" ON)
 
-add_subdirectory(ext/geos)
-
 if(BUILD_OSMS2SPLIT)
 
       add_library(s2 STATIC
@@ -239,7 +237,7 @@ if(BUILD_OSM2ASSIMP)
                   bz2 z expat pthread gfxpoly s2)
             target_include_directories(osm2assimp PUBLIC /usr/local/include )
       else()
-            target_link_libraries(osm2assimp PUBLIC assimp bz2 z expat pthread gfxpoly geos s2)
+            target_link_libraries(osm2assimp PUBLIC assimp bz2 z expat pthread gfxpoly s2)
       endif()
 
 endif()

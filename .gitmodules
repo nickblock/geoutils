@@ -22,6 +22,3 @@
 [submodule "ext/glm"]
 	path = ext/glm
 	url = git@github.com:g-truc/glm.git
-[submodule "ext/geos"]
-	path = ext/geos
-	url = https://github.com/nickblock/geos.git
