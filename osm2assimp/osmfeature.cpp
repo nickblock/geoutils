@@ -96,80 +96,22 @@ OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool findN
       mType = WATER;
     }
 
-    if(mType != UNDEFINED && way.nodes().ends_have_same_id() && way.nodes().size() > 3) {
-      
+    if(way.nodes().ends_have_same_id() && way.nodes().size() > 3) {
       mType |= CLOSED;
-
-      try {
-
-        osmium::area::AssemblerConfig area_config;
-        area_config.ignore_invalid_locations = true;
-        osmium::area::GeomAssembler assembler{area_config};
-        osmium::memory::Buffer out_buffer{2048};
-
-        if (!assembler(way, out_buffer)) {
-            mValid = false;
-        }
-
-        osmium::geom::GEOSFactory<EngineBlock::CenterEarthFixedConvert> factory;
-          
-        const auto& area = out_buffer.get<osmium::Area>(0);
-
-        //check for undefined items
-        for (const auto& item : area) {
-          if(item.type() == osmium::item_type::undefined) {
-            cout << "Ignoring id " << mName << endl;
-            mValid = false;
-            return;
-          }
-        }
-
-        const std::unique_ptr<geos::geom::MultiPolygon> mp{factory.create_multipolygon(area)};
-        
-        if(mp->getNumGeometries()) {
-
-          const geos::geom::Polygon* p0 = dynamic_cast<const geos::geom::Polygon*>(mp->getGeometryN(0));
-          const geos::geom::LineString* l0e = p0->getExteriorRing();
-          for(int i=0; i<l0e->getNumPoints(); i++) {
-            const auto l0e_p0 = std::unique_ptr<geos::geom::Point>(l0e->getPointN(i));
-
-            osmium::geom::Coordinates c{l0e_p0->getX(), l0e_p0->getY()};
-
-            glm::vec2 coord(c.x - ref.x, c.y - ref.y);
-
-            worldCoords.push_back(coord);
-          }
-        }
-      }
-      catch(osmium::geometry_error) {
-
-        mValid = false;
-
-        cout << "Geom Failed " << mName << endl;
-      }
     }
-    else {
-      
-      if(way.nodes().ends_have_same_id()) {
-      
-        mType |= CLOSED;
-      }
-      for(auto& node : way.nodes()) {
 
-        const osmium::Location& location = node.location();
+    for(auto node : way.nodes()) {
 
-        if(!location.valid()) {
-          mValid = false;
-          cout << "Locator Failed " << mName << endl;
-          break; 
-        }
+      osmium::geom::Coordinates c = EngineBlock::CenterEarthFixedConvert::to_coords(node.location());
 
-        const osmium::geom::Coordinates c = EngineBlock::CenterEarthFixedConvert::to_coords(location);
+      glm::vec2 coord(c.x - ref.x, c.y - ref.y);
 
-        glm::vec2 coord(c.x - ref.x, c.y - ref.y);
+      worldCoords.push_back(coord);
+    }
 
-        worldCoords.push_back(coord);
-      }
+    if(worldCoords.size() == 0) {
+      mValid = false;
+      cout << "No valid points found " << mName << endl;
     }
 
   } catch (std::out_of_range) {
