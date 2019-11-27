@@ -7,7 +7,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(MACOSX TRUE)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRAPIDJSON_HAS_STDSTRING=1 -std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRAPIDJSON_HAS_STDSTRING=1 -DGLM_FORCE_RADIANS=1 -std=c++14")
 
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -217,6 +217,7 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp/main.cpp
             osm2assimp/osmdata.cpp
             osm2assimp/osmfeature.cpp
+            osm2assimp/geomconvert.cpp
             ext/common.cpp)
 
       target_include_directories(osm2assimp PUBLIC 

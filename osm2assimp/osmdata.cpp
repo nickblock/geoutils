@@ -1,5 +1,6 @@
 #include "osmdata.h"
 #include "assimp_construct.h"
+#include "geomconvert.h"
 #include <iostream>
 #include <algorithm>
 
@@ -122,11 +123,11 @@ void OSMDataImport::process(const OSMFeature& feature)
     }
     else if(feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) && feature.type() & OSMFeature::CLOSED) {
         
-      mesh = AssimpConstruct::extrude2dMesh(feature.coords(), feature.height()); 
+      mesh = GeomConvert::extrude2dMesh(feature.coords(), feature.height()); 
     }
     else if(feature.type() & OSMFeature::HIGHWAY & mFilter) {
       
-      mesh = AssimpConstruct::polygonFromSpline(feature.coords(), 3.0);
+      mesh = GeomConvert::polygonFromSpline(feature.coords(), 3.0);
     }
     if(mesh) {
 

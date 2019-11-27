@@ -27,20 +27,12 @@ public:
     return mMeshes.size();
   }
 
-
-  static aiMesh* extrude2dMesh(const std::vector<glm::vec2>& baseVertices, float height);
-  static aiMesh* polygonFromSpline(const std::vector<glm::vec2>& baseVertices, float width);
-
   void setConsolidateMesh(bool mega);
-  void setZUp(bool zup);
   
 protected:
   void buildMultipleMeshes(aiScene*);
   void buildMegaMesh(aiScene*);
   void addLocatorsToScene(aiScene*);
-
-  static glm::vec3 upNormal();
-  static glm::vec3 posFromLoc(double lon, double lat, double height);
 
   struct Material {
     std::string mName;

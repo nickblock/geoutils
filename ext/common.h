@@ -1,7 +1,6 @@
 #ifndef __EB_COMMON_H__
 #define __EB_COMMON_H__
 
-#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/vec3.hpp>
 #include <rapidjson/document.h>

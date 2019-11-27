@@ -1,6 +1,7 @@
 #include "../args.hxx"
 #include "../tinyformat.h"
 #include "assimp_construct.h"
+#include "geomconvert.h"
 #include "common_geo.h"
 #include "osmdata.h"
 #include "centerearthfixedconvert.h"
@@ -128,7 +129,7 @@ int main(int argi, char** argc)
   }
 
   if(exportZUpArg) {
-    assimpConstruct.setZUp(true);
+    GeomConvert::zUp = true;
   }
 
   string outputFile = args::get(outputFileArg);
@@ -168,19 +169,6 @@ int main(int argi, char** argc)
       cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
       std::exit(1);
     }
-  }
-
-  if(args::get(inputFileArg) == "test") {
-
-    vector<glm::vec2> verts(4);
-    verts[0]= glm::vec2(-10, -10);
-    verts[1]= glm::vec2(-10, 10);
-    verts[2]= glm::vec2(10, 10);
-    verts[3]= glm::vec2(10, -10);
-
-    assimpConstruct.addMesh(assimpConstruct.extrude2dMesh(verts, 20.f), "testmesh");
-
-    cout << "added test mesh" << endl;
   }
 
   int shapeLimit = limitArg ? args::get(limitArg) : 0;
