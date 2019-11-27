@@ -48,6 +48,10 @@ private:
   std::unique_ptr<osmium::io::Writer>   getWriterForS2Cell(uint64_t cellId, osmium::io::Header& header);
   std::string                           fileNameOfS2Cell(uint64_t cellId);
 
+  /// <summary>
+  /// This struct keeps the buffer of OSM data for a given S2 cell.
+  /// As more ways are added the SetOfNodeIds keeps track of individual added nodes to ensure duplicates are not added 
+  /// <summary>
   struct S2CellDetails {
     SetOfNodeIds mWrittenNodes;
     osmium::memory::Buffer mBuffer;
