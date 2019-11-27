@@ -12,6 +12,10 @@
 #include <stdint.h>
 
 
+/// <summary>
+/// This class reads each OSM way node in a file and builds a map of S2 cell Ids, which cover each way.
+/// A way may fall into more than one S2 Cell. Each Way in any S2 Cell will copy all it's nodes into that cell.
+/// </summary>
 class S2Splitter : public osmium::handler::Handler {
 
 public:
@@ -21,11 +25,20 @@ public:
   virtual ~S2Splitter();
 
   void setOutputDirectory(const std::string&);
+
+  /// <summary>
+  /// Set output format to xml, otherwise OSM's protobuf binary format is used.
+  /// </summary>
   void setOutputXml(bool xml);
 
-  void way(osmium::Way& way);
+
+  /// <summary>
+  /// If any "keys of interest" are added only ways containing those keys will be imported.
+  /// </summary>
   void setKeyOfInterest(std::string key);
 
+  
+  void way(osmium::Way& way);
   void flush();
 
 private:

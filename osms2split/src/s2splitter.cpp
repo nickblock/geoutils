@@ -87,6 +87,8 @@ std::string S2Splitter::fileNameOfS2Cell(uint64_t cellId)
 void S2Splitter::way(osmium::Way& way)
 {
   bool import = true;
+
+  // first check if there are any KeysOfInterest, and only import the way if it has matching keys 
   if(mKeysOfInterest.size()) {
     import = false;
     for(auto& key : mKeysOfInterest) {
@@ -135,6 +137,7 @@ void S2Splitter::way(osmium::Way& way)
       }
     }
 
+    // write the way to the buffer of data OSM data for the S2 cell
     osmium::builder::add_way(s2CellDetails.mBuffer,
       osmium::builder::attr::_id(way.id()),
       osmium::builder::attr::_tags(way.tags()),
