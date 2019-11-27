@@ -2,15 +2,6 @@
 
 A set of tools for converting Open Street Map data into 3d geometry, also incorporating S2 Cells.
 
-## Deps
-
-geos 3.5.2 (no newer)
-
-http://download.osgeo.org/geos/geos-3.5.2.tar.bz2
-
-build + install 
-
-
 ## Building
 
 In root directory create a build folder
@@ -25,6 +16,18 @@ On systems that dont have c++ filesystem (MacOS), you need to avoid one of the t
 
 `cmake -DBUILD_OSMSPLIT=OFF ..`
 
+## S2 Cell Split
+
+Starting with an osm data file, download an area from https://www.openstreetmap.org/, eg old_street.osm
+
+split the osm file into files comprising of S2 cells by specifying to input file, an output folder and an S2 cell level:
+
+`osms2split -i old_street.osm -o testadata -l 14`
+
+the output folder will now contain a number of osm files for each S2 cell.
+
 ## Convert OSM to obj
+
+convert osm data files into geometry
 
 `osm2assimp -i example.osm -o example.obj`

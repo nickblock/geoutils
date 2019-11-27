@@ -21,12 +21,13 @@
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/osm/way.hpp>
+
 using index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
 using namespace std;
 
-osmium::Box osmiumBox(string extentsStr)
+osmium::Box osmiumBoxFromString(string extentsStr)
 {
   osmium::Box box;
 
@@ -150,7 +151,7 @@ int main(int argi, char** argc)
 
       string extentsStr = args::get(extentsArg);
 
-      box = osmiumBox(extentsStr);
+      box = osmiumBoxFromString(extentsStr);
     }
     catch(std::invalid_argument) {
       cout << "Failed to parse extents string '" << args::get(extentsArg) << "'" << endl;
@@ -171,8 +172,6 @@ int main(int argi, char** argc)
       std::exit(1);
     }
   }
-
-  int shapeLimit = limitArg ? args::get(limitArg) : 0;
 
   vector<string> inputFiles = getInputFiles(args::get(inputFileArg));
 
@@ -202,7 +201,7 @@ int main(int argi, char** argc)
       OSMDataImport osmReader(assimpConstruct, box, filter);
 
       //spacial case: if the filename correlates to an S2 cell we use that as the relative center point of the file,
-      // create a locator as teh center of the s2 cell - this requires an global ref point to be set
+      // create a locator as the center of the s2 cell - this requires the global ref point to be set
       uint64_t s2cellId = S2Util::getS2IdFromString(inputFile);
       if(s2cellId > 0) {
 
