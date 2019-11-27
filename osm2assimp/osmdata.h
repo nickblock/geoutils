@@ -4,7 +4,6 @@
 #include <string>
 #include <map>
 #include <vector>
-#include "common_geo.h"
 #include "osmfeature.h"
 #include <osmium/handler.hpp>
 

@@ -1,10 +1,12 @@
 #ifndef ASSIMP_CONSTRUCT_H
 #define ASSIMP_CONSTRUCT_H
 
-#include "common_geo.h"
 #include "assimp/scene.h"
 #include <assimp/Exporter.hpp>
 #include <assimp/postprocess.h>
+
+#include <glm/glm.hpp>
+#include <glm/vec3.hpp>
 
 #include <vector>
 #include <map>

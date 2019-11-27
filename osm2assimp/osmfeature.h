@@ -1,6 +1,16 @@
+#pragma once
+
 #include <vector>
 #include <string>
-#include "common_geo.h"
+
+#include <osmium/geom/coordinates.hpp>
+#include <osmium/osm/way.hpp>
+#include <osmium/osm/node.hpp>
+
+#include <glm/glm.hpp>
+#include <glm/vec3.hpp>
+
+using WorldCoord = osmium::geom::Coordinates;
 
 // <summary>
 // A class to hold the the 2d points of a single OSM feature,

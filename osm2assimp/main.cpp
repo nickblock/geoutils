@@ -2,7 +2,6 @@
 #include "../tinyformat.h"
 #include "assimp_construct.h"
 #include "geomconvert.h"
-#include "common_geo.h"
 #include "osmdata.h"
 #include "centerearthfixedconvert.h"
 #include "s2util.h"
@@ -20,6 +19,8 @@
 #include <osmium/index/map/dense_file_array.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <osmium/geom/mercator_projection.hpp>
+#include <osmium/geom/coordinates.hpp>
+#include <osmium/osm/way.hpp>
 using index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
