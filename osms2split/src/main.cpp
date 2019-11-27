@@ -1,36 +1,9 @@
 
-/*
-
-  EXAMPLE osmium_pub_names
-
-  Show the names and addresses of all pubs found in an OSM file.
-
-  DEMONSTRATES USE OF:
-  * file input
-  * your own handler
-  * access to tags
-
-  SIMPLER EXAMPLES you might want to understand first:
-  * osmium_read
-  * osmium_count
-
-  LICENSE
-  The code in this example file is released into the Public Domain.
-
-*/
-
-#include <cstdlib>  // for std::exit
-#include <cstring>  // for std::strncmp
-#include <iostream> // for std::cout, std::cerr
+#include <iostream>
 #include "args.hxx"
 
-// Allow any format of input files (XML, PBF, ...)
 #include <osmium/io/any_input.hpp>
-
-// We want to use the handler interface
 #include <osmium/handler.hpp>
-
-// For osmium::apply()
 #include <osmium/visitor.hpp>
 
 #include <osmium/index/node_locations_map.hpp>
