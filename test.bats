@@ -1,5 +1,10 @@
 #!/usr/bin/env bats
 
+@test "setup  context" {
+  
+  rm -rf testdata
+}
+
 @test "split test data" {
 
   mkdir -p testdata
@@ -14,4 +19,5 @@
   ./build/osm2assimp -i testdata/old_street0000.osm.pbf -o testdata/old_street0000.osm.obj
 
   [ -f testdata/old_street0000.osm.obj ]
+  [ `grep "Mesh" testdata/old_street0000.osm.obj | wc -l` -eq 48 ]
 }
