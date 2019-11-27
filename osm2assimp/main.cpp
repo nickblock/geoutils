@@ -24,8 +24,6 @@ using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
 using namespace std;
 
-const float buildingFloorHeight = 3.5f;
-
 osmium::Box osmiumBox(string extentsStr)
 {
   osmium::Box box;

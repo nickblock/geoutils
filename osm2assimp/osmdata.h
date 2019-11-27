@@ -15,7 +15,12 @@ namespace xmlpp {
   class Node;
 }
 
+/// <summary>
+/// A class that handles the reading of ways and nodes from an OSM file
+/// Each node or way is converted to an OSMFeature, which is later converted to an Assimp mesh
+/// <summary>
 class OSMDataImport : public osmium::handler::Handler {
+
 public: 
   OSMDataImport(AssimpConstruct& ac, const osmium::Box& extents, int filter = 0xffffffff );
 
@@ -23,12 +28,17 @@ public:
 
   void node(const osmium::Node& node);
 
+  /// <summary>
+  /// Optionally a parent node can be assigned, which all the meshes 
+  /// converted from OSMFeatures will be parented to.
+  /// </summary>
   void setParentAINode(aiNode* node);
 
   int exportCount() {
     return mCount;
   }
-protected:
+
+private:
 
   void process(const OSMFeature& feature);
 

@@ -2,26 +2,59 @@
 #include <string>
 #include "common_geo.h"
 
-struct OSMFeature {
+// <summary>
+// A class to hold the the 2d points of a single OSM feature,
+// typically a building or road.
+// This struct contains all the information needed to be converted into a mesh for Assimp later.   
+// </summary>
+class OSMFeature {
 
+public:
   static const int UNDEFINED = 0;
-  static const int CLOSED = 1;
+
+  // the closed type refers to a collection of nodes that make up an area where the forst and last nodes are the same.
+  // As opposed to a sequence of points making a path or road, a spline.
+  static const int CLOSED = 1; 
   static const int BUILDING = 2;
   static const int WATER = 4;
   static const int HIGHWAY = 8;
   static const int LOCATION = 16;
 
-  OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool findName = false);
-  OSMFeature(const osmium::Node& node, const WorldCoord& ref, bool findName = false);
+  // <summary>
+  // Construct an OSMFeature created from an osmium way; a collection of nodes, eg road or building
+  // <summary>
+  OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool getNameFromOSM = false);
 
-  int Type() const { return mType; }
+  // <summary>
+  // Construct an OSMFeature created from a single node; eg a location or landmark
+  // <summary>
+  OSMFeature(const osmium::Node& node, const WorldCoord& ref, bool getNameFromOSM = false);
+
+  int type() const { return mType; }
+
+  bool isValid() const { return mValid; }
+
+  float height() const { return mHeight; }
+
+  std::string name() const { return mName; }
+
+  const std::vector<glm::vec2>& coords() const {
+    return mWorldCoords;
+  } 
+
+  static int DefaultNumberOfFloors;
+  static float BuildingFloorHeight;
+
+private:
+
+  float determineHeightFromWay(const osmium::Way& way);
+  std::string getNameFromWay(const osmium::Way& way); 
+  int determineTypeFromWay(const osmium::Way& way);
 
   int mType;
   float mHeight;
-  int mFloors;
-  std::string mMaterial;
   std::string mName;
-  std::vector<glm::vec2> worldCoords;
+  std::vector<glm::vec2> mWorldCoords;
   bool mValid;
 };
   

@@ -10,8 +10,6 @@
 #include "glm/glm.hpp"  
 #include "glm/gtc/constants.hpp"  
 
-extern const float buildingFloorHeight;
-
 using WorldCoord = osmium::geom::Coordinates;
 
 struct Extents {

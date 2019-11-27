@@ -58,7 +58,7 @@ void OSMDataImport::way(const osmium::Way& way)
 
     OSMFeature feature(way, mRefPoint);
 
-    if(feature.mValid) {
+    if(feature.isValid()) {
       
       process(feature);
     }
@@ -108,41 +108,41 @@ void OSMDataImport::process(const OSMFeature& feature)
 
     aiMesh* mesh = nullptr;
 
-    if(feature.mType & OSMFeature::LOCATION & mFilter ) 
+    if(feature.type() & OSMFeature::LOCATION & mFilter ) 
     {
       aiNode* locatorNode = new aiNode;
 
-      glm::vec2 glm_pos = feature.worldCoords[0];
+      glm::vec2 glm_pos = feature.coords()[0];
       aiVector3t<float> asm_pos(glm_pos.x, glm_pos.y, 0.0f);
       aiMatrix4x4t<float>::Translation(asm_pos, locatorNode->mTransformation);
 
-      locatorNode->mName.Set(feature.mName);
+      locatorNode->mName.Set(feature.name());
 
       mAssimpConstruct.addLocator(locatorNode);
     }
-    else if(feature.mType & (OSMFeature::BUILDING | OSMFeature::WATER) && feature.mType & OSMFeature::CLOSED) {
+    else if(feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) && feature.type() & OSMFeature::CLOSED) {
         
-      mesh = AssimpConstruct::extrude2dMesh(feature.worldCoords, feature.mHeight); 
+      mesh = AssimpConstruct::extrude2dMesh(feature.coords(), feature.height()); 
     }
-    else if(feature.mType & OSMFeature::HIGHWAY & mFilter) {
+    else if(feature.type() & OSMFeature::HIGHWAY & mFilter) {
       
-      mesh = AssimpConstruct::polygonFromSpline(feature.worldCoords, 3.0);
+      mesh = AssimpConstruct::polygonFromSpline(feature.coords(), 3.0);
     }
     if(mesh) {
 
-      glm::vec3 color = glm::vec3(0.5); 
-      const auto& colIter = mMatColors.find(feature.mMaterial);
-      if(colIter != mMatColors.end()) {
-        color = colIter->second;
+      string materialName = "default";
+
+      if(feature.type() == OSMFeature::BUILDING) {
+        materialName = "building";
       }
 
       if(mesh->mNumFaces == 0 || mesh->mFaces[0].mNumIndices == 0) {
         return;
       }
 
-      mesh->mMaterialIndex = mAssimpConstruct.addMaterial(feature.mMaterial, color); 
+      mesh->mMaterialIndex = mAssimpConstruct.addMaterial(materialName, mMatColors[materialName]); 
 
-      string nameSanitize = feature.mName;
+      string nameSanitize = feature.name();
       sanitizeName(nameSanitize);
 
       mAssimpConstruct.addMesh(mesh, nameSanitize, mParentNode);
@@ -151,10 +151,10 @@ void OSMDataImport::process(const OSMFeature& feature)
     }
     else {
 
-      if(feature.mType & mFilter) {
+      if(feature.type() & mFilter) {
         static bool failed = true;
         if(failed) {
-          cout << "Failed to import some buildings, eg " << feature.mName << endl;
+          cout << "Failed to import some buildings, eg " << feature.name() << endl;
           failed = false;
         }
       }

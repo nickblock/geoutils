@@ -11,14 +11,39 @@ using std::cout;
 using std::endl;
 using std::string;
 
+int OSMFeature::DefaultNumberOfFloors = 3;
+float OSMFeature::BuildingFloorHeight = 3.5;
 
 std::vector<std::vector<std::string>> NameTags = {
   {"name"}, {"addr:housename"},
   {"addr:housenumber", "addr:street"}
 };
 
+float OSMFeature::determineHeightFromWay(const osmium::Way& way) 
+{
+  float height = BuildingFloorHeight * DefaultNumberOfFloors;
 
-std::string getName(const osmium::Way& way) 
+  if(way.tags().has_key("height")) {
+
+    try {
+      height = std::stof(way.tags()["height"]);
+    }
+    catch(std::invalid_argument) {
+    }
+  }
+  else if(way.tags().has_key("building:levels")) {
+    
+    try {
+      int floors = std::stoi(way.tags()["building:levels"]);
+      height = floors * BuildingFloorHeight;
+    }
+    catch (std::invalid_argument) {
+    }
+  }
+  return height;
+}
+
+std::string OSMFeature::getNameFromWay(const osmium::Way& way) 
 {
   std::string name;
   for(const auto& taglist : NameTags) {
@@ -45,81 +70,55 @@ std::string getName(const osmium::Way& way)
   }
   return name;
 }
-
-OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool findName)
-:mType(UNDEFINED), mHeight(0.f), mFloors(3), mMaterial("default"), mValid(true)
+ 
+int OSMFeature::determineTypeFromWay(const osmium::Way& way)
 {
-  try {
-    
-    if(findName) {
-      mName = getName(way);
-    }
-    else {
-      mName = std::to_string(way.id());
-    }
 
-    bool setHeight = false;
+  int type = UNDEFINED;
 
-    mHeight = buildingFloorHeight * mFloors;
+  if(way.tags().has_key("building")) {
+    type = BUILDING;
+  }
+  else if(way.tags().has_key("highway")) {
+    type = HIGHWAY;
+  }
+  else if(way.tags().has_key("waterway")) {
+    type = WATER;
+  }
 
-    if(way.tags().has_key("height")) {
+  if(way.nodes().ends_have_same_id() && way.nodes().size() > 3) {
+    type |= CLOSED;
+  }
 
-      try {
-        mHeight = std::stof(way.tags()["height"]);
-      }
-      catch(std::invalid_argument) {
+  return type;
+}
 
-       mValid = false; 
-      }
-    }
-    else if(way.tags().has_key("building:levels")) {
-      
-      try {
-        mFloors = std::stoi(way.tags()["building:levels"]);
-      }
-      catch (std::invalid_argument) {
-        mFloors = 1;
-      }
-      
-      mHeight = mFloors * buildingFloorHeight;
-      
-    }
+OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool getNameFromOSM)
+:  
+  mHeight(determineTypeFromWay(way)), 
+  mType(determineTypeFromWay(way)),
+  mValid(true)
+{
+  
+  if(getNameFromOSM) {
+    mName = getNameFromWay(way);
+  }
+  else {
+    mName = std::to_string(way.id());
+  }
 
-    if(way.tags().has_key("building")) {
-      mType = BUILDING;
-      mMaterial = "building";
-    }
-    else if(way.tags().has_key("highway")) {
-      mType = HIGHWAY;
-    }
-    else if(way.tags().has_key("waterway")) {
-      mType = WATER;
-    }
+  for(auto node : way.nodes()) {
 
-    if(way.nodes().ends_have_same_id() && way.nodes().size() > 3) {
-      mType |= CLOSED;
-    }
+    osmium::geom::Coordinates c = EngineBlock::CenterEarthFixedConvert::to_coords(node.location());
 
-    for(auto node : way.nodes()) {
+    glm::vec2 coord(c.x - ref.x, c.y - ref.y);
 
-      osmium::geom::Coordinates c = EngineBlock::CenterEarthFixedConvert::to_coords(node.location());
+    mWorldCoords.push_back(coord);
+  }
 
-      glm::vec2 coord(c.x - ref.x, c.y - ref.y);
-
-      worldCoords.push_back(coord);
-    }
-
-    if(worldCoords.size() == 0) {
-      mValid = false;
-      cout << "No valid points found " << mName << endl;
-    }
-
-  } catch (std::out_of_range) {
-    static bool once = true;
-    if(once) {
-      cout << "Failed to decode certain buildings" << endl;
-      once = false;
-    }
+  if(mWorldCoords.size() == 0) {
+    mValid = false;
+    cout << "No valid points found " << mName << endl;
   }
 }
 
@@ -133,5 +132,5 @@ OSMFeature::OSMFeature(const osmium::Node& node, const WorldCoord& ref, bool fin
 
   glm::vec2 coord(c.x - ref.x, c.y - ref.y);
 
-  worldCoords.push_back(coord);
+  mWorldCoords.push_back(coord);
 }
