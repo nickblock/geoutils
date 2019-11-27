@@ -1,5 +1,4 @@
-#ifndef ASSIMP_CONSTRUCT_H
-#define ASSIMP_CONSTRUCT_H
+#pragma once
 
 #include "assimp/scene.h"
 #include <assimp/Exporter.hpp>
@@ -57,4 +56,3 @@ protected:
   bool mMegaMesh;
   static bool mZUp;
 };
-#endif

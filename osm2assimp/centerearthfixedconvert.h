@@ -1,4 +1,4 @@
-
+#pragma once
 
 #include <osmium/geom/coordinates.hpp>
 

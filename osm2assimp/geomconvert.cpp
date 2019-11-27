@@ -165,11 +165,12 @@ aiMesh* GeomConvert::polygonFromSpline(const std::vector<glm::vec2>& vertices, f
   return nullptr;
 }
 
-typedef std::pair<glm::vec2, glm::vec2> Edge;
-typedef std::vector<Edge> EdgeList; 
 
 aiMesh* GeomConvert::extrude2dMesh(const vector<glm::vec2>& in_vertices, float height)
 {
+  using Edge = std::pair<glm::vec2, glm::vec2>;
+  using EdgeList = std::vector<Edge>; 
+  
   vector<glm::vec2> baseVertices;
 
   bool begin_eq_end = in_vertices[0] == in_vertices[in_vertices.size()-1];

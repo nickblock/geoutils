@@ -1,5 +1,4 @@
-#ifndef OSM_DATA_H
-#define OSM_DATA_H
+#pragma once
 
 #include <string>
 #include <map>
@@ -50,4 +49,3 @@ private:
   AssimpConstruct& mAssimpConstruct;
   aiNode* mParentNode;
 };
-#endif
