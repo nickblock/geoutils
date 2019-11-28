@@ -5,7 +5,7 @@
 
 #include <sstream>
 
-#include "centerearthfixedconvert.h"
+#include "convertlatlng.h"
 
 using std::cout;
 using std::endl;
@@ -93,7 +93,7 @@ int OSMFeature::determineTypeFromWay(const osmium::Way& way)
   return type;
 }
 
-OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool getNameFromOSM)
+OSMFeature::OSMFeature(const osmium::Way& way, bool getNameFromOSM)
 :  
   mHeight(determineTypeFromWay(way)), 
   mType(determineTypeFromWay(way)),
@@ -109,9 +109,9 @@ OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool getNa
 
   for(auto node : way.nodes()) {
 
-    osmium::geom::Coordinates c = EngineBlock::CenterEarthFixedConvert::to_coords(node.location());
+    osmium::geom::Coordinates c = EngineBlock::ConvertLatLngToCoords::to_coords(node.location());
 
-    glm::vec2 coord(c.x - ref.x, c.y - ref.y);
+    glm::vec2 coord(c.x, c.y);
 
     mWorldCoords.push_back(coord);
   }
@@ -123,14 +123,14 @@ OSMFeature::OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool getNa
 }
 
 
-OSMFeature::OSMFeature(const osmium::Node& node, const WorldCoord& ref, bool findName)
+OSMFeature::OSMFeature(const osmium::Node& node, bool findName)
 
 : mType(LOCATION), mValid(true)
 
 {
-  const osmium::geom::Coordinates c = EngineBlock::CenterEarthFixedConvert::to_coords(node.location());
+  const osmium::geom::Coordinates c = EngineBlock::ConvertLatLngToCoords::to_coords(node.location());
 
-  glm::vec2 coord(c.x - ref.x, c.y - ref.y);
+  glm::vec2 coord(c.x, c.y);
 
   mWorldCoords.push_back(coord);
 }

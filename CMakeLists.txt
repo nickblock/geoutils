@@ -212,7 +212,7 @@ if(BUILD_OSM2ASSIMP)
 
       add_executable(osm2assimp
             osm2assimp/assimp_construct.cpp
-            osm2assimp/centerearthfixedconvert.cpp
+            osm2assimp/convertlatlng.cpp
             osm2assimp/eigenconversion.cpp
             osm2assimp/main.cpp
             osm2assimp/osmdata.cpp

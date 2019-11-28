@@ -43,7 +43,6 @@ private:
   int mCount;
   int mFilter;
   const osmium::Box& mExtents;
-  WorldCoord mRefPoint;
   std::map<std::string, glm::vec3>  mMatColors;
   std::vector<OSMFeature> mFeatures;
   AssimpConstruct& mAssimpConstruct;

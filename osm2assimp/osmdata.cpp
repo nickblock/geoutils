@@ -15,7 +15,7 @@
 #include <osmium/geom/geos.hpp>
 #include <osmium/area/geom_assembler.hpp>
 
-#include "centerearthfixedconvert.h"
+#include "convertlatlng.h"
 
 #include "common.h"
 
@@ -28,7 +28,6 @@ using std::map;
 OSMDataImport::OSMDataImport(AssimpConstruct& ac, const osmium::Box& extents, int filter )
 : mCount(0), 
   mExtents(extents),
-  mRefPoint(EngineBlock::CenterEarthFixedConvert::to_coords(EngineBlock::CenterEarthFixedConvert::refPoint)),
   mAssimpConstruct(ac),
   mFilter(filter),
   mParentNode(nullptr)
@@ -57,7 +56,7 @@ void OSMDataImport::way(const osmium::Way& way)
 {
   if(!mExtents.valid() || wayInBox(way, mExtents)) {
 
-    OSMFeature feature(way, mRefPoint);
+    OSMFeature feature(way);
 
     if(feature.isValid()) {
       
@@ -85,7 +84,14 @@ void OSMDataImport::node(const osmium::Node& node)
     }
 
     if(saveIt) {
-      OSMFeature(node, mRefPoint);
+      
+      OSMFeature feature(node);
+      
+      if(feature.isValid()) {
+        
+        process(feature);
+      }
+
     }
   }
 }

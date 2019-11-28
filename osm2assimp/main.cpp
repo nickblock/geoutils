@@ -3,7 +3,7 @@
 #include "assimp_construct.h"
 #include "geomconvert.h"
 #include "osmdata.h"
-#include "centerearthfixedconvert.h"
+#include "convertlatlng.h"
 #include "s2util.h"
 
 #include <string.h>
@@ -165,7 +165,7 @@ int main(int argi, char** argc)
     try {
 
       globalRefPoint = refPointFromArg(args::get(refPointArg));
-      EngineBlock::CenterEarthFixedConvert::refPoint = globalRefPoint;
+      EngineBlock::ConvertLatLngToCoords::RefPoint = globalRefPoint;
     }
     catch(std::invalid_argument) {
       cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
@@ -212,14 +212,14 @@ int main(int argi, char** argc)
           exit(1); 
         }
 
-        EngineBlock::CenterEarthFixedConvert::refPoint = globalRefPoint;
+        EngineBlock::ConvertLatLngToCoords::RefPoint = globalRefPoint;
 
         S2Util::LatLng latLng = S2Util::getS2Center(s2cellId);    
         osmium::Location s2CellCenterLocation = osmium::Location(std::get<1>(latLng), std::get<0>(latLng));
 
         //the coords are given relative to the globalRefPoint
-        const osmium::geom::Coordinates s2CellCenterCoord = EngineBlock::CenterEarthFixedConvert::to_coords(s2CellCenterLocation);
-        EngineBlock::CenterEarthFixedConvert::refPoint = s2CellCenterLocation;
+        const osmium::geom::Coordinates s2CellCenterCoord = EngineBlock::ConvertLatLngToCoords::to_coords(s2CellCenterLocation);
+        EngineBlock::ConvertLatLngToCoords::RefPoint = s2CellCenterLocation;
 
         aiNode* s2CellParentAINode = new aiNode(std::to_string(s2cellId));
 
@@ -230,7 +230,7 @@ int main(int argi, char** argc)
       }
       else {
         if(!globalRefPoint) {
-          EngineBlock::CenterEarthFixedConvert::refPoint = box.bottom_left();
+          EngineBlock::ConvertLatLngToCoords::RefPoint = box.bottom_left();
         }
       }
 

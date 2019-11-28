@@ -22,7 +22,7 @@ class OSMFeature {
 public:
   static const int UNDEFINED = 0;
 
-  // the closed type refers to a collection of nodes that make up an area where the forst and last nodes are the same.
+  // the closed type refers to a collection of nodes that make up an area where the first and last nodes are the same.
   // As opposed to a sequence of points making a path or road, a spline.
   static const int CLOSED = 1; 
   static const int BUILDING = 2;
@@ -33,12 +33,12 @@ public:
   // <summary>
   // Construct an OSMFeature created from an osmium way; a collection of nodes, eg road or building
   // <summary>
-  OSMFeature(const osmium::Way& way, const WorldCoord& ref, bool getNameFromOSM = false);
+  OSMFeature(const osmium::Way& way, bool getNameFromOSM = false);
 
   // <summary>
   // Construct an OSMFeature created from a single node; eg a location or landmark
   // <summary>
-  OSMFeature(const osmium::Node& node, const WorldCoord& ref, bool getNameFromOSM = false);
+  OSMFeature(const osmium::Node& node, bool getNameFromOSM = false);
 
   int type() const { return mType; }
 
