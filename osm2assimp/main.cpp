@@ -34,6 +34,7 @@ using GeoUtils::OSMDataImport;
 using GeoUtils::AssimpConstruct;
 using GeoUtils::GeomConvert;
 using GeoUtils::OSMFeature;
+using GeoUtils::S2Util;
 
 osmium::Box osmiumBoxFromString(string extentsStr)
 {

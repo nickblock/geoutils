@@ -5,6 +5,8 @@
 #include "s2/s2cell_id.h"
 #include <tuple>
 
+namespace GeoUtils {
+
 class S2Util {
 public:
   using LatLng = std::tuple<double, double>;
@@ -55,3 +57,5 @@ public:
     return id;
   }
 };
+
+}

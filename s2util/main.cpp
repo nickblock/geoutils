@@ -8,6 +8,8 @@ using std::cout;
 using std::endl;
 using std::cerr;
 
+using GeoUtils::S2Util;
+
 int main(int argi, char** argv)
 {
   args::ArgumentParser  parser("s2util. Return coordinates of the center of an s2 cell.");
