@@ -12,6 +12,8 @@
 #include <stdint.h>
 
 
+namespace GeoUtils {
+
 /// <summary>
 /// This class reads each OSM way node in a file and builds a map of S2 cell Ids, which cover each way.
 /// A way may fall into more than one S2 Cell. Each Way in any S2 Cell will copy all it's nodes into that cell.
@@ -69,3 +71,5 @@ private:
   std::vector<std::string> mKeysOfInterest;
 
 };
+
+}

@@ -11,7 +11,7 @@
 #include <mutex>
 #include <utility>
 
-namespace EngineBlock {
+namespace GeoUtils {
 
 class OSMSplitConfig;
 

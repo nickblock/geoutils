@@ -10,6 +10,8 @@
 
 #include <sstream>
 
+namespace GeoUtils {
+
 S2Splitter::S2Splitter(int s2Level)
 : mS2Level(s2Level) 
 {
@@ -146,3 +148,4 @@ void S2Splitter::way(osmium::Way& way)
   }
 }
 
+}

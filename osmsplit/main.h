@@ -63,13 +63,13 @@ struct SplitOptions {
 void processOSMFile(
             std::string inputFile, 
             std::string outDir, 
-            EngineBlock::OSMSplitConfigPtr& config, 
+            GeoUtils::OSMSplitConfigPtr& config, 
             SplitOptions options);
 
 void processConfigFile(
             std::string inputFile, 
             std::string outDir, 
-            EngineBlock::OSMSplitConfigPtr& config, 
+            GeoUtils::OSMSplitConfigPtr& config, 
             SplitOptions options);
 
 #endif

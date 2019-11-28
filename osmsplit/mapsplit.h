@@ -15,7 +15,7 @@
 
 using location_handler_type = osmium::handler::NodeLocationsForWays<NodeLocatorMap>;
 
-namespace EngineBlock {
+namespace GeoUtils {
 
 template<typename T, unsigned int D>
 struct MapSplit {

@@ -8,7 +8,7 @@ using std::endl;
 using std::make_shared;
 
 
-namespace EngineBlock {
+namespace GeoUtils {
 
 void printBox(const osmium::Box& box) {
   cout << "min " << box.bottom_left().lat() << "," << box.bottom_left().lon() << " max " << box.top_right().lat() << ", " << box.top_right().lon(); 

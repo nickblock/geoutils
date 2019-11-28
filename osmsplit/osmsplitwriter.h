@@ -14,8 +14,7 @@
 #include "main.h"
 #include "osmsplitconfig.h"
 
-namespace EngineBlock {
-
+namespace GeoUtils {
 
 class OSMSplitWriter {
 

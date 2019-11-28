@@ -33,11 +33,11 @@ using std::vector;
 using std::set;
 using std::ofstream;
 
-using EngineBlock::MapHandler;
-using EngineBlock::OSMSplitWriter;
-using EngineBlock::OSMSplitConfigPtr;
-using EngineBlock::OSMSplitConfig;
-using EngineBlock::OSMConfigList;
+using GeoUtils::MapHandler;
+using GeoUtils::OSMSplitWriter;
+using GeoUtils::OSMSplitConfigPtr;
+using GeoUtils::OSMSplitConfig;
+using GeoUtils::OSMConfigList;
 
 namespace fs = std::experimental::filesystem;
 

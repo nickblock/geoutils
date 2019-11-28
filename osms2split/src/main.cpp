@@ -22,6 +22,8 @@ using std::vector;
 using NodeLocatorMap = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<NodeLocatorMap>;
 
+using GeoUtils::S2Splitter;
+
 vector<string> getKeysOfInterest(string input)
 {
   std::vector<std::string> tokens;

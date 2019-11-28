@@ -13,9 +13,7 @@ using std::endl;
 
 namespace fs = std::experimental::filesystem;
 
-namespace EngineBlock {
-
-
+namespace GeoUtils {
 
 OSMSplitWriter::LockWriter::LockWriter(std::string outFilePath, osmium::io::Header& header) {
 
