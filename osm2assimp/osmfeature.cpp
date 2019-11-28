@@ -109,7 +109,7 @@ OSMFeature::OSMFeature(const osmium::Way& way, bool getNameFromOSM)
 
   for(auto node : way.nodes()) {
 
-    osmium::geom::Coordinates c = EngineBlock::ConvertLatLngToCoords::to_coords(node.location());
+    osmium::geom::Coordinates c = ConvertLatLngToCoords::to_coords(node.location());
 
     glm::vec2 coord(c.x, c.y);
 
@@ -128,7 +128,7 @@ OSMFeature::OSMFeature(const osmium::Node& node, bool findName)
 : mType(LOCATION), mValid(true)
 
 {
-  const osmium::geom::Coordinates c = EngineBlock::ConvertLatLngToCoords::to_coords(node.location());
+  const osmium::geom::Coordinates c = ConvertLatLngToCoords::to_coords(node.location());
 
   glm::vec2 coord(c.x, c.y);
 
