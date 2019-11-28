@@ -214,9 +214,16 @@ int main(int argi, char** argc)
 
       OSMDataImport osmReader(assimpConstruct, box, filter);
 
-      //spacial case: if the filename correlates to an S2 cell we use that as the relative center point of the file,
+      //special case: if the filename correlates to an S2 cell we use that as the relative center point of the file,
       // create a locator as the center of the s2 cell - this requires the global ref point to be set
-      uint64_t s2cellId = S2Util::getS2IdFromString(inputFile);
+      uint64_t s2cellId = 0;
+      try {
+        s2cellId = S2Util::getS2IdFromString(inputFile);
+      }
+      catch(const std::exception&) {
+        //not an s2 cell
+      }
+
       if(s2cellId > 0) {
 
         cout << "Using S2 cell as origin" << endl;
