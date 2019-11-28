@@ -15,7 +15,7 @@ int main(int argi, char** argv)
   args::ArgumentParser  parser("s2util. Return coordinates of the center of an s2 cell.");
   args::HelpFlag help(parser, "help", "Display this help menu", {'h', "help"});
 
-  args::Positional<string>  inputS2Cell(parser, "0x0", "Enter a string containing an 8 digit hex number representing a valid s2 cell id");
+  args::Positional<string>  inputS2Cell(parser, "0x0", "Enter a string containing an 16 digit hex number representing a valid s2 cell id");
   args::Flag gpsArg(parser, "GPS Coordinates", "Returns center of S2 cell as Lat Lng", {"c"});
   args::Flag parentArg(parser, "Parent Id", "Returns parent cell id of input cell", {"p"});
   
