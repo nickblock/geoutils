@@ -211,7 +211,7 @@ if(BUILD_OSM2ASSIMP)
             ext/s2geometry/src)
 
       add_executable(osm2assimp
-            osm2assimp/assimp_construct.cpp
+            osm2assimp/assimpconstruct.cpp
             osm2assimp/convertlatlng.cpp
             osm2assimp/eigenconversion.cpp
             osm2assimp/main.cpp
