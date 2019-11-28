@@ -7,9 +7,15 @@
 
 namespace GeoUtils {
 
+/// <summary>
+/// A class exposing some useful functions concerning s2 cells 
+/// </summary>
 class S2Util {
+
 public:
+  
   using LatLng = std::tuple<double, double>;
+  
   static LatLng getS2Center(uint64_t id)
   {
     const S2CellId cellId(id);
@@ -42,17 +48,10 @@ public:
     std::regex_match (str, res, reg);
 
     if (res.size() <= 1) {
-      return 0;
+      throw std::invalid_argument("Failed to find 16 hex characters representing an S2 Cell");
     }
 
-    uint64_t id = 0;
-
-    try {
-      id = std::stoul(res[1], nullptr, 16);
-    }
-    catch (const std::exception& ex) {
-      std::cerr << "Couldn't decode input as hex number. " << ex.what() << std::endl;
-    }
+    uint64_t id = std::stoul(res[1], nullptr, 16);
 
     return id;
   }

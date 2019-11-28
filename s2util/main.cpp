@@ -38,11 +38,6 @@ int main(int argi, char** argv)
   try {
     
     uint64_t number = S2Util::getS2IdFromString(args::get(inputS2Cell));
-    
-    if (number < 1) {
-      cerr << "failed to find cell id in " << endl;
-      std::exit(1);
-    }
 
     const S2CellId cellId(number);
 
@@ -62,7 +57,7 @@ int main(int argi, char** argv)
       }
     }
     else {
-      std::cerr << "Invalid cell Id (" << number << ")" << endl;
+      throw std::invalid_argument(std::string("Invalid cell Id (") + std::to_string(number) + std::string(")"));
     }
 
   }
