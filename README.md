@@ -31,3 +31,10 @@ the output folder will now contain a number of osm files for each S2 cell.
 convert osm data files into geometry
 
 `osm2assimp -i example.osm -o example.obj`
+
+## Run Tests
+
+Tests make use of https://github.com/bats-core/bats-core, a system for running tests in bash.
+After building to teh 'build' folder run the tests with:
+
+`bats test.bats`
