@@ -2,6 +2,8 @@
 
 #include <Eigen/Geometry>
 
+namespace GeoUtils {
+
 namespace WGS84 {
   constexpr double SEMI_MAJOR_AXIS = 6378137;
   constexpr double FLATTENING_FACTOR = 1 / 298.257223563;
@@ -31,3 +33,4 @@ auto NEDtoECEF(const Eigen::Vector3d& origin, const Eigen::Vector3d& ned) -> Eig
 auto angleBetweenCoordinates(double lat1, const double long1, double lat2, const double long2) -> double;
 auto metersBetweenCoordinates(double lat1, double long1, double lat2, double long2) -> double;    
 
+}

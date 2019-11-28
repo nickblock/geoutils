@@ -1,6 +1,6 @@
 #include "../args.hxx"
 #include "../tinyformat.h"
-#include "assimp_construct.h"
+#include "assimpconstruct.h"
 #include "geomconvert.h"
 #include "osmdata.h"
 #include "convertlatlng.h"
@@ -25,7 +25,15 @@
 using index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
-using namespace std;
+using std::vector;
+using std::cout;
+using std::endl;
+
+using GeoUtils::ConvertLatLngToCoords;
+using GeoUtils::OSMDataImport;
+using GeoUtils::AssimpConstruct;
+using GeoUtils::GeomConvert;
+using GeoUtils::OSMFeature;
 
 osmium::Box osmiumBoxFromString(string extentsStr)
 {

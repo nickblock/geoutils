@@ -1,7 +1,10 @@
 #pragma once
 
 #include <osmium/geom/coordinates.hpp>
+#include <osmium/osm/location.hpp>
 
+
+namespace GeoUtils {
 
 /// <summary>
 /// A class providing two alternative methods for converting WSG coordinated to euclidean ones
@@ -33,3 +36,5 @@ public:
 
   static osmium::geom::Coordinates to_coords(const osmium::Location& location);
 };
+
+}

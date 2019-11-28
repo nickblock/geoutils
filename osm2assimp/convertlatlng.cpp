@@ -4,6 +4,8 @@
 
 #include <osmium/geom/mercator_projection.hpp>
 
+namespace GeoUtils {
+
 osmium::Location ConvertLatLngToCoords::RefPoint(-1.0, -1.0);
 bool ConvertLatLngToCoords::UseCenterEarthFixed = false;  
 
@@ -26,4 +28,6 @@ osmium::geom::Coordinates ConvertLatLngToCoords::to_coords(const osmium::Locatio
   else {
     return osm(location);
   }
+}
+
 }

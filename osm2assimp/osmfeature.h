@@ -10,6 +10,8 @@
 #include <glm/glm.hpp>
 #include <glm/vec3.hpp>
 
+namespace GeoUtils {
+
 using WorldCoord = osmium::geom::Coordinates;
 
 // <summary>
@@ -68,3 +70,4 @@ private:
   bool mValid;
 };
   
+}

@@ -1,6 +1,8 @@
 #include <iostream>
 #include "eigenconversion.h"
 
+namespace GeoUtils {
+
 constexpr double PI = 3.14159265358979323846;
 constexpr double EARTH_DIAMETERS_METERS = 6371.0 * 2 * 1000;
 constexpr double DEGREES_TO_RADIANS = PI / 180.0;
@@ -155,4 +157,6 @@ auto metersBetweenCoordinates(double lat1, double long1, double lat2, double lon
     double value = (x * x) + (cos(lat1) * cos(lat2) * y * y);
     return EARTH_DIAMETERS_METERS * atan2(sqrt(value), sqrt(1 - value));
 #endif
+}
+
 }

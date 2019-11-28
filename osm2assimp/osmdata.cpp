@@ -1,5 +1,5 @@
 #include "osmdata.h"
-#include "assimp_construct.h"
+#include "assimpconstruct.h"
 #include "geomconvert.h"
 #include <iostream>
 #include <algorithm>
@@ -24,6 +24,8 @@ using std::cout;
 using std::endl;
 using std::vector;
 using std::map;
+
+namespace GeoUtils {
 
 OSMDataImport::OSMDataImport(AssimpConstruct& ac, const osmium::Box& extents, int filter )
 : mCount(0), 
@@ -175,4 +177,6 @@ void OSMDataImport::process(const OSMFeature& feature)
       cout << "Failed to decode some nodes" << endl;
     }
   }
+}
+
 }

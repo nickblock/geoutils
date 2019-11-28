@@ -11,6 +11,8 @@ using std::cout;
 using std::endl;
 using std::string;
 
+namespace GeoUtils {
+
 int OSMFeature::DefaultNumberOfFloors = 3;
 float OSMFeature::BuildingFloorHeight = 3.5;
 
@@ -133,4 +135,6 @@ OSMFeature::OSMFeature(const osmium::Node& node, bool findName)
   glm::vec2 coord(c.x, c.y);
 
   mWorldCoords.push_back(coord);
+}
+
 }

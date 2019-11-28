@@ -11,6 +11,13 @@
 #include <map>
 #include <string>
 
+namespace GeoUtils {
+
+/// <summary>
+/// A class represeting an assimp scene
+/// Meshes and Locators are added to the object and then the write function can be called
+/// to write whole sceene to file.
+/// <summary>
 class AssimpConstruct 
 {
 public:
@@ -28,6 +35,10 @@ public:
     return mMeshes.size();
   }
 
+  /// <summary>
+  /// if setConsolidateMesh is set to true then at export all meshes will be 
+  /// consolidated into a single large mesh 
+  /// </summary>
   void setConsolidateMesh(bool mega);
   
 protected:
@@ -56,3 +67,5 @@ protected:
   bool mMegaMesh;
   static bool mZUp;
 };
+
+}

@@ -6,12 +6,15 @@
 #include "osmfeature.h"
 #include <osmium/handler.hpp>
 
-class AssimpConstruct;
 class aiNode;
 
 namespace xmlpp {
   class Node;
 }
+
+namespace GeoUtils {
+
+class AssimpConstruct;
 
 /// <summary>
 /// A class that handles the reading of ways and nodes from an OSM file
@@ -48,3 +51,5 @@ private:
   AssimpConstruct& mAssimpConstruct;
   aiNode* mParentNode;
 };
+
+}

@@ -9,6 +9,8 @@ extern "C" {
 
 using std::vector;
 
+namespace GeoUtils {
+
 bool GeomConvert::zUp = false;
 
 bool lineIntersects2d(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x, float p2_y, float p3_x, float p3_y, glm::vec3* intersection)
@@ -329,4 +331,6 @@ aiMesh* GeomConvert::extrude2dMesh(const vector<glm::vec2>& in_vertices, float h
   memcpy(newMesh->mNormals, normals.data(), normals.size() * sizeof(glm::vec3));
 
   return newMesh;
+}
+
 }

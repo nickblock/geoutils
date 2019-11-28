@@ -5,6 +5,9 @@
 #include <glm/glm.hpp>
 #include <glm/vec3.hpp>
 #include <vector>
+
+namespace GeoUtils {
+
 /// <summary>
 /// A couple os functions to convert from 2d points to a 3d assimp mesh 
 /// </summary>
@@ -31,3 +34,5 @@ public:
   /// </summary>
   static aiMesh* polygonFromSpline(const std::vector<glm::vec2>& baseVertices, float width);
 };
+
+}

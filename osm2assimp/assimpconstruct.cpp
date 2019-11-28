@@ -1,5 +1,5 @@
 
-#include "assimp_construct.h"
+#include "assimpconstruct.h"
 
 #include <assimp/Exporter.hpp>
 #include <assimp/postprocess.h>
@@ -11,6 +11,8 @@ using std::string;
 using std::vector;
 using std::cout;
 using std::endl;
+
+namespace GeoUtils {
 
 bool AssimpConstruct::mZUp = false;
 
@@ -114,9 +116,12 @@ void AssimpConstruct::buildMultipleMeshes(aiScene* assimpScene)
   for(size_t i=0; i<mMeshes.size(); i++) {
 
     assimpScene->mRootNode->mChildren[i] = new aiNode();
-    assimpScene->mRootNode->mChildren[i]->mParent = assimpScene->mRootNode;
+
     if(mMeshParents[i] != nullptr) {
       assimpScene->mRootNode->mChildren[i]->mParent = mMeshParents[i];
+    }
+    else {
+      assimpScene->mRootNode->mChildren[i]->mParent = assimpScene->mRootNode;
     }
     assimpScene->mRootNode->mChildren[i]->mNumMeshes = 1;
     assimpScene->mRootNode->mChildren[i]->mMeshes = new unsigned int[1];
@@ -210,4 +215,6 @@ const std::string& AssimpConstruct::formatsAvailableStr()
 bool AssimpConstruct::checkFormat(std::string ext)
 {
   return mExtMap.find(ext) != mExtMap.end();
+}
+
 }
