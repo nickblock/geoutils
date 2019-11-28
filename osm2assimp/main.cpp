@@ -173,13 +173,14 @@ int main(int argi, char** argc)
     }
   }
 
-  osmium::Location globalRefPoint;
+  //the originLocation will decide the point of origin for the exported geometry file
+  osmium::Location originLocation; 
 
   if(refPointArg) {
     try {
 
-      globalRefPoint = refPointFromArg(args::get(refPointArg));
-      ConvertLatLngToCoords::RefPoint = globalRefPoint;
+      originLocation = refPointFromArg(args::get(refPointArg));
+      ConvertLatLngToCoords::RefPoint = originLocation;
     }
     catch(std::invalid_argument) {
       cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
@@ -199,12 +200,11 @@ int main(int argi, char** argc)
 
       index_type index;
 
-      location_handler_type location_handler{index};
-      // location_handler.ignore_errors();
+      location_handler_type locationHandler{index};
       
-      osmium::io::Reader reader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
+      osmium::io::Reader osmFileReader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
-      osmium::io::Header header = reader.header();
+      osmium::io::Header header = osmFileReader.header();
       box = header.box();
 
       int filter = OSMFeature::BUILDING;
@@ -212,7 +212,7 @@ int main(int argi, char** argc)
         filter |= OSMFeature::HIGHWAY;
       }
 
-      OSMDataImport osmReader(assimpConstruct, box, filter);
+      OSMDataImport geoDataImporter(assimpConstruct, box, filter);
 
       //special case: if the filename correlates to an S2 cell we use that as the relative center point of the file,
       // create a locator as the center of the s2 cell - this requires the global ref point to be set
@@ -228,17 +228,17 @@ int main(int argi, char** argc)
 
         cout << "Using S2 cell as origin" << endl;
 
-        if(!globalRefPoint) {
+        if(!originLocation) {
           cout << "cannot use s2 cell without also having set a RefPoint flag" << endl;
           exit(1); 
         }
 
-        ConvertLatLngToCoords::RefPoint = globalRefPoint;
+        ConvertLatLngToCoords::RefPoint = originLocation;
 
         S2Util::LatLng latLng = S2Util::getS2Center(s2cellId);    
         osmium::Location s2CellCenterLocation = osmium::Location(std::get<1>(latLng), std::get<0>(latLng));
 
-        //the coords are given relative to the globalRefPoint
+        //the coords are given relative to the originLocation
         const osmium::geom::Coordinates s2CellCenterCoord = ConvertLatLngToCoords::to_coords(s2CellCenterLocation);
         ConvertLatLngToCoords::RefPoint = s2CellCenterLocation;
 
@@ -247,17 +247,17 @@ int main(int argi, char** argc)
         aiVector3t<float> asm_pos(s2CellCenterCoord.x, 0.0f, s2CellCenterCoord.y);
         aiMatrix4x4t<float>::Translation(asm_pos, s2CellParentAINode->mTransformation);
 
-        osmReader.setParentAINode(s2CellParentAINode);
+        geoDataImporter.setParentAINode(s2CellParentAINode);
       }
       else {
-        if(!globalRefPoint) {
+        if(!originLocation) {
           ConvertLatLngToCoords::RefPoint = box.bottom_left();
         }
       }
 
-      osmium::apply(reader, location_handler, osmReader);
+      osmium::apply(osmFileReader, locationHandler, geoDataImporter);
 
-      cout << "Ways Exported: " << osmReader.exportCount() << endl;
+      cout << "Ways Exported: " << geoDataImporter.exportCount() << endl;
     }
 
   }
