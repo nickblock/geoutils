@@ -97,7 +97,7 @@ int OSMFeature::determineTypeFromWay(const osmium::Way& way)
 
 OSMFeature::OSMFeature(const osmium::Way& way, bool getNameFromOSM)
 :  
-  mHeight(determineTypeFromWay(way)), 
+  mHeight(determineHeightFromWay(way)), 
   mType(determineTypeFromWay(way)),
   mValid(true)
 {

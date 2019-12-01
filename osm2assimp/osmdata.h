@@ -18,7 +18,8 @@ class AssimpConstruct;
 
 /// <summary>
 /// A class that handles the reading of ways and nodes from an OSM file
-/// Each node or way is converted to an OSMFeature, which is later converted to an Assimp mesh
+/// Each node or way is converted to an OSMFeature, which is added to the AssimpContruct to 
+/// be exported afterward.
 /// <summary>
 class OSMDataImport : public osmium::handler::Handler {
 
