@@ -79,8 +79,6 @@ void OSMDataImport::node(const osmium::Node& node)
 
       if(tagStr.size() > 4 && tagStr.substr(0, 5) == string("addr:")) {
 
-        cout << "Got tag = " << tag.key() << " : " << tag.value() << endl;
-
         saveIt = true;
       }
     }

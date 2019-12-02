@@ -17,7 +17,7 @@ osmium::geom::Coordinates ConvertLatLngToCoords::cef(const osmium::Location& loc
 } 
 osmium::geom::Coordinates ConvertLatLngToCoords::osm(const osmium::Location& location) {
 
-    return osmium::geom::lonlat_to_mercator(osmium::Location(location.x() - RefPoint.x(), location.y() - RefPoint.y()));
+    return osmium::geom::lonlat_to_mercator(osmium::Location(location.lon() - RefPoint.lon(), location.lat() - RefPoint.lat()));
 }
 
 osmium::geom::Coordinates ConvertLatLngToCoords::to_coords(const osmium::Location& location)

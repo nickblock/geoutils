@@ -204,8 +204,10 @@ int main(int argi, char** argc)
       
       osmium::io::Reader osmFileReader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
-      osmium::io::Header header = osmFileReader.header();
-      box = header.box();
+      if(!extentsArg) {
+        osmium::io::Header header = osmFileReader.header();
+        box = header.box();
+      }
 
       int filter = OSMFeature::BUILDING;
       if(highwayArg) {
