@@ -80,15 +80,32 @@ class OSMBuilder:
 builder = OSMBuilder()
 
 sw = {
+  "lat": 0.0000,
+  "lon": 0.0000
+}
+
+ne = {
   "lat": 0.0001,
   "lon": 0.0001
 }
 
-ne = {
-  "lat": 0.0002,
-  "lon": 0.0002
-}
+diff = 0.0001
+spc = 0.00015
+dim = 10
 
-builder.add_rect_building(ne, sw, 30.0)
+for y in range(dim):
+  for x in range(dim):
+
+    ne_corner = {
+      "lat": ne["lat"] + diff * y + spc * y,
+      "lon": ne["lon"] + diff * x + spc * x
+    }
+
+    sw_corner = {
+      "lat": sw["lat"] + diff * y + spc * y,
+      "lon": sw["lon"] + diff * x + spc * x
+    }
+
+    builder.add_rect_building(ne_corner, sw_corner, 30.0)
 
 builder.write("test.osm")
