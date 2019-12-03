@@ -77,7 +77,7 @@ vector<string> getInputFiles(string input)
 
 osmium::Location refPointFromArg(string refPointStr) 
 {
- osmium::Location location;
+  osmium::Location location;
 
   int commaPos = refPointStr.find_first_of(",");
   location.set_lat(std::stod(refPointStr));
@@ -130,8 +130,8 @@ int main(int argi, char** argc)
       std::cerr << parser;
       return 1;
   }
-  if(!inputFileArg || !outputFileArg) {
-
+  if(!inputFileArg || !outputFileArg) 
+  {
       cout << parser;
       return 0;
   }
@@ -173,7 +173,10 @@ int main(int argi, char** argc)
     }
   }
 
-  //the originLocation will decide the point of origin for the exported geometry file
+  //the originLocation will decide the point of origin for the exported geometry file.
+  //if it's not decided by the rePoint cmd line arg it is taken from the bottom left
+  //corner of the box, which in turn can be decided by the extents argument, 
+  // or is otherwise taken from the bounds of the input file.
   osmium::Location originLocation; 
 
   if(refPointArg) {
@@ -204,14 +207,20 @@ int main(int argi, char** argc)
       
       osmium::io::Reader osmFileReader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
-      if(!refPointArg) {
+      if(!box.valid()) {
         osmium::io::Header header = osmFileReader.header();
+        box = header.box();
 
-        if(!box.valid()) {
+        if(!box.valid() && !refPointArg) {
           cout << "No bounds found in osm file and no RefPoint specified, aborting" << endl;
           exit(1);
         }
-        box = header.box();
+      }
+
+      //if the refPoint was not set via commandline take the bottom left of the first input file specified 
+      if(!originLocation) {
+        originLocation = box.bottom_left();
+        ConvertLatLngToCoords::RefPoint = originLocation;
       }
 
       int filter = OSMFeature::BUILDING;
@@ -223,6 +232,8 @@ int main(int argi, char** argc)
 
       //special case: if the filename correlates to an S2 cell we use that as the relative center point of the file,
       // create a locator as the center of the s2 cell - this requires the global ref point to be set
+      // In this way a number of S2Cells can be combined in the output file, with the geometry of each given
+      // it's own ref point an parented to a separate parent node. 
       uint64_t s2cellId = 0;
       try {
         s2cellId = S2Util::getS2IdFromString(inputFile);
@@ -233,17 +244,10 @@ int main(int argi, char** argc)
 
       if(s2cellId > 0) {
 
-        cout << "Using S2 cell as origin" << endl;
+        cout << "S2Cell" << endl;
 
-        if(!originLocation) {
-          cout << "cannot use s2 cell without also having set a RefPoint flag" << endl;
-          exit(1); 
-        }
-
-        ConvertLatLngToCoords::RefPoint = originLocation;
-
-        S2Util::LatLng latLng = S2Util::getS2Center(s2cellId);    
-        osmium::Location s2CellCenterLocation = osmium::Location(std::get<1>(latLng), std::get<0>(latLng));
+        S2Util::LatLng s2LatLng = S2Util::getS2Center(s2cellId);    
+        osmium::Location s2CellCenterLocation = osmium::Location(std::get<1>(s2LatLng), std::get<0>(s2LatLng));
 
         //the coords are given relative to the originLocation
         const osmium::geom::Coordinates s2CellCenterCoord = ConvertLatLngToCoords::to_coords(s2CellCenterLocation);
@@ -255,11 +259,6 @@ int main(int argi, char** argc)
         aiMatrix4x4t<float>::Translation(asm_pos, s2CellParentAINode->mTransformation);
 
         geoDataImporter.setParentAINode(s2CellParentAINode);
-      }
-      else {
-        if(!originLocation) {
-          ConvertLatLngToCoords::RefPoint = box.bottom_left();
-        }
       }
 
       osmium::apply(osmFileReader, locationHandler, geoDataImporter);
