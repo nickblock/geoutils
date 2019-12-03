@@ -13,12 +13,42 @@ class OSMBuilder:
     self.top = Element("osm")
     self.top.set('generator', 'osm2assimp test generator')
     self.top.set('version', '0.6')
+    self.bounds = SubElement(self.top, "bounds")
 
     self.tree = ElementTree(self.top)
 
+    self.minLatLon = {}
+    self.maxLatLon = {}
+
+  def check_minmax(self, lonlat):
+
+    if self.nodeIdx == 0:
+      
+      self.minLatLon = {
+        "lat": lonlat["lat"],
+        "lon": lonlat["lon"],
+      }
+      self.maxLatLon = {
+        "lat": lonlat["lat"],
+        "lon": lonlat["lon"],
+      }
+
+    else:
+      
+      if lonlat["lat"] < self.minLatLon["lat"]:
+        self.minLatLon["lat"] = lonlat["lat"]
+      if lonlat["lon"] < self.minLatLon["lon"]:
+        self.minLatLon["lon"] = lonlat["lon"]
+      if lonlat["lat"] > self.maxLatLon["lat"]:
+        self.maxLatLon["lat"] = lonlat["lat"]
+      if lonlat["lon"] > self.maxLatLon["lon"]:
+        self.maxLatLon["lon"] = lonlat["lon"]
+
   def add_osm_node(self, parent_elem, lonlat):
 
-    nodeElement = SubElement(parent_elem, "node", id=str(self.nodeIdx), visible="true", version="2", changeset="1", lat=str(lonlat["lat"]), lon=str(lonlat["lon"]))
+    self.check_minmax(lonlat)
+
+    nodeElement = SubElement(parent_elem, "node", id=str(self.nodeIdx), visible="true", lat=str(lonlat["lat"]), lon=str(lonlat["lon"]))
 
     self.nodeIdx += 1;
 
@@ -70,6 +100,11 @@ class OSMBuilder:
     SubElement(wayElement, "tag", k="height", v=str(height))
     
   def write(self, filename):
+
+    self.bounds.set("minlat", str(self.minLatLon["lat"]))
+    self.bounds.set("minlon", str(self.minLatLon["lon"]))
+    self.bounds.set("maxlat", str(self.maxLatLon["lat"]))
+    self.bounds.set("maxlon", str(self.maxLatLon["lon"]))
 
     with open(filename, 'wb') as f:
         self.tree.write(f, xml_declaration=True, encoding='utf-8')
