@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from xml.etree.ElementTree import Element, ElementTree, SubElement, Comment, tostring
-
+import xml.dom.minidom
 
 class OSMBuilder:
 
@@ -50,11 +50,14 @@ class OSMBuilder:
       "lon": min_lonlat["lon"]
     }
 
+    first_node = self.add_osm_node(self.top, ne)
+
     nodeIds = [
-      self.add_osm_node(self.top, ne),
+      first_node,
       self.add_osm_node(self.top, nw),
+      self.add_osm_node(self.top, sw),
       self.add_osm_node(self.top, se),
-      self.add_osm_node(self.top, sw)
+      first_node
     ]
 
     wayElement = SubElement(self.top, "way", id=str(self.wayIdx))
@@ -71,17 +74,19 @@ class OSMBuilder:
     with open(filename, 'wb') as f:
         self.tree.write(f, xml_declaration=True, encoding='utf-8')
 
+    dom = xml.dom.minidom.parse(filename)
+    open(filename, 'w').write(dom.toprettyxml())
 
 builder = OSMBuilder()
 
 sw = {
-  "lat": 0.0,
-  "lon": 0.0
+  "lat": 0.0001,
+  "lon": 0.0001
 }
 
 ne = {
-  "lat": 0.0001,
-  "lon": 0.0001
+  "lat": 0.0002,
+  "lon": 0.0002
 }
 
 builder.add_rect_building(ne, sw, 30.0)
