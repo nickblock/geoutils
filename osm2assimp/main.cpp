@@ -204,8 +204,13 @@ int main(int argi, char** argc)
       
       osmium::io::Reader osmFileReader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
-      if(!extentsArg) {
+      if(!refPointArg) {
         osmium::io::Header header = osmFileReader.header();
+
+        if(!box.valid()) {
+          cout << "No bounds found in osm file and no RefPoint specified, aborting" << endl;
+          exit(1);
+        }
         box = header.box();
       }
 
