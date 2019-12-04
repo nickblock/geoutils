@@ -2,6 +2,7 @@
 
 from xml.etree.ElementTree import Element, ElementTree, SubElement, Comment, tostring
 import xml.dom.minidom
+import argparse
 
 class OSMBuilder:
 
@@ -112,35 +113,47 @@ class OSMBuilder:
     dom = xml.dom.minidom.parse(filename)
     open(filename, 'w').write(dom.toprettyxml())
 
-builder = OSMBuilder()
+if __name__== "__main__":
 
-sw = {
-  "lat": 0.0000,
-  "lon": 0.0000
-}
+  parser = argparse.ArgumentParser()
 
-ne = {
-  "lat": 0.0001,
-  "lon": 0.0001
-}
+  parser.add_argument("--input", "-i", type=str, default="test.osm")
+  parser.add_argument("--extents", "-e", type=str, default="0.0,0.0,0.001,0.001")
+  parser.add_argument("--space", "-s", type=float, default=0.0001)
+  parser.add_argument("--height", type=float, default=10.0)
 
-diff = 0.0001
-spc = 0.00015
-dim = 10
+  args = parser.parse_args()
 
-for y in range(dim):
-  for x in range(dim):
+  extents = [float(x) for x in args.extents.split(',')]
 
-    ne_corner = {
-      "lat": ne["lat"] + diff * y + spc * y,
-      "lon": ne["lon"] + diff * x + spc * x
-    }
+  builder = OSMBuilder()
 
-    sw_corner = {
-      "lat": sw["lat"] + diff * y + spc * y,
-      "lon": sw["lon"] + diff * x + spc * x
-    }
+  yidx = 0
+  xidx = 0
 
-    builder.add_rect_building(ne_corner, sw_corner, 30.0)
+  while True:
+    if yidx * args.space * 2 > extents[3] - extents[1]:
+      break
 
-builder.write("test.osm")
+    xidx = 0
+    while True:
+      if xidx * args.space * 2 > extents[2] - extents[0]:
+        break
+
+      sw_corner = {
+        "lat": extents[0] + args.space * yidx * 2,
+        "lon": extents[1] + args.space * xidx * 2
+      }
+
+      ne_corner = {
+        "lat": sw_corner["lat"] + args.space,
+        "lon": sw_corner["lon"] + args.space
+      }
+
+      builder.add_rect_building(ne_corner, sw_corner, 30.0)
+
+      xidx += 1
+
+    yidx += 1
+
+  builder.write(args.input)
