@@ -46,6 +46,8 @@ osmium::Box osmiumBoxFromJSON(const rapidjson::Value& v) {
   return box;
 }
 
+string OSMSplitConfig::mSuffix = ".osm.pbf";
+
 OSMSplitConfig::OSMSplitConfig(const osmium::Box& ext, string outputPrefix, bool sortByLat)
 : mExtents(ext),
   mSortByLat(sortByLat),
@@ -57,6 +59,11 @@ OSMSplitConfig::OSMSplitConfig(const rapidjson::Value& value)
 
 {
   initFromJSON(value);
+}
+
+void OSMSplitConfig::setOutputSuffix(std::string s)
+{
+  mSuffix = s;
 }
 
 void OSMSplitConfig::initFromJSON(const rapidjson::Value& value)

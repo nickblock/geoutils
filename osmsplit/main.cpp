@@ -231,6 +231,9 @@ int main(int argi, char** argc) {
   args::Flag                    updateOnlyArg(parser, "u", "Don't redo existing output files if input file is older", {'u'});
   args::Flag                    deleteInputFilesArg(parser, "d", "Delete input files", {'d'});
 
+  // couldn't get splitwriter to work with normal osm files
+  // args::Flag                    outputXMLFormat(parser, "x", "Output to xml format (protobuf is default)", {'x'});
+
   try
   {
       parser.ParseCLI(argi, argc);
@@ -278,6 +281,10 @@ int main(int argi, char** argc) {
   if(updateOnlyArg) {
     options.updateOnly = args::get(updateOnlyArg);
   }
+
+  // if(outputXMLFormat) {
+  //   OSMSplitConfig::setOutputSuffix(".osm");
+  // }
   
   try {
 

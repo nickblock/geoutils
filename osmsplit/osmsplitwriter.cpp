@@ -1,4 +1,5 @@
 #include "osmsplitwriter.h"
+#include "osmsplitconfig.h"
 
 #include <osmium/io/input_iterator.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
@@ -17,10 +18,10 @@ namespace GeoUtils {
 
 OSMSplitWriter::LockWriter::LockWriter(std::string outFilePath, osmium::io::Header& header) {
 
-  int lastSlash = outFilePath.find(".osm.pbf");
+  int lastSlash = outFilePath.find(OSMSplitConfig::suffix());
 
   mOutWayPath = outFilePath.substr(0, lastSlash);
-  mOutWayPath += "_ways.osm.pbf";
+  mOutWayPath += string("_ways") + OSMSplitConfig::suffix();
 
   mWayWriter = std::make_shared<osmium::io::Writer>(osmium::io::File(mOutWayPath), header, osmium::io::overwrite::allow);
   mWriter = std::make_shared<osmium::io::Writer>(osmium::io::File(outFilePath), header, osmium::io::overwrite::allow);

@@ -30,6 +30,7 @@ public:
   void                      initFromJSON(const rapidjson::Value&);
   OSMSplitConfigPair        split(double midPoint);
   void                      setFileName(const std::string& fileName);
+  static void               setOutputSuffix(std::string s);
 
   rapidjson::Value          toJson(rapidjson::Document::AllocatorType& alloc) const;
 
@@ -51,7 +52,7 @@ public:
   }
   static std::string        suffix() 
   {
-    return std::string(".osm.pbf");
+    return mSuffix;
   }
 
 protected:
@@ -60,6 +61,7 @@ protected:
   double        mMidPoint;
   OSMSplitConfigPair  mSplit;
   std::string   mFileName;
+  static std::string   mSuffix;
 };
 
 } 
