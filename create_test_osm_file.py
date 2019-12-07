@@ -117,7 +117,7 @@ if __name__== "__main__":
 
   parser = argparse.ArgumentParser()
 
-  parser.add_argument("--input", "-i", type=str, default="test.osm")
+  parser.add_argument("output", type=str, default="test.osm")
   parser.add_argument("--extents", "-e", type=str, default="0.0,0.0,0.001,0.001")
   parser.add_argument("--space", "-s", type=float, default=0.0001)
   parser.add_argument("--height", type=float, default=10.0)
@@ -156,4 +156,4 @@ if __name__== "__main__":
 
     yidx += 1
 
-  builder.write(args.input)
+  builder.write(args.output)
