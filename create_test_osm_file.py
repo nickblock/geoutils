@@ -131,13 +131,20 @@ if __name__== "__main__":
   yidx = 0
   xidx = 0
 
+  sw_corner = {}
+  ne_corner = {}
+
   while True:
-    if yidx * args.space * 2 > extents[3] - extents[1]:
+    if yidx * args.space * 2 > extents[2] - extents[0]:
+
+      print(sw_corner)
+      print(ne_corner)
+
       break
 
     xidx = 0
     while True:
-      if xidx * args.space * 2 > extents[2] - extents[0]:
+      if xidx * args.space * 2 > extents[3] - extents[1]:
         break
 
       sw_corner = {
