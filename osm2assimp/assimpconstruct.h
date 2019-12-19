@@ -35,6 +35,10 @@ public:
     return mMeshes.size();
   }
 
+  const char* exporterErrorStr() {
+    return mExporter.GetErrorString();
+  }
+
   /// <summary>
   /// if setConsolidateMesh is set to true then at export all meshes will be 
   /// consolidated into a single large mesh 

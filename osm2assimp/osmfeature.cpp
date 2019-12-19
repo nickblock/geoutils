@@ -118,10 +118,13 @@ OSMFeature::OSMFeature(const osmium::Way& way, bool getNameFromOSM)
     mWorldCoords.push_back(coord);
   }
 
-  if(mWorldCoords.size() == 0) {
+  if(
+    (mType & HIGHWAY && mWorldCoords.size() < 2 ) || 
+    (mType & BUILDING && !(mType & CLOSED))) {
     mValid = false;
-    cout << "No valid points found " << mName << endl;
+    cout << "Not enough valid points found " << mName << endl;
   }
+
 }
 
 

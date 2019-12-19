@@ -12,12 +12,13 @@ namespace GeoUtils {
 class ConvertLatLngToCoords {
 
 public:
+  static bool             UseCenterEarthFixed;
 
   /// <summary>
-  /// Both algorithms rely on a nearby reference point to overcome margin of error
-  /// <summary>
-  static osmium::Location RefPoint;
-  static bool             UseCenterEarthFixed;
+  /// Set the ref point. UseCenterEarthFixed should be set before setting this, as the way it is used is dependant 
+  /// on the algorithm used. 
+  /// </summary>
+  static void setRefPoint(const osmium::Location& loc);
     
   /// <summary>
   /// Convert coords using Center Earth Fixed
@@ -35,6 +36,12 @@ public:
   }
 
   static osmium::geom::Coordinates to_coords(const osmium::Location& location);
+
+private:
+  /// <summary>
+  /// Both algorithms rely on a nearby reference point to overcome margin of error
+  /// <summary>
+  static std::tuple<double, double> RefPoint;
 };
 
 }

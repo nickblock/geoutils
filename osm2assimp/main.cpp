@@ -4,6 +4,7 @@
 #include "geomconvert.h"
 #include "osmdata.h"
 #include "convertlatlng.h"
+#include "eigenconversion.h"
 #include "s2util.h"
 
 #include <string.h>
@@ -166,6 +167,8 @@ int main(int argi, char** argc)
       string extentsStr = args::get(extentsArg);
 
       box = osmiumBoxFromString(extentsStr);
+
+      ConvertLatLngToCoords::setRefPoint(box.bottom_left());
     }
     catch(std::invalid_argument) {
       cout << "Failed to parse extents string '" << args::get(extentsArg) << "'" << endl;
@@ -183,7 +186,7 @@ int main(int argi, char** argc)
     try {
 
       originLocation = refPointFromArg(args::get(refPointArg));
-      ConvertLatLngToCoords::RefPoint = originLocation;
+      ConvertLatLngToCoords::setRefPoint(originLocation);
     }
     catch(std::invalid_argument) {
       cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
@@ -220,7 +223,7 @@ int main(int argi, char** argc)
       //if the refPoint was not set via commandline take the bottom left of the first input file specified 
       if(!originLocation) {
         originLocation = box.bottom_left();
-        ConvertLatLngToCoords::RefPoint = originLocation;
+        ConvertLatLngToCoords::setRefPoint(originLocation);
       }
 
       int filter = OSMFeature::BUILDING;
@@ -251,7 +254,7 @@ int main(int argi, char** argc)
 
         //the coords are given relative to the originLocation
         const osmium::geom::Coordinates s2CellCenterCoord = ConvertLatLngToCoords::to_coords(s2CellCenterLocation);
-        ConvertLatLngToCoords::RefPoint = s2CellCenterLocation;
+        ConvertLatLngToCoords::setRefPoint(s2CellCenterLocation);
 
         aiNode* s2CellParentAINode = new aiNode(std::to_string(s2cellId));
 
@@ -270,7 +273,7 @@ int main(int argi, char** argc)
 
   if(assimpConstruct.numMeshes()) {
     if(AI_SUCCESS != assimpConstruct.write(outputFile.c_str())){
-      cout << "Failed to write out to '" << outputFile << "'" << endl;
+      cout << "Failed to write out to '" << outputFile << "', " << assimpConstruct.exporterErrorStr() << endl;
       return 1;
     }
   }
