@@ -47,6 +47,9 @@ class OSMBuilder:
 
   def add_osm_node(self, parent_elem, lonlat):
 
+    if parent_elem == None:
+      parent_elem = self.top
+
     self.check_minmax(lonlat)
 
     nodeElement = SubElement(parent_elem, "node", id=str(self.nodeIdx), visible="true", lat=str(lonlat["lat"]), lon=str(lonlat["lon"]))
@@ -58,6 +61,16 @@ class OSMBuilder:
   def add_node_id(self, parent_elem, idx):
 
     nodeIdElem = SubElement(parent_elem, "nd", ref=str(idx))
+
+  def add_highway(self, nodeIds):
+
+    wayElement = SubElement(self.top, "way", id=str(self.wayIdx))
+    self.wayIdx += 1
+
+    for n in nodeIds:
+      self.add_node_id(wayElement, n)
+
+    SubElement(wayElement, "tag", k="highway", v="primary")
 
   def add_rect_building(self, max_lonlat, min_lonlat, height):
 
@@ -134,6 +147,8 @@ if __name__== "__main__":
   sw_corner = {}
   ne_corner = {}
 
+  highway_nodes = []
+
   while True:
     if yidx * args.space * 2 > extents[2] - extents[0]:
 
@@ -144,6 +159,7 @@ if __name__== "__main__":
 
     xidx = 0
     while True:
+
       if xidx * args.space * 2 > extents[3] - extents[1]:
         break
 
@@ -157,10 +173,34 @@ if __name__== "__main__":
         "lon": sw_corner["lon"] + args.space
       }
 
+      road_node = {
+        "lat": ne_corner["lat"] + args.space * 0.5,
+        "lon": ne_corner["lon"] + args.space * 0.5
+      }
+
+      highway_nodes.append(builder.add_osm_node(None, road_node))
+
       builder.add_rect_building(ne_corner, sw_corner, 30.0)
 
       xidx += 1
 
     yidx += 1
+
+  print("num highway nodes " + str(len(highway_nodes)) + "\nwidth = " + str(xidx))
+
+  for i in range(xidx):
+
+    # print(highway_nodes[i:i+xidx-1])
+    begin = i * xidx
+    end = begin + xidx
+    builder.add_highway(highway_nodes[begin:end])
+
+    v_nodes = []
+    for j in range(xidx-1):
+      index = j*xidx+i
+      if index < len(highway_nodes):
+        v_nodes.append(highway_nodes[j*xidx+i])
+
+    builder.add_highway(v_nodes)
 
   builder.write(args.output)
