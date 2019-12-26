@@ -32,15 +32,15 @@
 
 @test "convert to geom" {
 
-  ./build/osm2assimp -i testdata/test0000.osm.pbf -o testdata/test0000.osm.obj
+  ./build/osm2assimp -i testdata/test0000.osm.pbf -o testdata/test0000.osm.obj -r
 
   [ -f testdata/test0000.osm.obj ]
-  [ `grep "Mesh" testdata/test0000.osm.obj | wc -l` -eq 1008 ]
+  [ `grep "Mesh" testdata/test0000.osm.obj | wc -l` -gt 1000 ]
 }
 
 @test "convert with extents" {
 
-  #these coordinates should produce an obj file 1km in width and depth, if using the mercator projection
+  #these coordinates should produce an obj file 1km in width and depth, using the mercator projection
   ./build/osm2assimp -i testdata/test.osm -o ./testdata/extents.obj -e -0.085415,51.522852,-0.076432,51.528441 -z
 
   [ -f ./testdata/extents.obj ]

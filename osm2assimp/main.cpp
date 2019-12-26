@@ -158,6 +158,12 @@ int main(int argi, char** argc)
     return 1;
   }
 
+  //the originLocation will decide the point of origin for the exported geometry file.
+  //if it's not decided by the rePoint cmd line arg it is taken from the bottom left
+  //corner of the box, which in turn can be decided by the extents argument, 
+  // or is otherwise taken from the bounds of the input file.
+  osmium::Location originLocation; 
+
   osmium::Box box;
 
   if(extentsArg) {
@@ -168,19 +174,14 @@ int main(int argi, char** argc)
 
       box = osmiumBoxFromString(extentsStr);
 
-      ConvertLatLngToCoords::setRefPoint(box.bottom_left());
+      originLocation = box.bottom_left();
+      ConvertLatLngToCoords::setRefPoint(originLocation);
     }
     catch(std::invalid_argument) {
       cout << "Failed to parse extents string '" << args::get(extentsArg) << "'" << endl;
       std::exit(1);
     }
   }
-
-  //the originLocation will decide the point of origin for the exported geometry file.
-  //if it's not decided by the rePoint cmd line arg it is taken from the bottom left
-  //corner of the box, which in turn can be decided by the extents argument, 
-  // or is otherwise taken from the bounds of the input file.
-  osmium::Location originLocation; 
 
   if(refPointArg) {
     try {

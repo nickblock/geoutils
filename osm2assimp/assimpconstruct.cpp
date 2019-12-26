@@ -119,6 +119,9 @@ void AssimpConstruct::buildMultipleMeshes(aiScene* assimpScene)
 
     if(mMeshParents[i] != nullptr) {
       assimpScene->mRootNode->mChildren[i]->mParent = mMeshParents[i];
+      if(mMeshParents[i]->mParent == nullptr) {
+        mMeshParents[i]->mParent = assimpScene->mRootNode;
+      }
     }
     else {
       assimpScene->mRootNode->mChildren[i]->mParent = assimpScene->mRootNode;
@@ -128,6 +131,8 @@ void AssimpConstruct::buildMultipleMeshes(aiScene* assimpScene)
     assimpScene->mRootNode->mChildren[i]->mMeshes[0] = i;
     assimpScene->mRootNode->mChildren[i]->mName.Set(mMeshNames[i]);
   }
+
+  centerMeshes(assimpScene);
 }
 
 void AssimpConstruct::addLocatorsToScene(aiScene* assimpScene)
@@ -205,6 +210,29 @@ int AssimpConstruct::addMaterial(std::string matname, glm::vec3 color) {
     mat.mColor = color;
     mMaterials.push_back(mat);
     return matIndex;
+  }
+}
+
+void AssimpConstruct::centerMeshes(aiScene* assimpScene) 
+{
+  for(int i=0; i<assimpScene->mNumMeshes; i++) {
+
+    auto mesh = assimpScene->mMeshes[i];
+    auto node = assimpScene->mRootNode->mChildren[i];
+
+    aiVector3D totalVec(0.0, 0.0, 0.0);
+
+    for(int v=0; v<mesh->mNumVertices; v++) {
+      totalVec += mesh->mVertices[v];
+    }
+
+    totalVec /= mesh->mNumVertices;
+
+    for(int v=0; v<mesh->mNumVertices; v++) {
+      mesh->mVertices[v] -= totalVec;
+    }
+
+    aiMatrix4x4::Translation(totalVec, node->mTransformation);
   }
 }
 

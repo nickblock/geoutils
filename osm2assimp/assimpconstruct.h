@@ -46,6 +46,11 @@ public:
   void setConsolidateMesh(bool mega);
   
 protected:
+
+  /// <summary>
+  /// Center the mesh vertices around their average point and translate the parent node.
+  /// </summary>
+  void centerMeshes(aiScene*);
   void buildMultipleMeshes(aiScene*);
   void buildMegaMesh(aiScene*);
   void addLocatorsToScene(aiScene*);

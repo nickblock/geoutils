@@ -48,7 +48,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/osm2assimp",
-      "args": ["-i", "${workspaceFolder}../londonS2//s2_4876030100000000.osm", "-o", "${workspaceFolder}../londonS2//s2_4876030100000000.obj", "-p", "51.4755856,-0.0498082"],,
+      "args": ["-i", "${workspaceFolder}/../../server/frontend/public/world_data/old_street1001.osm.pbf", "-o", "${workspaceFolder}/../../server/frontend/public/world_data/geomX200281Y2448223_g100.ctm", "-e", "-0.084517,51.524551,-0.083618,51.525110", "-r"],,
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

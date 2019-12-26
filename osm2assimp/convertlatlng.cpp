@@ -10,13 +10,13 @@ std::tuple<double, double> ConvertLatLngToCoords::RefPoint(-1.0, -1.0);
 bool ConvertLatLngToCoords::UseCenterEarthFixed = false;  
 
 void ConvertLatLngToCoords::setRefPoint(const osmium::Location& loc) {
-  if(UseCenterEarthFixed) {
+  // if(UseCenterEarthFixed) {
     RefPoint = {loc.lon(), loc.lat()};
-  }
-  else {
-    auto coord = osmium::geom::lonlat_to_mercator(loc);
-    RefPoint = {coord.x, coord.y};    
-  }
+  // }
+  // else {
+  //   auto coord = osmium::geom::lonlat_to_mercator(loc);
+  //   RefPoint = {coord.x, coord.y};    
+  // }
 }
 osmium::geom::Coordinates ConvertLatLngToCoords::cef(const osmium::Location& location) {
 
@@ -28,9 +28,10 @@ osmium::geom::Coordinates ConvertLatLngToCoords::osm(const osmium::Location& loc
 
     //the mercator projection gives very different results for different regions of the planet, which is awy the refpoint
     // is negated after the calcualtion is done
-    auto coord = osmium::geom::lonlat_to_mercator(osmium::Location(location.lon(), location.lat()));
+    auto coord = osmium::geom::lonlat_to_mercator(osmium::Location(location.lon() - std::get<0>(RefPoint), location.lat() - std::get<1>(RefPoint)));
 
-    return osmium::geom::Coordinates(coord.x - std::get<0>(RefPoint), coord.y - std::get<1>(RefPoint));
+    return coord;
+    // return osmium::geom::Coordinates(coord.x - std::get<0>(RefPoint), coord.y - std::get<1>(RefPoint));
 }
 
 osmium::geom::Coordinates ConvertLatLngToCoords::to_coords(const osmium::Location& location)
