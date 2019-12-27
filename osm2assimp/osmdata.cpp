@@ -63,31 +63,6 @@ void OSMDataImport::way(const osmium::Way& way)
 
 void OSMDataImport::node(const osmium::Node& node)
 {
-  if(node.tags().has_key("addr:housenumber")) {
-
-    bool saveIt = false;
-
-    for (const auto& tag : node.tags()) {
-
-      string tagStr(tag.key());
-
-      if(tagStr.size() > 4 && tagStr.substr(0, 5) == string("addr:")) {
-
-        saveIt = true;
-      }
-    }
-
-    if(saveIt) {
-      
-      OSMFeature feature(node);
-      
-      if(feature.isValid()) {
-        
-        process(feature);
-      }
-
-    }
-  }
 }
 
 void OSMDataImport::setParentAINode(aiNode* node)
@@ -112,10 +87,11 @@ void OSMDataImport::process(const OSMFeature& feature)
     //if it's just a locator
     if(feature.type() & OSMFeature::LOCATION) 
     {
+      glm::vec2 loc = feature.coords()[0];
+      glm::vec3 glm_pos = GeomConvert::posFromLoc(loc.x, loc.y, 0.0f);
+      
       aiNode* locatorNode = new aiNode;
-
-      glm::vec2 glm_pos = feature.coords()[0];
-      aiVector3t<float> asm_pos(glm_pos.x, glm_pos.y, 0.0f);
+      aiVector3t<float> asm_pos(glm_pos.x, glm_pos.y, glm_pos.z);
       aiMatrix4x4t<float>::Translation(asm_pos, locatorNode->mTransformation);
 
       locatorNode->mName.Set(feature.name());
