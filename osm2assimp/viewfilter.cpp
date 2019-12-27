@@ -2,6 +2,7 @@
 #include "s2/s2cell.h" 
 #include "s2/s2latlng.h"
 #include "s2/s2point.h"  
+#include "osmfeature.h"
 
 namespace GeoUtils {
 
@@ -13,12 +14,9 @@ TypeFilter::TypeFilter(int filter)
 
 }
 
-bool TypeFilter::include(const osmium::Way& way) 
+bool TypeFilter::include(const osmium::Way& way) const
 {
-  for(const auto& node: way.nodes()) {
-
-  }
-  return false;
+  return OSMFeature::determineTypeFromWay(way) & mFilter;
 }
 
 BoundFilter::BoundFilter(const osmium::Box& box) 
@@ -27,7 +25,7 @@ BoundFilter::BoundFilter(const osmium::Box& box)
 
 }
 
-bool BoundFilter::include(const osmium::Way& way) 
+bool BoundFilter::include(const osmium::Way& way) const
 {
   for(const auto& node: way.nodes()) {
     if(mBox.contains(node.location())) {
@@ -42,7 +40,7 @@ S2CellFilter::S2CellFilter(uint64_t id)
   mS2Cell = make_unique<S2Cell>(S2CellId(id));
 }
 
-bool S2CellFilter::include(const osmium::Way& way) 
+bool S2CellFilter::include(const osmium::Way& way) const
 {
   for(const auto& node: way.nodes()) {
     if(mS2Cell->Contains(S2Point(S2LatLng::FromDegrees(node.location().lat(), node.location().lon())))) {

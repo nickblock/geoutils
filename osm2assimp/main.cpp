@@ -6,6 +6,7 @@
 #include "convertlatlng.h"
 #include "eigenconversion.h"
 #include "s2util.h"
+#include "viewfilter.h"
 
 #include <string.h>
 #include <iostream>
@@ -29,6 +30,7 @@ using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 using std::vector;
 using std::cout;
 using std::endl;
+using std::make_shared;
 
 using GeoUtils::ConvertLatLngToCoords;
 using GeoUtils::OSMDataImport;
@@ -36,6 +38,10 @@ using GeoUtils::AssimpConstruct;
 using GeoUtils::GeomConvert;
 using GeoUtils::OSMFeature;
 using GeoUtils::S2Util;
+using GeoUtils::ViewFilterList;
+using GeoUtils::TypeFilter;
+using GeoUtils::BoundFilter;
+using GeoUtils::S2CellFilter;
 
 osmium::Box osmiumBoxFromString(string extentsStr)
 {
@@ -88,6 +94,10 @@ osmium::Location refPointFromArg(string refPointStr)
  return location;
 }
 
+//special case: if the filename correlates to an S2 cell we use that as the relative center point of the file,
+// create a locator as the center of the s2 cell - this requires the global ref point to be set
+// In this way a number of S2Cells can be combined in the output file, with the geometry of each given
+// it's own ref point and parented to a unique parent node. 
 void parentNodesToS2Cell(uint64_t s2cellId, OSMDataImport& importer)
 {
   S2Util::LatLng s2LatLng = S2Util::getS2Center(s2cellId);    
@@ -126,6 +136,7 @@ int main(int argi, char** argc)
   args::Flag  convertCEF(parser, "Convert CEF", "When converting LatLng to coordinate use Center Earth Fixed algorithm, as opposed to the default mercator projection", {'a'});
   args::ValueFlag<string> extentsArg(parser, "Extents", "4 comma separated values; min lat, min long, max lat, max long", {'e'});
   args::ValueFlag<string> refPointArg(parser, "RefPoint", "2 comma separated values; latLng coords. To be used as point of origin for geometry ", {'p'});
+  args::ValueFlag<string> s2CellArg(parser, "S2Cell", "S2 Cell Id as hex string. Filters nodes and ways only somepart inside S2 Cell", {'s', "s2"});
 
   try
   {
@@ -175,6 +186,8 @@ int main(int argi, char** argc)
     return 1;
   }
 
+  ViewFilterList viewFilters;
+
   //the originLocation will decide the point of origin for the exported geometry file.
   //if it's not decided by the rePoint cmd line arg it is taken from the bottom left
   //corner of the box, which in turn can be decided by the extents argument, 
@@ -193,6 +206,8 @@ int main(int argi, char** argc)
 
       originLocation = box.bottom_left();
       ConvertLatLngToCoords::setRefPoint(originLocation);
+
+      viewFilters.push_back(make_shared<BoundFilter>(box));
     }
     catch(std::invalid_argument) {
       cout << "Failed to parse extents string '" << args::get(extentsArg) << "'" << endl;
@@ -208,6 +223,30 @@ int main(int argi, char** argc)
     }
     catch(std::invalid_argument) {
       cout << "failed to parse ref point string '" << args::get(refPointArg) << "'" << endl;
+      std::exit(1);
+    }
+  }
+
+  if(s2CellArg) {
+    try {
+
+      string s2CellStr = args::get(s2CellArg);
+      if(s2CellStr.size() < 16) {
+        int addZeroes = 16 - s2CellStr.size();
+        for(int i=0; i<addZeroes; i++) s2CellStr += "0";
+      }
+
+      uint64_t s2cellId = S2Util::getS2IdFromString(s2CellStr);
+
+      viewFilters.push_back(make_shared<S2CellFilter>(s2cellId));
+
+      S2Util::LatLng latLng = S2Util::getS2Center(s2cellId);
+      originLocation = {std::get<0>(latLng), std::get<1>(latLng)};
+      ConvertLatLngToCoords::setRefPoint(originLocation);
+    }
+    catch(const std::exception&) {
+
+      cout << "failed to parse S2 Cell id string '" << args::get(s2CellArg) << "', is it a <=16 character hex string?" << endl;
       std::exit(1);
     }
   }
@@ -249,22 +288,9 @@ int main(int argi, char** argc)
         filter |= OSMFeature::HIGHWAY;
       }
 
-      OSMDataImport geoDataImporter(assimpConstruct, box, filter);
+      viewFilters.push_back(make_shared<TypeFilter>(filter));
 
-      //special case: if the filename correlates to an S2 cell we use that as the relative center point of the file,
-      // create a locator as the center of the s2 cell - this requires the global ref point to be set
-      // In this way a number of S2Cells can be combined in the output file, with the geometry of each given
-      // it's own ref point an parented to a separate parent node. 
-      uint64_t s2cellId = 0;
-      try {
-        
-        s2cellId = S2Util::getS2IdFromString(inputFile);
-
-        parentNodesToS2Cell(s2cellId, geoDataImporter);
-      }
-      catch(const std::exception&) {
-        //not an s2 cell
-      }
+      OSMDataImport geoDataImporter(assimpConstruct, viewFilters);
 
       osmium::apply(osmFileReader, locationHandler, geoDataImporter);
 

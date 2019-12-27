@@ -27,11 +27,10 @@ using std::map;
 
 namespace GeoUtils {
 
-OSMDataImport::OSMDataImport(AssimpConstruct& ac, const osmium::Box& extents, int filter )
+OSMDataImport::OSMDataImport(AssimpConstruct& ac, const ViewFilterList& filters)
 : mCount(0), 
-  mExtents(extents),
   mAssimpConstruct(ac),
-  mFilter(filter),
+  mFilters(filters),
   mParentNode(nullptr)
 {
   std::locale::global(std::locale(""));
@@ -45,25 +44,20 @@ OSMDataImport::OSMDataImport(AssimpConstruct& ac, const osmium::Box& extents, in
   mMatColors["building"] = glm::vec3(0.9, 0.1, 0.7);
 }
 
-bool wayInBox(const osmium::Way& way, const osmium::Box& box) {
-  for(const auto& node : way.nodes()) {
-    if(node.location().valid() && box.contains(node.location())) {
-      return true;
-    }
-  }
-  return false;
-}
-
 void OSMDataImport::way(const osmium::Way& way) 
 {
-  if(!mExtents.valid() || wayInBox(way, mExtents)) {
-
-    OSMFeature feature(way);
-
-    if(feature.isValid()) {
-      
-      process(feature);
+  for(const auto& filter : mFilters) {
+    
+    if(!filter->include(way)) {
+      return;
     }
+  }
+
+  OSMFeature feature(way);
+
+  if(feature.isValid()) {
+    
+    process(feature);
   }
 }
 
@@ -115,9 +109,8 @@ void OSMDataImport::process(const OSMFeature& feature)
 
     aiMesh* mesh = nullptr;
 
-
     //if it's just a locator
-    if(feature.type() & OSMFeature::LOCATION & mFilter ) 
+    if(feature.type() & OSMFeature::LOCATION) 
     {
       aiNode* locatorNode = new aiNode;
 
@@ -139,7 +132,7 @@ void OSMDataImport::process(const OSMFeature& feature)
     }
 
     // if it's something that wants turning into a polygon spline
-    else if(feature.type() & OSMFeature::HIGHWAY & mFilter) {
+    else if(feature.type() & OSMFeature::HIGHWAY) {
       
       mesh = GeomConvert::polygonFromSpline(feature.coords(), 3.0);
     }
@@ -170,14 +163,11 @@ void OSMDataImport::process(const OSMFeature& feature)
     }
     else {
 
-      if(feature.type() & mFilter) {
         static bool failed = true;
         if(failed) {
           cout << "Failed to import some buildings, eg " << feature.name() << endl;
           failed = false;
         }
-      }
-
     }
   
   } catch (std::out_of_range) {

@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include "osmfeature.h"
+#include "viewfilter.h"
 #include <osmium/handler.hpp>
 
 class aiNode;
@@ -24,7 +25,7 @@ class AssimpConstruct;
 class OSMDataImport : public osmium::handler::Handler {
 
 public: 
-  OSMDataImport(AssimpConstruct& ac, const osmium::Box& extents, int filter = 0xffffffff );
+  OSMDataImport(AssimpConstruct& ac, const ViewFilterList& filters );
 
   void way(const osmium::Way& way);
 
@@ -45,8 +46,7 @@ private:
   void process(const OSMFeature& feature);
 
   int mCount;
-  int mFilter;
-  const osmium::Box& mExtents;
+  const ViewFilterList& mFilters;
   std::map<std::string, glm::vec3>  mMatColors;
   std::vector<OSMFeature> mFeatures;
   AssimpConstruct& mAssimpConstruct;

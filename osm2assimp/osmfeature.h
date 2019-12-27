@@ -32,6 +32,8 @@ public:
   static const int HIGHWAY = 8;
   static const int LOCATION = 16;
 
+  static int determineTypeFromWay(const osmium::Way& way);
+  
   // <summary>
   // Construct an OSMFeature created from an osmium way; a collection of nodes, eg road or building
   // <summary>
@@ -61,7 +63,6 @@ private:
 
   float determineHeightFromWay(const osmium::Way& way);
   std::string getNameFromWay(const osmium::Way& way); 
-  int determineTypeFromWay(const osmium::Way& way);
 
   int mType;
   float mHeight;

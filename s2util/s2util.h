@@ -4,6 +4,7 @@
 #include "s2/s2latlng.h"
 #include "s2/s2cell_id.h"
 #include <tuple>
+#include <iostream>
 
 namespace GeoUtils {
 
@@ -44,7 +45,7 @@ public:
   static uint64_t getS2IdFromString(std::string str)
   {
     std::smatch res; 
-    std::regex reg(".*([0-9a-f]{16}).*");
+    std::regex reg(".*([0-9a-fA-F]{16}).*");
     std::regex_match (str, res, reg);
 
     if (res.size() <= 1) {
