@@ -241,7 +241,7 @@ int main(int argi, char** argc)
       viewFilters.push_back(make_shared<S2CellFilter>(s2cellId));
 
       S2Util::LatLng latLng = S2Util::getS2Center(s2cellId);
-      originLocation = {std::get<0>(latLng), std::get<1>(latLng)};
+      originLocation = {std::get<1>(latLng), std::get<0>(latLng)};
       ConvertLatLngToCoords::setRefPoint(originLocation);
     }
     catch(const std::exception&) {
