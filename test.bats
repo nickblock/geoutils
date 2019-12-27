@@ -47,6 +47,15 @@
   [ "`./build/ext/assimp/tools/assimp_cmd/assimpd info ./testdata/extents.obj | grep -i 'Maximum point'`" = "Maximum point      (1005.099976 984.254028 30.000000)" ]
 }
 
+@test "export s2 cell" {
+
+  ./build/osm2assimp -i testdata/test.osm -o testdata/48761cafc0000000.dae -s 48761cafc0000000 
+
+  [ "`./build/ext/assimp/tools/assimp_cmd/assimpd info ./testdata/48761cafc0000000.dae | grep -i 'Maximum point'`" = "Maximum point      (156.870972 30.000000 246.121613)" ]
+  [ "`./build/ext/assimp/tools/assimp_cmd/assimpd info ./testdata/48761cafc0000000.dae | grep -i 'Minimum point'`" = "Minimum point      (-165.954987 0.000000 -236.954605)" ]
+
+}
+
 @test "s2util" {
 
   [ `./build/s2util s2_4876030000000000.osm.pbf --c` = "51.473,-0.0468724" ]
