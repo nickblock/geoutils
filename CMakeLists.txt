@@ -218,6 +218,7 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp/osmdata.cpp
             osm2assimp/osmfeature.cpp
             osm2assimp/geomconvert.cpp
+            osm2assimp/viewfilter.cpp
             ext/common.cpp)
 
       target_include_directories(osm2assimp PUBLIC 
@@ -238,7 +239,7 @@ if(BUILD_OSM2ASSIMP)
                   bz2 z expat pthread gfxpoly s2)
             target_include_directories(osm2assimp PUBLIC /usr/local/include )
       else()
-            target_link_libraries(osm2assimp PUBLIC assimp bz2 z expat pthread gfxpoly s2)
+            target_link_libraries(osm2assimp PUBLIC assimp s2 ssl crypto bz2 z expat pthread gfxpoly)
       endif()
 
 endif()

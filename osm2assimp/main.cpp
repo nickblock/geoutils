@@ -88,6 +88,23 @@ osmium::Location refPointFromArg(string refPointStr)
  return location;
 }
 
+void parentNodesToS2Cell(uint64_t s2cellId, OSMDataImport& importer)
+{
+  S2Util::LatLng s2LatLng = S2Util::getS2Center(s2cellId);    
+  osmium::Location s2CellCenterLocation = osmium::Location(std::get<1>(s2LatLng), std::get<0>(s2LatLng));
+
+  //the coords are given relative to the originLocation
+  const osmium::geom::Coordinates s2CellCenterCoord = ConvertLatLngToCoords::to_coords(s2CellCenterLocation);
+  ConvertLatLngToCoords::setRefPoint(s2CellCenterLocation);
+
+  aiNode* s2CellParentAINode = new aiNode(std::to_string(s2cellId));
+
+  aiVector3t<float> asm_pos(s2CellCenterCoord.x, 0.0f, s2CellCenterCoord.y);
+  aiMatrix4x4t<float>::Translation(asm_pos, s2CellParentAINode->mTransformation);
+
+  importer.setParentAINode(s2CellParentAINode);
+}
+
 int main(int argi, char** argc)
 {
 
@@ -240,29 +257,13 @@ int main(int argi, char** argc)
       // it's own ref point an parented to a separate parent node. 
       uint64_t s2cellId = 0;
       try {
+        
         s2cellId = S2Util::getS2IdFromString(inputFile);
+
+        parentNodesToS2Cell(s2cellId, geoDataImporter);
       }
       catch(const std::exception&) {
         //not an s2 cell
-      }
-
-      if(s2cellId > 0) {
-
-        cout << "S2Cell" << endl;
-
-        S2Util::LatLng s2LatLng = S2Util::getS2Center(s2cellId);    
-        osmium::Location s2CellCenterLocation = osmium::Location(std::get<1>(s2LatLng), std::get<0>(s2LatLng));
-
-        //the coords are given relative to the originLocation
-        const osmium::geom::Coordinates s2CellCenterCoord = ConvertLatLngToCoords::to_coords(s2CellCenterLocation);
-        ConvertLatLngToCoords::setRefPoint(s2CellCenterLocation);
-
-        aiNode* s2CellParentAINode = new aiNode(std::to_string(s2cellId));
-
-        aiVector3t<float> asm_pos(s2CellCenterCoord.x, 0.0f, s2CellCenterCoord.y);
-        aiMatrix4x4t<float>::Translation(asm_pos, s2CellParentAINode->mTransformation);
-
-        geoDataImporter.setParentAINode(s2CellParentAINode);
       }
 
       osmium::apply(osmFileReader, locationHandler, geoDataImporter);

@@ -115,6 +115,8 @@ void OSMDataImport::process(const OSMFeature& feature)
 
     aiMesh* mesh = nullptr;
 
+
+    //if it's just a locator
     if(feature.type() & OSMFeature::LOCATION & mFilter ) 
     {
       aiNode* locatorNode = new aiNode;
@@ -126,15 +128,23 @@ void OSMDataImport::process(const OSMFeature& feature)
       locatorNode->mName.Set(feature.name());
 
       mAssimpConstruct.addLocator(locatorNode);
+
+      return;
     }
+
+    // if it's something that wants turning into a 3d mesh
     else if(feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) && feature.type() & OSMFeature::CLOSED) {
         
       mesh = GeomConvert::extrude2dMesh(feature.coords(), feature.height()); 
     }
+
+    // if it's something that wants turning into a polygon spline
     else if(feature.type() & OSMFeature::HIGHWAY & mFilter) {
       
       mesh = GeomConvert::polygonFromSpline(feature.coords(), 3.0);
     }
+
+    // if we made either kind of mesh successfully
     if(mesh) {
 
       string materialName = "default";
@@ -155,6 +165,8 @@ void OSMDataImport::process(const OSMFeature& feature)
       mAssimpConstruct.addMesh(mesh, nameSanitize, mParentNode);
       
       mCount++;
+
+      return;
     }
     else {
 
