@@ -36,8 +36,8 @@ bool BoundFilter::include(const osmium::Way& way) const
 }
 
 S2CellFilter::S2CellFilter(uint64_t id) 
+: mS2Cell(make_unique<S2Cell>(S2CellId(id)))
 {
-  mS2Cell = make_unique<S2Cell>(S2CellId(id));
 }
 
 bool S2CellFilter::include(const osmium::Way& way) const
