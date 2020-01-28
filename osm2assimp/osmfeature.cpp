@@ -1,7 +1,6 @@
 #include "osmfeature.h"
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/area/geom_assembler.hpp>
-#include <osmium/geom/geos.hpp>
 
 #include <sstream>
 

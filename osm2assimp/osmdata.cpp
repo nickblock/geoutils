@@ -12,7 +12,6 @@
 #include <osmium/visitor.hpp>
 #include <osmium/geom/coordinates.hpp>
 #include <osmium/geom/mercator_projection.hpp>
-#include <osmium/geom/geos.hpp>
 #include <osmium/area/geom_assembler.hpp>
 
 #include "convertlatlng.h"
