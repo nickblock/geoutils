@@ -264,39 +264,45 @@ int main(int argi, char** argc)
       index_type index;
 
       location_handler_type locationHandler{index};
-      
-      osmium::io::Reader osmFileReader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
-      if(!box.valid()) {
-        osmium::io::Header header = osmFileReader.header();
-        box = header.box();
+      try {
 
-        if(!box.valid() && !refPointArg) {
-          cout << "No bounds found in osm file and no RefPoint specified, aborting" << endl;
-          exit(1);
+        osmium::io::Reader osmFileReader{inputFile, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
+
+        if(!box.valid()) {
+          osmium::io::Header header = osmFileReader.header();
+          box = header.box();
+
+          if(!box.valid() && !refPointArg) {
+            cout << "No bounds found in osm file and no RefPoint specified, aborting" << endl;
+            exit(1);
+          }
         }
+
+        //if the refPoint was not set via commandline take the bottom left of the first input file specified 
+        if(!originLocation) {
+          originLocation = box.bottom_left();
+          ConvertLatLngToCoords::setRefPoint(originLocation);
+        }
+
+        int filter = OSMFeature::BUILDING;
+        if(highwayArg) {
+          filter |= OSMFeature::HIGHWAY;
+        }
+
+        viewFilters.push_back(make_shared<TypeFilter>(filter));
+
+        OSMDataImport geoDataImporter(assimpConstruct, viewFilters);
+
+        osmium::apply(osmFileReader, locationHandler, geoDataImporter);
+
+        cout << "Ways Exported: " << geoDataImporter.exportCount() << endl;
       }
-
-      //if the refPoint was not set via commandline take the bottom left of the first input file specified 
-      if(!originLocation) {
-        originLocation = box.bottom_left();
-        ConvertLatLngToCoords::setRefPoint(originLocation);
+      catch(const std::system_error& err) {
+        cout << "Failed to read " << inputFile << ", " << err.what() << endl;
+        continue;
       }
-
-      int filter = OSMFeature::BUILDING;
-      if(highwayArg) {
-        filter |= OSMFeature::HIGHWAY;
-      }
-
-      viewFilters.push_back(make_shared<TypeFilter>(filter));
-
-      OSMDataImport geoDataImporter(assimpConstruct, viewFilters);
-
-      osmium::apply(osmFileReader, locationHandler, geoDataImporter);
-
-      cout << "Ways Exported: " << geoDataImporter.exportCount() << endl;
     }
-
   }
 
   if(assimpConstruct.numMeshes()) {
