@@ -225,6 +225,7 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp 
             ext/libosmium/include 
             ext/protozero/include
+            ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/geoutils/ext/assimp/include
             ext/assimp/include
             ext/gfxpoly
             ext/eigen 
