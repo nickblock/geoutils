@@ -191,7 +191,7 @@ if(BUILD_OSM2ASSIMP)
 
       add_subdirectory(ext/assimp)
 
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPACKAGE_VERSION=\"1\"")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPACKAGE_VERSION=\"1\" -fcommon")
 
       add_library(gfxpoly STATIC
             ext/gfxpoly/src/active.c
