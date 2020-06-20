@@ -9,48 +9,51 @@
 
 class aiNode;
 
-namespace xmlpp {
+namespace xmlpp
+{
   class Node;
 }
 
-namespace GeoUtils {
+namespace GeoUtils
+{
 
-class AssimpConstruct;
-
-/// <summary>
-/// A class that handles the reading of ways and nodes from an OSM file
-/// Each node or way is converted to an OSMFeature, which is added to the AssimpContruct to 
-/// be exported afterward.
-/// <summary>
-class OSMDataImport : public osmium::handler::Handler {
-
-public: 
-  OSMDataImport(AssimpConstruct& ac, const ViewFilterList& filters );
-
-  void way(const osmium::Way& way);
-
-  void node(const osmium::Node& node);
+  class AssimpConstruct;
 
   /// <summary>
-  /// Optionally a parent node can be assigned, which all the meshes 
-  /// converted from OSMFeatures will be parented to.
-  /// </summary>
-  void setParentAINode(aiNode* node);
+  /// A class that handles the reading of ways and nodes from an OSM file
+  /// Each node or way is converted to an OSMFeature, which is added to the AssimpContruct to
+  /// be exported afterward.
+  /// <summary>
+  class OSMDataImport : public osmium::handler::Handler
+  {
 
-  int exportCount() {
-    return mCount;
-  }
+  public:
+    OSMDataImport(AssimpConstruct &ac, const ViewFilterList &filters);
 
-private:
+    void way(const osmium::Way &way);
 
-  void process(const OSMFeature& feature);
+    void node(const osmium::Node &node);
 
-  int mCount;
-  const ViewFilterList& mFilters;
-  std::map<std::string, glm::vec3>  mMatColors;
-  std::vector<OSMFeature> mFeatures;
-  AssimpConstruct& mAssimpConstruct;
-  aiNode* mParentNode;
-};
+    /// <summary>
+    /// Optionally a parent node can be assigned, which all the meshes
+    /// converted from OSMFeatures will be parented to.
+    /// </summary>
+    void setParentAINode(aiNode *node);
 
-}
+    int exportCount()
+    {
+      return mCount;
+    }
+
+  private:
+    void process(const OSMFeature &feature);
+
+    int mCount;
+    const ViewFilterList &mFilters;
+    std::map<std::string, glm::vec3> mMatColors;
+    std::vector<OSMFeature> mFeatures;
+    AssimpConstruct &mAssimpConstruct;
+    aiNode *mParentNode;
+  };
+
+} // namespace GeoUtils

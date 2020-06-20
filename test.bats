@@ -3,7 +3,7 @@
 source assimp_info.sh
 
 test_output_folder=/data/test
-build_folder=./build #/home/nick/Documents/Metrolysis/server/native/build/thirdparty/geoutils/
+build_folder=/home/nick/Documents/metrolysis/server/native/build/thirdparty/geoutils/
 
 
 @test "setup  context" {
@@ -38,10 +38,10 @@ build_folder=./build #/home/nick/Documents/Metrolysis/server/native/build/thirdp
 
 @test "convert to geom" {
 
-  "$build_folder"/osm2assimp -i $test_output_folder/test0000.osm.pbf -o $test_output_folder/test0000.osm.obj -r
+  "$build_folder"/osm2assimp -i $test_output_folder/test0000.osm.pbf -o $test_output_folder/test0000.osm.obj -r 
 
   [ -f $test_output_folder/test0000.osm.obj ]
-  [ `grep "Mesh" $test_output_folder/test0000.osm.obj | wc -l` -gt 1000 ]
+  [ `grep "Mesh" $test_output_folder/test0000.osm.obj | wc -l` -eq 2 ]
 }
 
 @test "convert with extents" {

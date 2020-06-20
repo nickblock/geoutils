@@ -3,7 +3,7 @@
 build_folder=./build
 
 function get_assimp_info() {
-  "$build_folder"/ext/assimp/bin/assimp info $1
+  "$build_folder"/ext/assimp/bin/assimpd info $1
 }
 
 function maxline() {
