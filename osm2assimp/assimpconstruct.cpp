@@ -126,7 +126,8 @@ namespace GeoUtils
           assimpScene->mMeshes[idx],
           assimpScene->mRootNode->mChildren[idx]) = mergeMeshes(meshIter.second, idx);
 
-      assimpScene->mRootNode->mChildren[idx]->mName.Set(mMaterials[idx].mName.c_str());
+      assimpScene->mMeshes[idx]->mMaterialIndex = meshIter.first;
+      assimpScene->mRootNode->mChildren[idx]->mName.Set(mMaterials[meshIter.first].mName.c_str());
       idx++;
     }
   }
