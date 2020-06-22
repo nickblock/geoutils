@@ -246,9 +246,9 @@ namespace GeoUtils
       break;
     }
 
-    string outExt = filename.substr(filename.size() - 3, 3);
+    string outExt = filename.substr(filename.find_last_of('.') + 1);
 
-    return mExporter.Export(assimpScene, mExtMap[outExt], filename, aiProcess_Triangulate);
+    return mExporter.Export(assimpScene, outExt, filename, aiProcess_Triangulate);
   }
 
   void AssimpConstruct::addMesh(aiMesh *mesh, std::string name, aiNode *parent)

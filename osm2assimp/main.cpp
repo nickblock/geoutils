@@ -96,6 +96,13 @@ osmium::Location refPointFromArg(string refPointStr)
   return location;
 }
 
+std::string getFileExt(const std::string filename)
+{
+  int dotPos = filename.find_last_of('.');
+
+  return filename.substr(dotPos + 1);
+}
+
 //special case: if the filename correlates to an S2 cell we use that as the relative center point of the file,
 // create a locator as the center of the s2 cell - this requires the global ref point to be set
 // In this way a number of S2Cells can be combined in the output file, with the geometry of each given
@@ -189,7 +196,7 @@ int main(int argi, char **argc)
   }
 
   string outputFile = args::get(outputFileArg);
-  string outExt = outputFile.substr(outputFile.size() - 3, 3);
+  auto outExt = getFileExt(outputFile);
 
   if (!assimpConstruct.checkFormat(outExt))
   {
