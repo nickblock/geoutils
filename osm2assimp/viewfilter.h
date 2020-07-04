@@ -6,56 +6,57 @@
 
 class S2Cell;
 
-namespace GeoUtils {
-
-class ViewFilter;
-
-/// <summary>
-/// A container that defines the filter of the data.
-/// That may include the extents of tbe bounds we are taking, any type filter, etc.
-/// In order for an osmium::way to be included in the view it must pass all filters
-/// </summary
-using ViewFilterList = std::vector<std::shared_ptr<ViewFilter>>;
-
-/// A class which decides whehter a given osmium::way should be included in our view
-class ViewFilter {
-public:
-  virtual bool include(const osmium::Way& way) const = 0;
-};
-
-/// A filter of types as defined in OSMFeature
-class TypeFilter : public ViewFilter
+namespace GeoUtils
 {
-public:
-  TypeFilter(int filter);
 
-  virtual bool include(const osmium::Way& way) const;
+  class ViewFilter;
 
-private:
-  int mFilter;
-};
+  /// <summary>
+  /// A container that defines the filter of the data.
+  /// That may include the extents of tbe bounds we are taking, any type filter, etc.
+  /// In order for an osmium::way to be included in the view it must pass all filters
+  /// </summary
+  using ViewFilterList = std::vector<std::shared_ptr<ViewFilter>>;
 
-class BoundFilter : public ViewFilter
-{
-public:
-  BoundFilter(const osmium::Box& box);
+  /// A class which decides whehter a given osmium::way should be included in our view
+  class ViewFilter
+  {
+  public:
+    virtual bool include(const osmium::Way &way) const = 0;
+  };
 
-  virtual bool include(const osmium::Way& way) const;
+  /// A filter of types as defined in OSMFeature
+  class TypeFilter : public ViewFilter
+  {
+  public:
+    TypeFilter(int filter);
 
-private:
-  const osmium::Box& mBox;
-};
+    virtual bool include(const osmium::Way &way) const;
 
+  private:
+    int mFilter;
+  };
 
-class S2CellFilter : public ViewFilter
-{
-public:
-  S2CellFilter(uint64_t id);
+  class BoundFilter : public ViewFilter
+  {
+  public:
+    BoundFilter(const osmium::Box &box);
 
-  virtual bool include(const osmium::Way& way) const;
+    virtual bool include(const osmium::Way &way) const;
 
-private:
-  std::unique_ptr<S2Cell> mS2Cell;
-};
+  private:
+    const osmium::Box &mBox;
+  };
 
-}
+  class S2CellFilter : public ViewFilter
+  {
+  public:
+    S2CellFilter(uint64_t id);
+
+    virtual bool include(const osmium::Way &way) const;
+
+  private:
+    std::unique_ptr<S2Cell> mS2Cell;
+  };
+
+} // namespace GeoUtils

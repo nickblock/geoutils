@@ -124,6 +124,15 @@ void parentNodesToS2Cell(uint64_t s2cellId, OSMDataImport &importer)
   importer.setParentAINode(s2CellParentAINode);
 }
 
+void addGround(const std::vector<glm::vec2> &groundCorners, bool zup, AssimpConstruct &assimpConstruct)
+{
+  aiMesh *mesh = GeomConvert::extrude2dMesh(groundCorners, 0.1f);
+  aiNode *parent = new aiNode;
+  aiMatrix4x4::Translation(zup ? aiVector3D(0.0, 0.0, -0.1) : aiVector3D(0.0, -0.1, 0.0), parent->mTransformation);
+  mesh->mMaterialIndex = assimpConstruct.addMaterial("ground", glm::vec3(228 / 255.f, 145 / 255.f, 36 / 255.f));
+  assimpConstruct.addMesh(mesh, "ground", parent);
+}
+
 int main(int argi, char **argc)
 {
 
@@ -141,6 +150,7 @@ int main(int argi, char **argc)
   args::ValueFlag<int> consolidateArg(parser, "Consolidate", "Consolidate mesh data into single mesh '0' or Mesh per Object '2'. Default is mesh per Material/Type '1'", {'c'});
   args::Flag highwayArg(parser, "Highways", "Include roads in export", {'r'});
   args::Flag exportZUpArg(parser, "Z Up", "Export Z up", {'z'});
+  args::Flag groundArg(parser, "Ground", "Create ground plane to extents or S2 cell region", {'g'});
   args::Flag convertCEF(parser, "Convert CEF", "When converting LatLng to coordinate use Center Earth Fixed algorithm, as opposed to the default mercator projection", {'a'});
   args::ValueFlag<string> extentsArg(parser, "Extents", "4 comma separated values; min lat, min long, max lat, max long", {'e'});
   args::ValueFlag<string> refPointArg(parser, "RefPoint", "2 comma separated values; latLng coords. To be used as point of origin for geometry ", {'p'});
@@ -204,6 +214,7 @@ int main(int argi, char **argc)
     return 1;
   }
 
+  std::vector<glm::vec2> groundCorners;
   ViewFilterList viewFilters;
 
   //the originLocation will decide the point of origin for the exported geometry file.
@@ -219,7 +230,6 @@ int main(int argi, char **argc)
 
     try
     {
-
       string extentsStr = args::get(extentsArg);
 
       box = osmiumBoxFromString(extentsStr);
@@ -228,6 +238,20 @@ int main(int argi, char **argc)
       ConvertLatLngToCoords::setRefPoint(originLocation);
 
       viewFilters.push_back(make_shared<BoundFilter>(box));
+
+      if (groundArg)
+      {
+        groundCorners.resize(4);
+
+        osmium::geom::Coordinates bottom_left = ConvertLatLngToCoords::to_coords(box.bottom_left());
+        osmium::geom::Coordinates top_right = ConvertLatLngToCoords::to_coords(box.top_right());
+        osmium::geom::Coordinates bottom_right(top_right.x, bottom_left.y);
+        osmium::geom::Coordinates top_left(bottom_left.x, top_right.y);
+        groundCorners[0] = {bottom_left.x, bottom_left.y};
+        groundCorners[1] = {top_right.x, top_right.y};
+        groundCorners[2] = {bottom_right.x, bottom_right.y};
+        groundCorners[3] = {top_left.x, top_left.y};
+      }
     }
     catch (std::invalid_argument)
     {
@@ -271,6 +295,18 @@ int main(int argi, char **argc)
       S2Util::LatLng latLng = S2Util::getS2Center(s2cellId);
       originLocation = {std::get<1>(latLng), std::get<0>(latLng)};
       ConvertLatLngToCoords::setRefPoint(originLocation);
+
+      if (groundArg)
+      {
+        auto cornerCoords = S2Util::getS2Corners(s2cellId);
+
+        groundCorners.resize(4);
+        for (int i = 0; i < 4; i++)
+        {
+          osmium::geom::Coordinates coord = ConvertLatLngToCoords::to_coords({std::get<1>(cornerCoords[i]), std::get<0>(cornerCoords[i])});
+          groundCorners[i] = {coord.x, coord.y};
+        }
+      }
     }
     catch (const std::exception &)
     {
@@ -341,6 +377,11 @@ int main(int argi, char **argc)
       cout << "Failed to read " << inputFile << ", " << err.what() << endl;
       continue;
     }
+  }
+
+  if (groundArg)
+  {
+    addGround(groundCorners, exportZUpArg, assimpConstruct);
   }
 
   if (assimpConstruct.numMeshes())

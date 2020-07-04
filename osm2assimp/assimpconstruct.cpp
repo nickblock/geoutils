@@ -99,16 +99,15 @@ namespace GeoUtils
   {
     std::map<int, std::vector<aiMesh *>> materialMeshMap;
 
-    for (auto mesh : mMeshes)
+    for (int i = 0; i < mMeshes.size(); i++)
     {
-      auto iter = materialMeshMap.find(mesh->mMaterialIndex);
-      if (iter == materialMeshMap.end())
+      if (materialMeshMap.find(mMeshes[i]->mMaterialIndex) == materialMeshMap.end())
       {
-
-        materialMeshMap[mesh->mMaterialIndex] = {};
-        iter = materialMeshMap.find(mesh->mMaterialIndex);
+        materialMeshMap[mMeshes[i]->mMaterialIndex] = {};
       }
-      materialMeshMap[mesh->mMaterialIndex].push_back(mesh);
+      freezeMesh(mMeshes[i], mMeshParents[i]);
+      materialMeshMap[mMeshes[i]->mMaterialIndex]
+          .push_back(mMeshes[i]);
     }
 
     assimpScene->mNumMeshes = materialMeshMap.size();
@@ -305,6 +304,24 @@ namespace GeoUtils
       }
 
       aiMatrix4x4::Translation(totalVec, node->mTransformation);
+    }
+  }
+
+  void AssimpConstruct::freezeMesh(aiMesh *mesh, aiNode *parent)
+  {
+    if (parent == nullptr || parent->mTransformation.IsIdentity())
+    {
+      return;
+    }
+
+    for (int i = 0; i < mesh->mNumVertices; i++)
+    {
+      mesh->mVertices[i] *= parent->mTransformation;
+    }
+    for (int i = 0; i < mesh->mNumVertices; i++)
+    {
+      mesh->mNormals[i] *= parent->mTransformation;
+      mesh->mNormals[i].Normalize();
     }
   }
 

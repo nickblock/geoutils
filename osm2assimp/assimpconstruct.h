@@ -49,6 +49,8 @@ namespace GeoUtils
       return mExporter.GetErrorString();
     }
 
+    static void freezeMesh(aiMesh *, aiNode *parent);
+
     /// <summary>
     /// set the level of granularity of mesh export
     /// </summary>
