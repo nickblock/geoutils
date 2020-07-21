@@ -35,12 +35,12 @@ namespace GeoUtils
   {
     std::locale::global(std::locale(""));
 
-    mMatColors["ground"] = glm::vec3(1.0);
-    mMatColors["highway"] = glm::vec3(0.2);
+    mMatColors["ground"] = glm::vec3(149 / 255.f, 174 / 255.f, 81 / 255.f);
+    mMatColors["highway"] = glm::vec3(81 / 255.f, 149 / 255.f, 174 / 255.f);
     mMatColors["water"] = glm::vec3(0.2, 0.4, 0.8);
     mMatColors["green"] = glm::vec3(0.2, 0.7, 0.1);
     mMatColors["red"] = glm::vec3(0.8, 0.1, 0.2);
-    mMatColors["default"] = glm::vec3(0.7, 0.0, 0.5);
+    mMatColors["default"] = glm::vec3(174 / 255.f, 81 / 255.f, 149 / 255.f);
     mMatColors["building"] = glm::vec3(0.9, 0.1, 0.7);
   }
 
@@ -122,15 +122,15 @@ namespace GeoUtils
       {
         string materialName = "default";
 
-        if (feature.type() == OSMFeature::BUILDING)
+        if (feature.type() & OSMFeature::BUILDING)
         {
           materialName = "building";
         }
-        else if (feature.type() == OSMFeature::HIGHWAY)
+        else if (feature.type() & OSMFeature::HIGHWAY)
         {
           materialName = "highway";
         }
-        else if (feature.type() == OSMFeature::WATER)
+        else if (feature.type() & OSMFeature::WATER)
         {
           materialName = "water";
         }

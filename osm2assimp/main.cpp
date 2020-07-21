@@ -126,10 +126,11 @@ void parentNodesToS2Cell(uint64_t s2cellId, OSMDataImport &importer)
 
 void addGround(const std::vector<glm::vec2> &groundCorners, bool zup, AssimpConstruct &assimpConstruct)
 {
-  aiMesh *mesh = GeomConvert::extrude2dMesh(groundCorners, 0.1f);
+  float groundDepth = 0.1;
+  aiMesh *mesh = GeomConvert::extrude2dMesh(groundCorners, groundDepth);
   aiNode *parent = new aiNode;
-  aiMatrix4x4::Translation(zup ? aiVector3D(0.0, 0.0, -0.1) : aiVector3D(0.0, -0.1, 0.0), parent->mTransformation);
-  mesh->mMaterialIndex = assimpConstruct.addMaterial("ground", glm::vec3(228 / 255.f, 145 / 255.f, 36 / 255.f));
+  aiMatrix4x4::Translation(zup ? aiVector3D(0.0, 0.0, -groundDepth) : aiVector3D(0.0, -groundDepth, 0.0), parent->mTransformation);
+  mesh->mMaterialIndex = assimpConstruct.addMaterial("ground", glm::vec3(149 / 255.f, 174 / 255.f, 81 / 255.f));
   assimpConstruct.addMesh(mesh, "ground", parent);
 }
 
