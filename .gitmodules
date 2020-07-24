@@ -21,4 +21,4 @@
 	url = https://github.com/nickblock/eigen-git-mirror.git
 [submodule "ext/glm"]
 	path = ext/glm
-	url = git@github.com:g-truc/glm.git
+	url = https://ithub.com/g-truc/glm.git
