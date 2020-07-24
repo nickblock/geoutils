@@ -1,24 +1,24 @@
 [submodule "ext/libosmium"]
 	path = ext/libosmium
-	url = git@github.com:osmcode/libosmium.git
+	url = https://github.com/osmcode/libosmium.git
 [submodule "ext/protozero"]
 	path = ext/protozero
-	url = git@github.com:mapbox/protozero.git
+	url = https://github.com/mapbox/protozero.git
 [submodule "ext/s2geometry"]
 	path = ext/s2geometry
-	url = git@github.com:google/s2geometry.git
+	url = https://github.com/google/s2geometry.git
 [submodule "ext/rapidjson"]
 	path = ext/rapidjson
-	url = git@github.com:miloyip/rapidjson.git
+	url = https://github.com/miloyip/rapidjson.git
 [submodule "ext/assimp"]
 	path = ext/assimp
-	url = git@github.com:nickblock/assimp.git
+	url = https://github.com/nickblock/assimp.git
 [submodule "ext/gfxpoly"]
 	path = ext/gfxpoly
-	url = git@github.com:matthiaskramm/gfxpoly.git
+	url = https://github.com/matthiaskramm/gfxpoly.git
 [submodule "ext/eigen"]
 	path = ext/eigen
-	url = git@github.com:nickblock/eigen-git-mirror.git
+	url = https://github.com/nickblock/eigen-git-mirror.git
 [submodule "ext/glm"]
 	path = ext/glm
 	url = git@github.com:g-truc/glm.git
