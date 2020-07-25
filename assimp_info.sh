@@ -1,9 +1,7 @@
 #!/bin/bash
 
-build_folder=./build
-
 function get_assimp_info() {
-  "$build_folder"/ext/assimp/bin/assimpd info $1
+  assimpd info $1
 }
 
 function maxline() {
