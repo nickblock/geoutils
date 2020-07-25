@@ -4,10 +4,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 load assimp_info.sh
 
-if [ ! -z "$TEST_DATA_DIR" ]; 
-then
-  echo "You must export TEST_DATA_DIR variable point to a folder to store generated test data, and make sure the folder exists"
-fi
+setup() {
+
+  if [ -z "$TEST_DATA_DIR" ]; 
+  then
+    export TEST_DATA_DIR=/tmp
+  fi
+}
 
 @test "setup  context" {
 

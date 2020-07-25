@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function get_assimp_info() {
-  assimpd info $1
+  assimp info $1
 }
 
 function maxline() {
