@@ -1,206 +1,214 @@
 #!/usr/bin/env python3
 
-from xml.etree.ElementTree import Element, ElementTree, SubElement, Comment, tostring
+from xml.etree.ElementTree import Element, ElementTree, SubElement
 import xml.dom.minidom
 import argparse
 
+
 class OSMBuilder:
 
-  def __init__(self):
+    def __init__(self):
 
-    self.nodeIdx = 0
-    self.wayIdx = 0
+        self.nodeIdx = 0
+        self.wayIdx = 0
 
-    self.top = Element("osm")
-    self.top.set('generator', 'osm2assimp test generator')
-    self.top.set('version', '0.6')
-    self.bounds = SubElement(self.top, "bounds")
+        self.top = Element("osm")
+        self.top.set('generator', 'osm2assimp test generator')
+        self.top.set('version', '0.6')
+        self.bounds = SubElement(self.top, "bounds")
 
-    self.tree = ElementTree(self.top)
+        self.tree = ElementTree(self.top)
 
-    self.minLatLon = {}
-    self.maxLatLon = {}
+        self.minLatLon = {}
+        self.maxLatLon = {}
 
-  def check_minmax(self, lonlat):
+    def check_minmax(self, lonlat):
 
-    if self.nodeIdx == 0:
-      
-      self.minLatLon = {
-        "lat": lonlat["lat"],
-        "lon": lonlat["lon"],
-      }
-      self.maxLatLon = {
-        "lat": lonlat["lat"],
-        "lon": lonlat["lon"],
-      }
+        if self.nodeIdx == 0:
 
-    else:
-      
-      if lonlat["lat"] < self.minLatLon["lat"]:
-        self.minLatLon["lat"] = lonlat["lat"]
-      if lonlat["lon"] < self.minLatLon["lon"]:
-        self.minLatLon["lon"] = lonlat["lon"]
-      if lonlat["lat"] > self.maxLatLon["lat"]:
-        self.maxLatLon["lat"] = lonlat["lat"]
-      if lonlat["lon"] > self.maxLatLon["lon"]:
-        self.maxLatLon["lon"] = lonlat["lon"]
+            self.minLatLon = {
+                "lat": lonlat["lat"],
+                "lon": lonlat["lon"],
+            }
+            self.maxLatLon = {
+                "lat": lonlat["lat"],
+                "lon": lonlat["lon"],
+            }
 
-  def add_osm_node(self, parent_elem, lonlat):
+        else:
 
-    if parent_elem == None:
-      parent_elem = self.top
+            if lonlat["lat"] < self.minLatLon["lat"]:
+                self.minLatLon["lat"] = lonlat["lat"]
+            if lonlat["lon"] < self.minLatLon["lon"]:
+                self.minLatLon["lon"] = lonlat["lon"]
+            if lonlat["lat"] > self.maxLatLon["lat"]:
+                self.maxLatLon["lat"] = lonlat["lat"]
+            if lonlat["lon"] > self.maxLatLon["lon"]:
+                self.maxLatLon["lon"] = lonlat["lon"]
 
-    self.check_minmax(lonlat)
+    def add_osm_node(self, parent_elem, lonlat):
 
-    nodeElement = SubElement(parent_elem, "node", id=str(self.nodeIdx), visible="true", lat=str(lonlat["lat"]), lon=str(lonlat["lon"]))
+        if parent_elem is None:
+            parent_elem = self.top
 
-    self.nodeIdx += 1;
+        self.check_minmax(lonlat)
 
-    return self.nodeIdx - 1
+        SubElement(parent_elem, "node", id=str(
+            self.nodeIdx), visible="true", lat=str(lonlat["lat"]),
+            lon=str(lonlat["lon"]))
 
-  def add_node_id(self, parent_elem, idx):
+        self.nodeIdx += 1
 
-    nodeIdElem = SubElement(parent_elem, "nd", ref=str(idx))
+        return self.nodeIdx - 1
 
-  def add_highway(self, nodeIds):
+    def add_node_id(self, parent_elem, idx):
 
-    wayElement = SubElement(self.top, "way", id=str(self.wayIdx))
-    self.wayIdx += 1
+        SubElement(parent_elem, "nd", ref=str(idx))
 
-    for n in nodeIds:
-      self.add_node_id(wayElement, n)
+    def add_highway(self, nodeIds):
 
-    SubElement(wayElement, "tag", k="highway", v="primary")
+        wayElement = SubElement(self.top, "way", id=str(self.wayIdx))
+        self.wayIdx += 1
 
-  def add_rect_building(self, max_lonlat, min_lonlat, height):
+        for n in nodeIds:
+            self.add_node_id(wayElement, n)
 
-    ne = {
-      "lat": max_lonlat["lat"],
-      "lon": max_lonlat["lon"]
-    }
+        SubElement(wayElement, "tag", k="highway", v="primary")
 
-    nw = {
-      "lat": max_lonlat["lat"],
-      "lon": min_lonlat["lon"]
-    }
+    def add_rect_building(self, max_lonlat, min_lonlat, height):
 
-    se = {
-      "lat": min_lonlat["lat"],
-      "lon": max_lonlat["lon"]
-    }
+        ne = {
+            "lat": max_lonlat["lat"],
+            "lon": max_lonlat["lon"]
+        }
 
-    sw = {
-      "lat": min_lonlat["lat"],
-      "lon": min_lonlat["lon"]
-    }
+        nw = {
+            "lat": max_lonlat["lat"],
+            "lon": min_lonlat["lon"]
+        }
 
-    first_node = self.add_osm_node(self.top, ne)
+        se = {
+            "lat": min_lonlat["lat"],
+            "lon": max_lonlat["lon"]
+        }
 
-    nodeIds = [
-      first_node,
-      self.add_osm_node(self.top, nw),
-      self.add_osm_node(self.top, sw),
-      self.add_osm_node(self.top, se),
-      first_node
-    ]
+        sw = {
+            "lat": min_lonlat["lat"],
+            "lon": min_lonlat["lon"]
+        }
 
-    wayElement = SubElement(self.top, "way", id=str(self.wayIdx))
-    self.wayIdx += 1
+        first_node = self.add_osm_node(self.top, ne)
 
-    for n in nodeIds:
-      self.add_node_id(wayElement, n)
+        nodeIds = [
+            first_node,
+            self.add_osm_node(self.top, nw),
+            self.add_osm_node(self.top, sw),
+            self.add_osm_node(self.top, se),
+            first_node
+        ]
 
-    SubElement(wayElement, "tag", k="building", v="yes")
-    SubElement(wayElement, "tag", k="height", v=str(height))
-    
-  def write(self, filename):
+        wayElement = SubElement(self.top, "way", id=str(self.wayIdx))
+        self.wayIdx += 1
 
-    self.bounds.set("minlat", str(self.minLatLon["lat"]))
-    self.bounds.set("minlon", str(self.minLatLon["lon"]))
-    self.bounds.set("maxlat", str(self.maxLatLon["lat"]))
-    self.bounds.set("maxlon", str(self.maxLatLon["lon"]))
+        for n in nodeIds:
+            self.add_node_id(wayElement, n)
 
-    with open(filename, 'wb') as f:
-        self.tree.write(f, xml_declaration=True, encoding='utf-8')
+        SubElement(wayElement, "tag", k="building", v="yes")
+        SubElement(wayElement, "tag", k="height", v=str(height))
 
-    dom = xml.dom.minidom.parse(filename)
-    open(filename, 'w').write(dom.toprettyxml())
+    def write(self, filename):
 
-if __name__== "__main__":
+        self.bounds.set("minlat", str(self.minLatLon["lat"]))
+        self.bounds.set("minlon", str(self.minLatLon["lon"]))
+        self.bounds.set("maxlat", str(self.maxLatLon["lat"]))
+        self.bounds.set("maxlon", str(self.maxLatLon["lon"]))
 
-  parser = argparse.ArgumentParser()
+        with open(filename, 'wb') as f:
+            self.tree.write(f, xml_declaration=True, encoding='utf-8')
 
-  parser.add_argument("output", type=str, default="test.osm")
-  parser.add_argument("--extents", "-e", type=str, default="0.0,0.0,0.001,0.001")
-  parser.add_argument("--space", "-s", type=float, default=0.0002)
-  parser.add_argument("--height", type=float, default=10.0)
+        dom = xml.dom.minidom.parse(filename)
+        open(filename, 'w').write(dom.toprettyxml())
 
-  args = parser.parse_args()
 
-  extents = [float(x) for x in args.extents.split(',')]
+if __name__ == "__main__":
 
-  builder = OSMBuilder()
+    parser = argparse.ArgumentParser()
 
-  yidx = 0
-  xidx = 0
+    parser.add_argument("output", type=str, default="test.osm")
+    parser.add_argument("--extents", "-e", type=str,
+                        default="0.0,0.0,0.001,0.001")
+    parser.add_argument("--space", "-s", type=float, default=0.0002)
+    parser.add_argument("--height", type=float, default=10.0)
 
-  sw_corner = {}
-  ne_corner = {}
+    args = parser.parse_args()
 
-  highway_nodes = []
+    extents = [float(x) for x in args.extents.split(',')]
 
-  while True:
-    if yidx * args.space * 2 > extents[2] - extents[0]:
+    builder = OSMBuilder()
 
-      print(sw_corner)
-      print(ne_corner)
-
-      break
-
+    yidx = 0
     xidx = 0
+
+    sw_corner = {}
+    ne_corner = {}
+
+    highway_nodes = []
+
     while True:
+        if yidx * args.space * 2 > extents[2] - extents[0]:
 
-      if xidx * args.space * 2 > extents[3] - extents[1]:
-        break
+            print(sw_corner)
+            print(ne_corner)
 
-      sw_corner = {
-        "lat": extents[0] + args.space * yidx * 2,
-        "lon": extents[1] + args.space * xidx * 2
-      }
+            break
 
-      ne_corner = {
-        "lat": sw_corner["lat"] + args.space,
-        "lon": sw_corner["lon"] + args.space
-      }
+        xidx = 0
+        while True:
 
-      road_node = {
-        "lat": ne_corner["lat"] + args.space * 0.5,
-        "lon": ne_corner["lon"] + args.space * 0.5
-      }
+            if xidx * args.space * 2 > extents[3] - extents[1]:
+                break
 
-      highway_nodes.append(builder.add_osm_node(None, road_node))
+            sw_corner = {
+                "lat": extents[0] + args.space * yidx * 2,
+                "lon": extents[1] + args.space * xidx * 2
+            }
 
-      builder.add_rect_building(ne_corner, sw_corner, 30.0)
+            ne_corner = {
+                "lat": sw_corner["lat"] + args.space,
+                "lon": sw_corner["lon"] + args.space
+            }
 
-      xidx += 1
+            road_node = {
+                "lat": ne_corner["lat"] + args.space * 0.5,
+                "lon": ne_corner["lon"] + args.space * 0.5
+            }
 
-    yidx += 1
+            highway_nodes.append(builder.add_osm_node(None, road_node))
 
-  print("num highway nodes " + str(len(highway_nodes)) + "\nwidth = " + str(xidx))
+            builder.add_rect_building(ne_corner, sw_corner, 30.0)
 
-  for i in range(xidx):
+            xidx += 1
 
-    # print(highway_nodes[i:i+xidx-1])
-    begin = i * xidx
-    end = begin + xidx
-    builder.add_highway(highway_nodes[begin:end])
+        yidx += 1
 
-    v_nodes = []
-    for j in range(xidx-1):
-      index = j*xidx+i
-      if index < len(highway_nodes):
-        v_nodes.append(highway_nodes[j*xidx+i])
+    print("num highway nodes " +
+          str(len(highway_nodes)) +
+          "\nwidth = " +
+          str(xidx))
 
-    builder.add_highway(v_nodes)
+    for i in range(xidx):
 
-  builder.write(args.output)
+        # print(highway_nodes[i:i+xidx-1])
+        begin = i * xidx
+        end = begin + xidx
+        builder.add_highway(highway_nodes[begin:end])
+
+        v_nodes = []
+        for j in range(xidx-1):
+            index = j*xidx+i
+            if index < len(highway_nodes):
+                v_nodes.append(highway_nodes[j*xidx+i])
+
+        builder.add_highway(v_nodes)
+
+    builder.write(args.output)
