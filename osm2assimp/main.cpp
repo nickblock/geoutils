@@ -248,6 +248,7 @@ int main(int argi, char **argc)
         osmium::geom::Coordinates top_right = ConvertLatLngToCoords::to_coords(box.top_right());
         osmium::geom::Coordinates bottom_right(top_right.x, bottom_left.y);
         osmium::geom::Coordinates top_left(bottom_left.x, top_right.y);
+
         groundCorners[0] = {bottom_left.x, bottom_left.y};
         groundCorners[1] = {top_right.x, top_right.y};
         groundCorners[2] = {bottom_right.x, bottom_right.y};
