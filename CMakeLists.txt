@@ -186,6 +186,7 @@ if(BUILD_OSMSPLIT)
 endif()
 
 option(BUILD_OSM2ASSIMP "Build osm2assimp" ON)
+option(BUILD_GTEST "Build GoogelTest" ON)
 
 if(BUILD_OSM2ASSIMP)
 
@@ -193,55 +194,71 @@ if(BUILD_OSM2ASSIMP)
 
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPACKAGE_VERSION=\"1\" -fcommon")
 
-      add_library(gfxpoly STATIC
-            ext/gfxpoly/src/active.c
-            ext/gfxpoly/src/convert.c
-            ext/gfxpoly/src/dict.c
-            ext/gfxpoly/src/gfxline.c
-            ext/gfxpoly/src/moments.c
-            ext/gfxpoly/src/poly.c
-            ext/gfxpoly/src/render.c
-            ext/gfxpoly/src/stroke.c
-            ext/gfxpoly/src/wind.c
-            ext/gfxpoly/src/xrow.c )
+      add_library(clipper STATIC
+            ext/clipper/clipper.cpp)
+      
+      target_include_directories(clipper PRIVATE
+            ext/clipper )
 
-      target_include_directories(gfxpoly PRIVATE 
-            ext/gfxpoly/src 
-            ext/gfxpoly
-            ext/s2geometry/src)
-
-      add_executable(osm2assimp
+      add_library(osm2assimpLib STATIC 
             osm2assimp/assimpconstruct.cpp
             osm2assimp/convertlatlng.cpp
             osm2assimp/eigenconversion.cpp
-            osm2assimp/main.cpp
             osm2assimp/osmdata.cpp
             osm2assimp/osmfeature.cpp
             osm2assimp/geomconvert.cpp
             osm2assimp/viewfilter.cpp
-            ext/common.cpp)
+            ext/common.cpp
+      )
 
-      target_include_directories(osm2assimp PUBLIC 
-            osm2assimp 
+
+      target_include_directories(osm2assimpLib PUBLIC 
+            osm2assimp
             ext/libosmium/include 
             ext/protozero/include
-            ${CMAKE_CURRENT_BINARY_DIR}/thirdparty/geoutils/ext/assimp/include
+            ${CMAKE_CURRENT_BINARY_DIR}/ext/assimp/include
             ext/assimp/include
-            ext/gfxpoly
+            ext/clipper
             ext/eigen 
             ext/rapidjson/include 
             ext/glm 
+            ext/s2geometry/src
             ext 
-            s2util )
+            s2util 
+      )
 
+      add_executable(osm2assimp
+            osm2assimp/main.cpp
+      )
+
+      target_include_directories(osm2assimp PUBLIC 
+            osm2assimp 
+      )
+      
       if(MACOSX)
-            target_link_libraries(osm2assimp PUBLIC assimp 
-                  /usr/local/lib/libgeos.dylib
-                  bz2 z expat pthread gfxpoly s2)
-            target_include_directories(osm2assimp PUBLIC /usr/local/include )
+      target_link_libraries(osm2assimp PUBLIC assimp
+      osm2assimpLib
+      bz2 z expat pthread clipper s2)
+      target_include_directories(osm2assimp PUBLIC /usr/local/include )
       else()
-            target_link_libraries(osm2assimp PUBLIC assimp s2 ssl crypto bz2 z expat pthread gfxpoly)
+      target_link_libraries(osm2assimp PUBLIC osm2assimpLib assimp s2 ssl crypto bz2 z expat pthread clipper )
       endif()
+
+      if(BUILD_GTEST)
+            add_subdirectory(ext/googletest)
+      endif()
+
+      add_executable(osm2assimpTest 
+            osm2assimp/test.cpp
+      )
+      target_include_directories(osm2assimpTest PUBLIC
+            ext/googletest/googletest/include
+      )
+      target_link_libraries(osm2assimpTest PUBLIC 
+            osm2assimpLib
+            gtest_main
+            clipper
+      )
 
 endif()
 

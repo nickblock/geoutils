@@ -13,12 +13,12 @@
 [submodule "ext/assimp"]
 	path = ext/assimp
 	url = https://github.com/nickblock/assimp.git
-[submodule "ext/gfxpoly"]
-	path = ext/gfxpoly
-	url = https://github.com/matthiaskramm/gfxpoly.git
 [submodule "ext/eigen"]
 	path = ext/eigen
 	url = https://github.com/nickblock/eigen-git-mirror.git
 [submodule "ext/glm"]
 	path = ext/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "ext/googletest"]
+	path = ext/googletest
+	url = https://github.com/google/googletest.git
