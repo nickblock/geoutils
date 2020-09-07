@@ -186,7 +186,8 @@ if(BUILD_OSMSPLIT)
 endif()
 
 option(BUILD_OSM2ASSIMP "Build osm2assimp" ON)
-option(BUILD_GTEST "Build GoogelTest" ON)
+option(BUILD_GTEST "Build GoogleTest" ON)
+
 
 if(BUILD_OSM2ASSIMP)
 
@@ -245,6 +246,7 @@ if(BUILD_OSM2ASSIMP)
       endif()
 
       if(BUILD_GTEST)
+            message("Building GTest from Geoutils")
             add_subdirectory(ext/googletest)
       endif()
 
