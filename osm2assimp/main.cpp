@@ -124,6 +124,23 @@ void parentNodesToS2Cell(uint64_t s2cellId, OSMDataImport &importer)
   importer.setParentAINode(s2CellParentAINode);
 }
 
+std::vector<glm::vec2> cornersFromBox(const osmium::Box &box)
+{
+  std::vector<glm::vec2> groundCorners(4);
+
+  osmium::geom::Coordinates bottom_left = ConvertLatLngToCoords::to_coords(box.bottom_left());
+  osmium::geom::Coordinates top_right = ConvertLatLngToCoords::to_coords(box.top_right());
+  osmium::geom::Coordinates bottom_right(top_right.x, bottom_left.y);
+  osmium::geom::Coordinates top_left(bottom_left.x, top_right.y);
+
+  groundCorners[0] = {bottom_left.x, bottom_left.y};
+  groundCorners[1] = {top_right.x, top_right.y};
+  groundCorners[2] = {bottom_right.x, bottom_right.y};
+  groundCorners[3] = {top_left.x, top_left.y};
+
+  return groundCorners;
+}
+
 void addGround(const std::vector<glm::vec2> &groundCorners, bool zup, AssimpConstruct &assimpConstruct)
 {
   float groundDepth = 0.1;
@@ -228,7 +245,6 @@ int main(int argi, char **argc)
 
   if (extentsArg)
   {
-
     try
     {
       string extentsStr = args::get(extentsArg);
@@ -242,17 +258,7 @@ int main(int argi, char **argc)
 
       if (groundArg)
       {
-        groundCorners.resize(4);
-
-        osmium::geom::Coordinates bottom_left = ConvertLatLngToCoords::to_coords(box.bottom_left());
-        osmium::geom::Coordinates top_right = ConvertLatLngToCoords::to_coords(box.top_right());
-        osmium::geom::Coordinates bottom_right(top_right.x, bottom_left.y);
-        osmium::geom::Coordinates top_left(bottom_left.x, top_right.y);
-
-        groundCorners[0] = {bottom_left.x, bottom_left.y};
-        groundCorners[1] = {top_right.x, top_right.y};
-        groundCorners[2] = {bottom_right.x, bottom_right.y};
-        groundCorners[3] = {top_left.x, top_left.y};
+        groundCorners = cornersFromBox(box);
       }
     }
     catch (std::invalid_argument)
@@ -320,6 +326,8 @@ int main(int argi, char **argc)
 
   vector<string> inputFiles = getInputFiles(args::get(inputFileArg));
 
+  osmium::Box filesBox;
+
   for (auto &inputFile : inputFiles)
   {
     cout << inputFile << endl;
@@ -351,6 +359,7 @@ int main(int argi, char **argc)
           cout << "No bounds found in osm file and no RefPoint specified, aborting" << endl;
           exit(1);
         }
+        filesBox.extend(box);
       }
 
       //if the refPoint was not set via commandline take the bottom left of the first input file specified
@@ -383,6 +392,10 @@ int main(int argi, char **argc)
 
   if (groundArg)
   {
+    if (groundCorners.size() == 0)
+    {
+      groundCorners = cornersFromBox(filesBox);
+    }
     addGround(groundCorners, exportZUpArg, assimpConstruct);
   }
 
