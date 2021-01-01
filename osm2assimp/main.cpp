@@ -73,6 +73,7 @@ int main(int argi, char **argc)
   args::ValueFlag<string> extentsArg(parser, "Extents", "4 comma separated values; min lat, min long, max lat, max long", {'e'});
   args::ValueFlag<string> refPointArg(parser, "RefPoint", "2 comma separated values; latLng coords. To be used as point of origin for geometry ", {'p'});
   args::ValueFlag<string> s2CellArg(parser, "S2Cell", "S2 Cell Id as hex string. Filters nodes and ways only somepart inside S2 Cell", {'s', "s2"});
+  args::ValueFlag<float> uvScaleArg(parser, "UV Scale", "Scale UV set. UV set rounds to nearest 1.0 for quad nearest to given scale. Default parameter of zero omits UV set altogether.", {'u', "uv"});
 
   try
   {
@@ -222,6 +223,11 @@ int main(int argi, char **argc)
       cout << "failed to parse S2 Cell id string '" << args::get(s2CellArg) << "', is it a <=16 character hex string?" << endl;
       std::exit(1);
     }
+  }
+
+  if (uvScaleArg)
+  {
+    GeomConvert::texCoordScale = args::get(uvScaleArg);
   }
 
   vector<string> inputFiles = getInputFiles(args::get(inputFileArg));

@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/fwd.hpp>
 #include <osmium/osm/box.hpp>
 
 using std::string;
@@ -9,6 +11,18 @@ using std::vector;
 
 namespace GeoUtils
 {
+  struct BBox
+  {
+    BBox();
+    void add(const glm::vec3 &p);
+    void add(const BBox & /*bb*/);
+
+    auto transform(const glm::mat4 & /*mat*/) -> BBox;
+
+    glm::vec3 mMin{};
+    glm::vec3 mMax{};
+  };
+
   osmium::Box osmiumBoxFromString(string extentsStr);
   osmium::Location refPointFromArg(string refPointStr);
   vector<string> getInputFiles(string input);

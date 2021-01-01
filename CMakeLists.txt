@@ -261,6 +261,10 @@ if(BUILD_OSM2ASSIMP)
             osm2assimpLib
             gtest_main
             clipper
+            assimp
+            s2
+            bz2
+            expat
       )
 
 endif()

@@ -119,4 +119,43 @@ namespace GeoUtils
     mesh->mMaterialIndex = assimpConstruct.addMaterial("ground", glm::vec3(149 / 255.f, 174 / 255.f, 81 / 255.f));
     assimpConstruct.addMesh(mesh, "ground", parent);
   }
+
+  //boudning box functions
+
+  BBox::BBox()
+  {
+    mMin.x = std::numeric_limits<float>::max();
+    mMin.y = std::numeric_limits<float>::max();
+    mMin.z = std::numeric_limits<float>::max();
+    mMax.x = std::numeric_limits<float>::min();
+    mMax.y = std::numeric_limits<float>::min();
+    mMax.z = std::numeric_limits<float>::min();
+  }
+
+  void BBox::add(const glm::vec3 &p)
+  {
+    mMin = min(mMin, p);
+    mMax = max(mMax, p);
+  }
+  void BBox::add(const BBox &bb)
+  {
+    mMin = min(mMin, bb.mMin);
+    mMax = max(mMax, bb.mMax);
+  }
+
+  auto BBox::transform(const glm::mat4 &mat) -> BBox
+  {
+    BBox tBbox;
+
+    tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMin.y, mMin.z, 1.0)));
+    tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMax.y, mMax.z, 1.0)));
+    tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMin.y, mMin.z, 1.0)));
+    tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMax.y, mMin.z, 1.0)));
+    tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMin.y, mMax.z, 1.0)));
+    tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMax.y, mMax.z, 1.0)));
+    tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMin.y, mMax.z, 1.0)));
+    tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMax.y, mMin.z, 1.0)));
+
+    return tBbox;
+  }
 } // namespace GeoUtils
