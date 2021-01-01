@@ -137,7 +137,7 @@ int main(int argi, char **argc)
   ViewFilterList viewFilters;
 
   //the originLocation will decide the point of origin for the exported geometry file.
-  //if it's not decided by the refPoint cmd line arg it is taken from the bottom left
+  //if it's not specified by the refPoint cmd line arg it is taken from the bottom left
   //corner of the box, which in turn can be decided by the extents argument,
   // or is otherwise taken from the bounds of the input file.
   osmium::Location originLocation;
