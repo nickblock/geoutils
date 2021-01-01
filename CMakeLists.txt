@@ -209,6 +209,7 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp/osmfeature.cpp
             osm2assimp/geomconvert.cpp
             osm2assimp/viewfilter.cpp
+            osm2assimp/utils.cpp
             ext/common.cpp
       )
 
