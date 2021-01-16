@@ -49,6 +49,7 @@ namespace GeoUtils
 
     mergedMesh->mNumVertices = 0;
     mergedMesh->mNumFaces = 0;
+    mergedMesh->mNumUVComponents[0] = meshes[0]->mNumUVComponents[0];
 
     for (size_t i = 0; i < meshes.size(); i++)
     {
@@ -59,6 +60,11 @@ namespace GeoUtils
     mergedMesh->mVertices = new aiVector3D[mergedMesh->mNumVertices];
     mergedMesh->mNormals = new aiVector3D[mergedMesh->mNumVertices];
     mergedMesh->mFaces = new aiFace[mergedMesh->mNumFaces];
+
+    if (mergedMesh->mNumUVComponents[0])
+    {
+      mergedMesh->mTextureCoords[0] = new aiVector3D[mergedMesh->mNumVertices];
+    }
 
     int curVertices = 0;
     int curFaces = 0;
@@ -73,6 +79,13 @@ namespace GeoUtils
       memcpy(&mergedMesh->mNormals[curVertices],
              meshes[m]->mNormals,
              meshes[m]->mNumVertices * sizeof(aiVector3D));
+
+      if (mergedMesh->mNumUVComponents[0])
+      {
+        memcpy(&mergedMesh->mTextureCoords[0][curVertices],
+               meshes[m]->mTextureCoords[0],
+               meshes[m]->mNumVertices * sizeof(aiVector3D));
+      }
 
       for (size_t f = 0; f < meshes[m]->mNumFaces; f++)
       {

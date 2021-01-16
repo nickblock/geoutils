@@ -20,6 +20,7 @@ namespace GeoUtils
     /// A boolean deciding the up axis as z
     /// </summary>
     static bool zUp;
+    static float texCoordScale;
 
     static glm::vec3 upNormal();
     static glm::vec3 posFromLoc(double lon, double lat, double height);

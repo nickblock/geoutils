@@ -1,5 +1,6 @@
 #include "geomconvert.h"
 #include "common.h"
+#include "utils.h"
 
 #include "clipper.hpp"
 #include "glm/gtc/constants.hpp"
@@ -10,6 +11,7 @@ namespace GeoUtils
 {
 
   bool GeomConvert::zUp = false;
+  float GeomConvert::texCoordScale = 0.0f;
 
   bool lineIntersects2d(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x, float p2_y, float p3_x, float p3_y, glm::vec3 *intersection)
   {
@@ -161,6 +163,7 @@ namespace GeoUtils
     float accumEdge = 0;
 
     glm::vec2 center(0);
+
     for (size_t i = 0; i < numBaseVertices; i++)
     {
 
@@ -223,6 +226,9 @@ namespace GeoUtils
 
     vector<glm::vec3> vertices(doExtrude ? numBaseVertices * 6 : numBaseVertices);
     vector<glm::vec3> normals(vertices.size());
+    vector<glm::vec3> texcoords(texCoordScale != 0.0f ? vertices.size() : 0);
+
+    BBox bbox;
 
     for (size_t v = 0; v < numBaseVertices; v++)
     {
@@ -230,9 +236,13 @@ namespace GeoUtils
 
       vertices[v] = posFromLoc(nv.x, nv.y, 0.0);
       normals[v] = -upNormal();
+
+      bbox.add(vertices[v]);
+
       if (height > 0.f)
       {
         vertices[v + numBaseVertices] = posFromLoc(nv.x, nv.y, height);
+        bbox.add(vertices[v + numBaseVertices]);
         normals[v + numBaseVertices] = upNormal();
       }
     }
@@ -292,6 +302,20 @@ namespace GeoUtils
         vNormals[2] = n;
         vNormals[3] = n;
 
+        if (texcoords.size())
+        {
+          glm::vec3 *texCoord = &texcoords[index];
+
+          float width = (corners[0] - corners[1]).length();
+          float texCoordU = std::round(width / texCoordScale);
+          float texCoordV = std::round(height / texCoordScale);
+
+          texCoord[0] = {texCoordU, texCoordV, 0.f};
+          texCoord[1] = {0.f, texCoordV, 0.f};
+          texCoord[2] = {0.f, 0.f, 0.f};
+          texCoord[3] = {texCoordU, 0.f, 0.f};
+        }
+
         aiFace &face = newMesh->mFaces[2 + f];
         face.mNumIndices = 4;
         face.mIndices = new unsigned int[4];
@@ -308,6 +332,13 @@ namespace GeoUtils
 
     memcpy(newMesh->mVertices, vertices.data(), vertices.size() * sizeof(glm::vec3));
     memcpy(newMesh->mNormals, normals.data(), normals.size() * sizeof(glm::vec3));
+
+    if (texcoords.size())
+    {
+      newMesh->mNumUVComponents[0] = 2;
+      newMesh->mTextureCoords[0] = new aiVector3D[vertices.size()];
+      memcpy(newMesh->mTextureCoords[0], texcoords.data(), vertices.size() * sizeof(glm::vec3));
+    }
 
     return newMesh;
   }

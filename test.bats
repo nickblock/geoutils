@@ -24,7 +24,9 @@ setup() {
 
   mkdir -p $TEST_DATA_DIR
 
-  run osmsplit -i $TEST_DATA_DIR/test.osm -o $TEST_DATA_DIR -s 1 -l 4
+  cmd="osmsplit -i $TEST_DATA_DIR/test.osm -o $TEST_DATA_DIR -s 1 -l 4"
+  echo $cmd
+  run $cmd
   
   [ "$status" -eq 0 ]
   [ `ls -al $TEST_DATA_DIR/test*.osm.pbf | wc -l` -eq 16 ]
@@ -32,7 +34,9 @@ setup() {
 
 @test "split into S2 cells" {
 
-  run osms2split -i $TEST_DATA_DIR/test.osm -o $TEST_DATA_DIR -l 10
+  cmd="osms2split -i $TEST_DATA_DIR/test.osm -o $TEST_DATA_DIR -l 10"
+  echo $cmd
+  run $cmd
 
   [ "$status" -eq 0 ]
   [ -f $TEST_DATA_DIR/s2_4876030000000000.osm.pbf ]
@@ -43,7 +47,9 @@ setup() {
 
 @test "convert to geom" {
 
-  run osm2assimp -i $TEST_DATA_DIR/test0000.osm.pbf -o $TEST_DATA_DIR/test0000.osm.obj -r 
+  cmd="osm2assimp -i $TEST_DATA_DIR/test0000.osm.pbf -o $TEST_DATA_DIR/test0000.osm.obj -r"
+  echo $cmd
+  run $cmd
 
   [ "$status" -eq 0 ]
   [ -f $TEST_DATA_DIR/test0000.osm.obj ]
@@ -53,7 +59,10 @@ setup() {
 @test "convert with extents" {
 
   #these coordinates should produce an obj file 1km in width and depth, using the mercator projection
-  run osm2assimp -i $TEST_DATA_DIR/test.osm -o $TEST_DATA_DIR/extents.obj -e -0.085415,51.522852,-0.076432,51.528441 -z
+  cmd="osm2assimp -i $TEST_DATA_DIR/test.osm -o $TEST_DATA_DIR/extents.obj -e -0.085415,51.522852,-0.076432,51.528441 -z -u 3.5"
+
+  run $cmd
+  echo $cmd
 
   dimensions=$(get_dimensions "$TEST_DATA_DIR/extents.obj")
 
@@ -64,7 +73,9 @@ setup() {
 
 @test "export s2 cell" {
 
-  run osm2assimp -i $TEST_DATA_DIR/test.osm -o $TEST_DATA_DIR/48761cafc0000000.obj -s 48761cafc0000000 -z -r -g -a -c 1
+  cmd="osm2assimp -i $TEST_DATA_DIR/test.osm -o $TEST_DATA_DIR/48761cafc0000000.obj -s 48761cafc0000000 -z -r -g -a -c 1"
+  echo $cmd
+  run $cmd
 
   dimensions=$(get_dimensions "$TEST_DATA_DIR/48761cafc0000000.obj" )
 

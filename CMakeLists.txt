@@ -209,6 +209,7 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp/osmfeature.cpp
             osm2assimp/geomconvert.cpp
             osm2assimp/viewfilter.cpp
+            osm2assimp/utils.cpp
             ext/common.cpp
       )
 
@@ -260,6 +261,10 @@ if(BUILD_OSM2ASSIMP)
             osm2assimpLib
             gtest_main
             clipper
+            assimp
+            s2
+            bz2
+            expat
       )
 
 endif()
