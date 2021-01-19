@@ -108,13 +108,13 @@ namespace GeoUtils
       // if it's something that wants turning into a 3d mesh
       else if (feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) && feature.type() & OSMFeature::CLOSED)
       {
-        mesh = GeomConvert::extrude2dMesh(feature.coords(), feature.height());
+        mesh = GeomConvert::extrude2dMesh(feature.coords(), feature.height(), mCount);
       }
 
       // if it's something that wants turning into a polygon spline
       else if (feature.type() & OSMFeature::HIGHWAY)
       {
-        mesh = GeomConvert::polygonFromSpline(feature.coords(), 3.0);
+        mesh = GeomConvert::polygonFromSpline(feature.coords(), 3.0, mCount);
       }
 
       // if we made either kind of mesh successfully

@@ -62,7 +62,7 @@ namespace GeoUtils
     }
   }
 
-  aiMesh *GeomConvert::polygonFromSpline(const std::vector<glm::vec2> &vertices, float width)
+  aiMesh *GeomConvert::polygonFromSpline(const std::vector<glm::vec2> &vertices, float width, int index)
   {
     ClipperLib::ClipperOffset clipperOffset;
 
@@ -134,7 +134,7 @@ namespace GeoUtils
     }
   }
 
-  aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices, float height)
+  aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices, float height, int index)
   {
     using Edge = std::pair<glm::vec2, glm::vec2>;
     using EdgeList = std::vector<Edge>;
@@ -310,10 +310,10 @@ namespace GeoUtils
           float texCoordU = std::round(width / texCoordScale);
           float texCoordV = std::round(height / texCoordScale);
 
-          texCoord[0] = {texCoordU, texCoordV, 0.f};
-          texCoord[1] = {0.f, texCoordV, 0.f};
-          texCoord[2] = {0.f, 0.f, 0.f};
-          texCoord[3] = {texCoordU, 0.f, 0.f};
+          texCoord[0] = {texCoordU, texCoordV, static_cast<float>(index)};
+          texCoord[1] = {0.f, texCoordV, static_cast<float>(index)};
+          texCoord[2] = {0.f, 0.f, static_cast<float>(index)};
+          texCoord[3] = {texCoordU, 0.f, static_cast<float>(index)};
         }
 
         aiFace &face = newMesh->mFaces[2 + f];

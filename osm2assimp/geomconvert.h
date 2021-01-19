@@ -29,12 +29,12 @@ namespace GeoUtils
     /// Given an enclosed loop of 2d points defining a polygon the function returns a 3d mesh
     /// with the polygon as it's base and top extruded to the value of the given height
     /// <summary>
-    static aiMesh *extrude2dMesh(const std::vector<glm::vec2> &baseVertices, float height);
+    static aiMesh *extrude2dMesh(const std::vector<glm::vec2> &baseVertices, float height, int index);
 
     /// <summary>
     /// Given a list of points as a spline, creates a flat mesh for the spline of the given width
     /// </summary>
-    static aiMesh *polygonFromSpline(const std::vector<glm::vec2> &baseVertices, float width);
+    static aiMesh *polygonFromSpline(const std::vector<glm::vec2> &baseVertices, float width, int index);
   };
 
 } // namespace GeoUtils
