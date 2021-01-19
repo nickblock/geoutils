@@ -274,10 +274,15 @@ option(BUILD_S2UTIL "Build s2util" ON)
 if(BUILD_S2UTIL)
 
       add_executable(s2util 
-            s2util/main.cpp)
+            s2util/main.cpp
+            osm2assimp/eigenconversion.cpp)
 
-      target_include_directories(s2util PRIVATE ext)
-      target_include_directories(s2util PRIVATE ext/s2geometry/src)
+      target_include_directories(s2util PRIVATE 
+            ext
+            ext/s2geometry/src
+            osm2assimp
+            ext/eigen)
+            
       if(MACOSX)
             target_link_libraries(s2util PUBLIC s2 bz2 pthread)
       else()

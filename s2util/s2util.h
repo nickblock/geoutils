@@ -3,8 +3,12 @@
 #include "s2/s2cell.h"
 #include "s2/s2latlng.h"
 #include "s2/s2cell_id.h"
+#include "eigenconversion.h"
 #include <tuple>
 #include <iostream>
+#include <string>
+
+using std::string;
 
 namespace GeoUtils
 {
@@ -17,6 +21,18 @@ namespace GeoUtils
 
   public:
     using LatLng = std::tuple<double, double>;
+
+    static LatLng parseLatLonString(string latLngStr)
+    {
+      int commaPos = latLngStr.find_first_of(",");
+      double lat = std::stod(latLngStr.substr(0, commaPos));
+      latLngStr = latLngStr.substr(commaPos + 1, latLngStr.size());
+
+      commaPos = latLngStr.find_first_of(",");
+      double lon = std::stod(latLngStr.substr(0, commaPos));
+
+      return {lat,lon};
+    }
 
     static LatLng getS2Center(uint64_t id)
     {
@@ -80,6 +96,13 @@ namespace GeoUtils
       uint64_t id = std::stoul(res[1], nullptr, 16);
 
       return id;
+    }
+
+    static LatLng LLAToCartesian(LatLng loc, LatLng origin)
+    {
+      auto resultV3 = LLAtoNED({std::get<0>(origin), std::get<1>(origin), 0.0}, {std::get<0>(loc), std::get<1>(loc), 0.0});
+
+      return {resultV3[0], resultV3[1]};
     }
   };
 
