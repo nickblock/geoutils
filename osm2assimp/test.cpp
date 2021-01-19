@@ -11,7 +11,7 @@ TEST(Test, Spline)
       {0.0, 10.0},
       {5.0, 20.0}};
 
-  auto results = GeoUtils::GeomConvert::polygonFromSpline(points, 0.5);
+  auto results = GeoUtils::GeomConvert::polygonFromSpline(points, 0.5, 0);
 
   EXPECT_TRUE(results != nullptr);
 }
