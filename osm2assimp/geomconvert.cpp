@@ -306,7 +306,7 @@ namespace GeoUtils
         {
           glm::vec3 *texCoord = &texcoords[index];
 
-          float width = (corners[0] - corners[1]).length();
+          float width = glm::distance(corners[0], corners[1]);
           float texCoordU = std::round(width / texCoordScale);
           float texCoordV = std::round(height / texCoordScale);
 
