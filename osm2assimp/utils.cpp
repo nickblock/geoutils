@@ -115,7 +115,8 @@ namespace GeoUtils
     float groundDepth = 0.1;
     aiMesh *mesh = GeomConvert::extrude2dMesh(groundCorners, groundDepth, 0);
     aiNode *parent = new aiNode;
-    aiMatrix4x4::Translation(zup ? aiVector3D(0.0, 0.0, -groundDepth) : aiVector3D(0.0, -groundDepth, 0.0), parent->mTransformation);
+
+    aiMatrix4x4::Translation(zup ? aiVector3D(0.0, 0.0, -(groundDepth * 2.0f)) : aiVector3D(0.0, -(groundDepth * 2.0f), 0.0), parent->mTransformation);
     mesh->mMaterialIndex = assimpConstruct.addMaterial("ground", glm::vec3(149 / 255.f, 174 / 255.f, 81 / 255.f));
     assimpConstruct.addMesh(mesh, "ground", parent);
   }

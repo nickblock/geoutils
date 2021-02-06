@@ -182,20 +182,17 @@ namespace GeoUtils
 
     for (size_t i = 0; i < mMeshes.size(); i++)
     {
-      assimpScene->mRootNode->mChildren[i] = new aiNode();
-
+      auto meshParent = mMeshParents[i];
       if (mMeshParents[i] != nullptr)
       {
-        assimpScene->mRootNode->mChildren[i]->mParent = mMeshParents[i];
-        if (mMeshParents[i]->mParent == nullptr)
-        {
-          mMeshParents[i]->mParent = assimpScene->mRootNode;
-        }
+        auto meshParent = mMeshParents[i];
+        assimpScene->mRootNode->mChildren[i] = meshParent;
       }
       else
       {
-        assimpScene->mRootNode->mChildren[i]->mParent = assimpScene->mRootNode;
+        assimpScene->mRootNode->mChildren[i] = new aiNode();
       }
+      assimpScene->mRootNode->mChildren[i]->mParent = assimpScene->mRootNode;
       assimpScene->mRootNode->mChildren[i]->mNumMeshes = 1;
       assimpScene->mRootNode->mChildren[i]->mMeshes = new unsigned int[1];
       assimpScene->mRootNode->mChildren[i]->mMeshes[0] = i;
@@ -316,8 +313,9 @@ namespace GeoUtils
       {
         mesh->mVertices[v] -= totalVec;
       }
-
-      aiMatrix4x4::Translation(totalVec, node->mTransformation);
+      aiMatrix4x4 centerMat;
+      aiMatrix4x4::Translation(totalVec, centerMat);
+      node->mTransformation *= centerMat;
     }
   }
 
