@@ -103,9 +103,9 @@ namespace GeoUtils
     osmium::geom::Coordinates top_left(bottom_left.x, top_right.y);
 
     groundCorners[0] = {bottom_left.x, bottom_left.y};
-    groundCorners[1] = {top_right.x, top_right.y};
-    groundCorners[2] = {bottom_right.x, bottom_right.y};
-    groundCorners[3] = {top_left.x, top_left.y};
+    groundCorners[1] = {top_left.x, top_left.y};
+    groundCorners[2] = {top_right.x, top_right.y};
+    groundCorners[3] = {bottom_right.x, bottom_right.y};
 
     return groundCorners;
   }
