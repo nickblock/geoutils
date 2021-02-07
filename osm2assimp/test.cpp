@@ -4,14 +4,14 @@
 #include "glm/glm.hpp"
 #include <vector>
 
-TEST(Test, Spline)
+TEST(Test, MeshFromLine)
 {
   std::vector<glm::vec2> points = {
       {0.0, 0.0},
       {0.0, 10.0},
-      {5.0, 20.0}};
+      {10.0, 20.0}};
 
-  auto results = GeoUtils::GeomConvert::polygonFromSpline(points, 0.5, 0);
+  auto results = GeoUtils::GeomConvert::meshFromLine(points, 2.0, 0);
 
   EXPECT_TRUE(results != nullptr);
 }

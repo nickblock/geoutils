@@ -114,7 +114,7 @@ namespace GeoUtils
       // if it's something that wants turning into a polygon spline
       else if (feature.type() & OSMFeature::HIGHWAY)
       {
-        mesh = GeomConvert::polygonFromSpline(feature.coords(), 3.0, mCount);
+        mesh = GeomConvert::meshFromLine(feature.coords(), OSMFeature::RoadWidth, mCount);
       }
 
       // if we made either kind of mesh successfully

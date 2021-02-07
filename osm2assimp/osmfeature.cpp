@@ -14,7 +14,8 @@ namespace GeoUtils
 {
 
   int OSMFeature::DefaultNumberOfFloors = 3;
-  float OSMFeature::BuildingFloorHeight = 2.5;
+  float OSMFeature::BuildingFloorHeight = 2.5f;
+  float OSMFeature::RoadWidth = 3.0f;
 
   std::vector<std::vector<std::string>> NameTags = {
       {"name"}, {"addr:housename"}, {"addr:housenumber", "addr:street"}};

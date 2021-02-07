@@ -62,6 +62,7 @@ namespace GeoUtils
 
     static int DefaultNumberOfFloors;
     static float BuildingFloorHeight;
+    static float RoadWidth;
 
   private:
     float determineHeightFromWay(const osmium::Way &way);

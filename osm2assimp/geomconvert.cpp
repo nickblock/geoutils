@@ -1,8 +1,6 @@
 #include "geomconvert.h"
 #include "common.h"
 #include "utils.h"
-
-#include "clipper.hpp"
 #include "glm/gtc/constants.hpp"
 
 using std::vector;
@@ -13,7 +11,7 @@ namespace GeoUtils
   bool GeomConvert::zUp = false;
   float GeomConvert::texCoordScale = 0.0f;
 
-  bool lineIntersects2d(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x, float p2_y, float p3_x, float p3_y, glm::vec3 *intersection)
+  bool lineIntersects2d(float p0_x, float p0_y, float p1_x, float p1_y, float p2_x, float p2_y, float p3_x, float p3_y, glm::vec2 *intersection)
   {
     float s1_x, s1_y, s2_x, s2_y;
     s1_x = p1_x - p0_x;
@@ -25,14 +23,13 @@ namespace GeoUtils
     s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
     t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
 
+    if (intersection)
+    {
+      intersection->x = p0_x + (t * s1_x);
+      intersection->y = p0_y + (t * s1_y);
+    }
     if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
     {
-      if (intersection)
-      {
-        intersection->x = p0_x + (t * s1_x);
-        intersection->z = p0_y + (t * s1_y);
-        intersection->y = 0.f;
-      }
       return true;
     }
 
@@ -62,79 +59,130 @@ namespace GeoUtils
     }
   }
 
-  aiMesh *GeomConvert::polygonFromSpline(const std::vector<glm::vec2> &vertices, float width, int index)
+  struct LineSegment
   {
-    ClipperLib::ClipperOffset clipperOffset;
-
-    ClipperLib::Path inputPath;
-
-    constexpr int FloatToIntMultiplier = 100000;
-
-    for (auto &v : vertices)
+    LineSegment(const glm::vec2 &p0, const glm::vec2 &p1, float width)
     {
-      inputPath.push_back({static_cast<int>(v.x * FloatToIntMultiplier),
-                           static_cast<int>(v.y * FloatToIntMultiplier)});
+      auto dir = glm::normalize(p1 - p0);
+
+      auto norm = glm::vec2(-dir[1], dir[0]);
+      auto normWidth = norm * width / 2.0f;
+
+      mArcTan = atan2(dir.y, dir.x);
+
+      mPoints = {
+          p0 + normWidth,
+          p0 - normWidth,
+          p1 - normWidth,
+          p1 + normWidth,
+      };
+    }
+    std::array<glm::vec2, 2> crossPoints(const LineSegment &other)
+    {
+      std::array<glm::vec2, 2> result;
+      lineIntersects2d(this->mPoints[0].x, this->mPoints[0].y, this->mPoints[3].x, this->mPoints[3].y,
+                       other.mPoints[0].x, other.mPoints[0].y, other.mPoints[3].x, other.mPoints[3].y, &result[0]);
+      lineIntersects2d(this->mPoints[1].x, this->mPoints[1].y, this->mPoints[2].x, this->mPoints[2].y,
+                       other.mPoints[1].x, other.mPoints[1].y, other.mPoints[2].x, other.mPoints[2].y, &result[1]);
+
+      return result;
     }
 
-    clipperOffset.AddPath(inputPath, ClipperLib::jtMiter, ClipperLib::etOpenSquare);
+    std::array<glm::vec2, 4> mPoints;
+    float mArcTan;
+  };
 
-    ClipperLib::Paths solution;
-
-    clipperOffset.Execute(solution, width * FloatToIntMultiplier);
-
-    if (solution.size() > 0)
-    {
-
-      int totalVertices = 0;
-      for (auto &path : solution)
-      {
-        totalVertices += path.size();
-      }
-      aiMesh *mesh = new aiMesh;
-
-      mesh->mNumVertices = solution[0].size();
-      mesh->mVertices = new aiVector3D[mesh->mNumVertices];
-      mesh->mNormals = new aiVector3D[mesh->mNumVertices];
-
-      glm::vec3 gUpNormal = GeomConvert::upNormal();
-      aiVector3D aiUpNormal(gUpNormal.x, gUpNormal.y, gUpNormal.z);
-
-      for (size_t i = 0; i < mesh->mNumVertices; i++)
-      {
-        mesh->mNormals[i] = aiUpNormal;
-      }
-
-      mesh->mNumFaces = 1;
-      mesh->mFaces = new aiFace[1];
-
-      aiFace &aFace = mesh->mFaces[0];
-      aFace.mNumIndices = mesh->mNumVertices;
-      aFace.mIndices = new unsigned int[aFace.mNumIndices];
-
-      int idx = 0;
-      for (auto &p : solution[0])
-      {
-        glm::vec3 pv = posFromLoc(static_cast<double>(p.X) / FloatToIntMultiplier, static_cast<double>(p.Y) / FloatToIntMultiplier, 0.5);
-
-        aiVector3D &av = mesh->mVertices[idx];
-        av.x = pv.x;
-        av.y = pv.y;
-        av.z = pv.z;
-
-        aFace.mIndices[idx] = idx;
-
-        idx++;
-      }
-
-      return mesh;
-    }
-    else
+  aiMesh *GeomConvert::meshFromLine(const std::vector<glm::vec2> &line, float width, int featureId)
+  {
+    if (line.size() < 2)
     {
       return nullptr;
     }
+    int numSegments = line.size() - 1;
+
+    std::vector<glm::vec3> points;
+    std::vector<glm::vec3> texcoords;
+
+    auto lastSeg = LineSegment(line[0], line[1], width);
+
+    points.push_back(glm::vec3(lastSeg.mPoints[0], 0.0f));
+    points.push_back(glm::vec3(lastSeg.mPoints[1], 0.0f));
+
+    glm::vec2 uvDistance(0.0f, 0.0f);
+    texcoords.push_back({0.0f, uvDistance[0], static_cast<float>(featureId)});
+    texcoords.push_back({1.0f, uvDistance[1], static_cast<float>(featureId)});
+
+    for (int i = 1; i < numSegments; i++)
+    {
+      auto nextSeg = LineSegment(line[i + 0], line[i + 1], width);
+
+      auto crossPoints = lastSeg.crossPoints(nextSeg);
+
+      points.push_back(glm::vec3(crossPoints[0], 0.0f));
+      points.push_back(glm::vec3(crossPoints[1], 0.0f));
+
+      uvDistance += glm::vec2{
+          glm::distance(points[i * 2 + 0], points[i * 2 - 2]) / width,
+          glm::distance(points[i * 2 + 1], points[i * 2 - 1]) / width,
+      };
+
+      texcoords.push_back({0.0f, uvDistance[0], static_cast<float>(featureId)});
+      texcoords.push_back({1.0f, uvDistance[1], static_cast<float>(featureId)});
+
+      lastSeg = nextSeg;
+    }
+
+    points.push_back(glm::vec3(lastSeg.mPoints[3], 0.0f));
+    points.push_back(glm::vec3(lastSeg.mPoints[2], 0.0f));
+
+    uvDistance += glm::vec2{
+        glm::distance(points[points.size() - 1], points[points.size() - 3]) / width,
+        glm::distance(points[points.size() - 2], points[points.size() - 4]) / width,
+    };
+
+    texcoords.push_back({0.0f, uvDistance[0], static_cast<float>(featureId)});
+    texcoords.push_back({1.0f, uvDistance[1], static_cast<float>(featureId)});
+
+    aiMesh *mesh = new aiMesh;
+
+    mesh->mNumVertices = numSegments * 2 + 4;
+    mesh->mVertices = new aiVector3D[mesh->mNumVertices];
+    mesh->mNormals = new aiVector3D[mesh->mNumVertices];
+    mesh->mNumUVComponents[0] = 2;
+    mesh->mTextureCoords[0] = new aiVector3D[mesh->mNumVertices];
+    memcpy(mesh->mTextureCoords[0], texcoords.data(), mesh->mNumVertices * sizeof(glm::vec3));
+
+    mesh->mNumFaces = numSegments;
+    mesh->mFaces = new aiFace[numSegments];
+
+    memcpy(mesh->mVertices, points.data(), sizeof(glm::vec3) * points.size());
+
+    static auto aiUpNormal = aiVector3D(upNormal().x, upNormal().y, upNormal().z);
+    for (int i = 0; i < points.size(); i++)
+    {
+      mesh->mNormals[i] = aiUpNormal;
+    }
+
+    int vertIdx = 0;
+    int faceIdx = 0;
+
+    for (int i = 0; i < numSegments; i++)
+    {
+      auto &face = mesh->mFaces[faceIdx++];
+
+      face.mNumIndices = 4;
+      face.mIndices = new unsigned int[4];
+
+      face.mIndices[0] = (i * 2) + 0;
+      face.mIndices[1] = (i * 2) + 1;
+      face.mIndices[2] = (i * 2) + 3;
+      face.mIndices[3] = (i * 2) + 2;
+    }
+
+    return mesh;
   }
 
-  aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices, float height, int index)
+  aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices, float height, int featureId)
   {
     using Edge = std::pair<glm::vec2, glm::vec2>;
     using EdgeList = std::vector<Edge>;
@@ -310,10 +358,10 @@ namespace GeoUtils
           float texCoordU = std::round(width / texCoordScale);
           float texCoordV = std::round(height / texCoordScale);
 
-          texCoord[0] = {texCoordU, texCoordV, static_cast<float>(index)};
-          texCoord[1] = {0.f, texCoordV, static_cast<float>(index)};
-          texCoord[2] = {0.f, 0.f, static_cast<float>(index)};
-          texCoord[3] = {texCoordU, 0.f, static_cast<float>(index)};
+          texCoord[0] = {texCoordU, texCoordV, static_cast<float>(featureId)};
+          texCoord[1] = {0.f, texCoordV, static_cast<float>(featureId)};
+          texCoord[2] = {0.f, 0.f, static_cast<float>(featureId)};
+          texCoord[3] = {texCoordU, 0.f, static_cast<float>(featureId)};
         }
 
         aiFace &face = newMesh->mFaces[2 + f];

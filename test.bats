@@ -88,10 +88,11 @@ setup() {
 
 @test "s2util" {
 
-  run s2util s2_4876030000000000.osm.pbf --c
-
+  cmd="s2util s2_4876030000000000.osm.pbf -c"
+  echo $cmd
+  run $cmd
   echo "s2Utils = [$output]" 2>&3
 
   [ "$status" -eq 0 ]
-  [ "$output" = "51.473,-0.0468724 " ]
+  [ "$output" = "Cell Center = 51.473,-0.0468724" ]
 }
