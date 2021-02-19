@@ -112,6 +112,15 @@ namespace GeoUtils
     mMax = max(mMax, bb.mMax);
   }
 
+  glm::vec3 BBox::size()
+  {
+    return mMax - mMin;
+  }
+  glm::vec3 BBox::fraction(const glm::vec3 &in)
+  {
+    return (in - mMin) / size();
+  }
+
   auto BBox::transform(const glm::mat4 &mat) -> BBox
   {
     BBox tBbox;

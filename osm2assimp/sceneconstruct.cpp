@@ -2,6 +2,8 @@
 #include "assimpwriter.h"
 #include "geomconvert.h"
 #include "common.h"
+#include "ground.h"
+#include "assimp/mesh.h"
 #include <iostream>
 
 using std::cout;
@@ -50,13 +52,7 @@ namespace GeoUtils
   }
   void SceneConstruct::addGround(const std::vector<glm::vec2> &groundCorners)
   {
-    // float groundDepth = 5.0;
-    // aiMesh *mesh = GeomConvert::extrude2dMesh(groundCorners, groundDepth, 0);
-    // aiNode *parent = new aiNode;
-
-    // aiMatrix4x4::Translation(zup ? aiVector3D(0.0, 0.0, -(groundDepth + 0.1)) : aiVector3D(0.0, -(groundDepth + 0.1), 0.0), parent->mTransformation);
-    // mesh->mMaterialIndex = sceneConstruct.addMaterial("ground", glm::vec3(149 / 255.f, 174 / 255.f, 81 / 255.f));
-    // sceneConstruct.addMesh(mesh, "ground", parent);
+    mGroundCorners = groundCorners;
   }
   int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer, const OutputConfig &config)
   {
@@ -134,6 +130,23 @@ namespace GeoUtils
           cout << "Failed to decode some nodes" << endl;
         }
       }
+    }
+
+    if (mGroundCorners.size())
+    {
+      Ground ground(mGroundCorners);
+
+      for (auto &feature : mFeatures)
+      {
+        if (feature.type() & OSMFeature::BUILDING)
+        {
+          ground.addSubtraction(feature.coords());
+        }
+      }
+
+      aiMesh *mesh = ground.getMesh();
+      mesh->mMaterialIndex = writer.addMaterial("ground", mMatColors["ground"]);
+      writer.addMesh(mesh, "ground");
     }
 
     return writer.write(outFilePath);

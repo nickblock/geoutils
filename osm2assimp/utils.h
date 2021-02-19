@@ -21,6 +21,10 @@ namespace GeoUtils
 
     glm::vec3 mMin{};
     glm::vec3 mMax{};
+
+    glm::vec3 size();
+
+    glm::vec3 fraction(const glm::vec3 &in);
   };
 
   osmium::Box osmiumBoxFromString(string extentsStr);

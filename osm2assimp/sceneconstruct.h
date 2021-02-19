@@ -35,6 +35,7 @@ namespace GeoUtils
     const ViewFilterList &mFilters;
     std::map<std::string, glm::vec3> mMatColors;
     std::vector<OSMFeature> mFeatures;
+    std::vector<glm::vec2> mGroundCorners;
   };
 
 }
