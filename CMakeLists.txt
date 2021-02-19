@@ -195,8 +195,14 @@ if(BUILD_OSM2ASSIMP)
 
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPACKAGE_VERSION=\"1\" -fcommon")
 
+      add_library(clipper STATIC
+            ext/clipper/clipper.cpp)
+      
+      target_include_directories(clipper PRIVATE
+            ext/clipper )
+
       add_library(osm2assimpLib STATIC 
-            osm2assimp/assimpconstruct.cpp
+            osm2assimp/sceneconstruct.cpp
             osm2assimp/convertlatlng.cpp
             osm2assimp/eigenconversion.cpp
             osm2assimp/osmdata.cpp
@@ -214,6 +220,7 @@ if(BUILD_OSM2ASSIMP)
             ext/protozero/include
             ${CMAKE_CURRENT_BINARY_DIR}/ext/assimp/include
             ext/assimp/include
+            ext/clipper
             ext/eigen 
             ext/rapidjson/include 
             ext/glm 
@@ -233,10 +240,10 @@ if(BUILD_OSM2ASSIMP)
       if(MACOSX)
       target_link_libraries(osm2assimp PUBLIC assimp
       osm2assimpLib
-      bz2 z expat pthread s2)
+      bz2 z expat pthread clipper s2)
       target_include_directories(osm2assimp PUBLIC /usr/local/include )
       else()
-      target_link_libraries(osm2assimp PUBLIC osm2assimpLib assimp s2 ssl crypto bz2 z expat pthread )
+      target_link_libraries(osm2assimp PUBLIC osm2assimpLib assimp s2 ssl crypto bz2 z expat pthread clipper )
       endif()
 
       if(BUILD_GTEST)
@@ -253,6 +260,7 @@ if(BUILD_OSM2ASSIMP)
       target_link_libraries(osm2assimpTest PUBLIC 
             osm2assimpLib
             gtest_main
+            clipper
             assimp
             s2
             bz2

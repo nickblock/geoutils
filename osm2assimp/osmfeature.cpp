@@ -122,7 +122,15 @@ namespace GeoUtils
     }
     else
     {
-      mName = std::to_string(way.id());
+      if (mType & HIGHWAY)
+      {
+        mName = "Highway_";
+      }
+      else if (mType & BUILDING)
+      {
+        mName = "Building_";
+      }
+      mName += std::to_string(way.id());
     }
 
     for (auto node : way.nodes())

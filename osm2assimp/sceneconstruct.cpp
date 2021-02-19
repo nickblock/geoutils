@@ -1,5 +1,5 @@
 
-#include "assimpconstruct.h"
+#include "sceneconstruct.h"
 #include "osmdata.h"
 
 #include <assimp/Exporter.hpp>
@@ -15,9 +15,9 @@ using std::vector;
 
 namespace GeoUtils
 {
-  bool AssimpConstruct::mZUp = false;
+  bool SceneConstruct::mZUp = false;
 
-  AssimpConstruct::AssimpConstruct()
+  SceneConstruct::SceneConstruct()
   {
     int numFormats = mExporter.GetExportFormatCount();
 
@@ -33,12 +33,12 @@ namespace GeoUtils
     }
   }
 
-  void AssimpConstruct::setMeshGranularity(MeshGranularity m)
+  void SceneConstruct::setMeshGranularity(MeshGranularity m)
   {
     mGran = m;
   }
 
-  AssimpConstruct::NodeAndMesh AssimpConstruct::mergeMeshes(std::vector<aiMesh *> meshes, int meshIdx)
+  SceneConstruct::NodeAndMesh SceneConstruct::mergeMeshes(std::vector<aiMesh *> meshes, int meshIdx)
   {
     aiNode *node = new aiNode;
     node->mNumMeshes = 1;
@@ -108,7 +108,7 @@ namespace GeoUtils
     return {mergedMesh, node};
   }
 
-  void AssimpConstruct::buildMeshPerMaterial(aiScene *assimpScene)
+  void SceneConstruct::buildMeshPerMaterial(aiScene *assimpScene)
   {
     std::map<int, std::vector<aiMesh *>> materialMeshMap;
 
@@ -145,7 +145,7 @@ namespace GeoUtils
     }
   }
 
-  void AssimpConstruct::buildMegaMesh(aiScene *assimpScene)
+  void SceneConstruct::buildMegaMesh(aiScene *assimpScene)
   {
     assimpScene->mNumMeshes = 1;
     assimpScene->mMeshes = new aiMesh *[1];
@@ -170,7 +170,7 @@ namespace GeoUtils
         assimpScene->mRootNode->mChildren[0]) = mergeMeshes(mMeshes, 0);
   }
 
-  void AssimpConstruct::buildMeshPerObject(aiScene *assimpScene)
+  void SceneConstruct::buildMeshPerObject(aiScene *assimpScene)
   {
     assimpScene->mNumMeshes = mMeshes.size();
     assimpScene->mMeshes = mMeshes.data();
@@ -202,7 +202,7 @@ namespace GeoUtils
     centerMeshes(assimpScene);
   }
 
-  void AssimpConstruct::addLocatorsToScene(aiScene *assimpScene)
+  void SceneConstruct::addLocatorsToScene(aiScene *assimpScene)
   {
     int index = mMeshes.size();
     for (auto &locNode : mLocatorNodes)
@@ -214,7 +214,7 @@ namespace GeoUtils
     }
   }
 
-  int AssimpConstruct::write(const string &filename)
+  int SceneConstruct::write(const string &filename)
   {
 
     aiScene *assimpScene = new aiScene;
@@ -261,19 +261,19 @@ namespace GeoUtils
     return mExporter.Export(assimpScene, outExt, filename, aiProcess_Triangulate);
   }
 
-  void AssimpConstruct::addMesh(aiMesh *mesh, std::string name, aiNode *parent)
+  void SceneConstruct::addMesh(aiMesh *mesh, std::string name, aiNode *parent)
   {
     mMeshes.push_back(mesh);
     mMeshNames.push_back(name);
     mMeshParents.push_back(parent);
   }
 
-  void AssimpConstruct::addLocator(aiNode *node)
+  void SceneConstruct::addLocator(aiNode *node)
   {
     mLocatorNodes.push_back(node);
   }
 
-  int AssimpConstruct::addMaterial(std::string matname, glm::vec3 color)
+  int SceneConstruct::addMaterial(std::string matname, glm::vec3 color)
   {
     const auto &iter = mMaterialNameMap.find(matname);
     if (iter != mMaterialNameMap.end())
@@ -292,7 +292,7 @@ namespace GeoUtils
     }
   }
 
-  void AssimpConstruct::centerMeshes(aiScene *assimpScene)
+  void SceneConstruct::centerMeshes(aiScene *assimpScene)
   {
     for (int i = 0; i < assimpScene->mNumMeshes; i++)
     {
@@ -319,7 +319,7 @@ namespace GeoUtils
     }
   }
 
-  void AssimpConstruct::freezeMesh(aiMesh *mesh, aiNode *parent)
+  void SceneConstruct::freezeMesh(aiMesh *mesh, aiNode *parent)
   {
     if (parent == nullptr || parent->mTransformation.IsIdentity())
     {
@@ -337,11 +337,11 @@ namespace GeoUtils
     }
   }
 
-  const std::string &AssimpConstruct::formatsAvailableStr()
+  const std::string &SceneConstruct::formatsAvailableStr()
   {
     return mFormatsAvailable;
   }
-  bool AssimpConstruct::checkFormat(std::string ext)
+  bool SceneConstruct::checkFormat(std::string ext)
   {
     return mExtMap.find(ext) != mExtMap.end();
   }

@@ -17,7 +17,7 @@ namespace xmlpp
 namespace GeoUtils
 {
 
-  class AssimpConstruct;
+  class SceneConstruct;
 
   /// <summary>
   /// A class that handles the reading of ways and nodes from an OSM file
@@ -28,7 +28,7 @@ namespace GeoUtils
   {
 
   public:
-    OSMDataImport(AssimpConstruct &ac, const ViewFilterList &filters);
+    OSMDataImport(SceneConstruct &ac, const ViewFilterList &filters);
 
     void way(const osmium::Way &way);
 
@@ -52,7 +52,7 @@ namespace GeoUtils
     const ViewFilterList &mFilters;
     std::map<std::string, glm::vec3> mMatColors;
     std::vector<OSMFeature> mFeatures;
-    AssimpConstruct &mAssimpConstruct;
+    SceneConstruct &mSceneConstruct;
     aiNode *mParentNode;
   };
 

@@ -3,7 +3,7 @@
 #include "convertlatlng.h"
 #include "osmdata.h"
 #include "geomconvert.h"
-#include "assimpconstruct.h"
+#include "sceneconstruct.h"
 
 #include "assimp/scene.h"
 
@@ -110,15 +110,15 @@ namespace GeoUtils
     return groundCorners;
   }
 
-  void addGround(const vector<glm::vec2> &groundCorners, bool zup, AssimpConstruct &assimpConstruct)
+  void addGround(const vector<glm::vec2> &groundCorners, bool zup, SceneConstruct &sceneConstruct)
   {
-    float groundDepth = 0.1;
+    float groundDepth = 5.0;
     aiMesh *mesh = GeomConvert::extrude2dMesh(groundCorners, groundDepth, 0);
     aiNode *parent = new aiNode;
 
-    aiMatrix4x4::Translation(zup ? aiVector3D(0.0, 0.0, -(groundDepth * 2.0f)) : aiVector3D(0.0, -(groundDepth * 2.0f), 0.0), parent->mTransformation);
-    mesh->mMaterialIndex = assimpConstruct.addMaterial("ground", glm::vec3(149 / 255.f, 174 / 255.f, 81 / 255.f));
-    assimpConstruct.addMesh(mesh, "ground", parent);
+    aiMatrix4x4::Translation(zup ? aiVector3D(0.0, 0.0, -(groundDepth + 0.1)) : aiVector3D(0.0, -(groundDepth + 0.1), 0.0), parent->mTransformation);
+    mesh->mMaterialIndex = sceneConstruct.addMaterial("ground", glm::vec3(149 / 255.f, 174 / 255.f, 81 / 255.f));
+    sceneConstruct.addMesh(mesh, "ground", parent);
   }
 
   //boudning box functions

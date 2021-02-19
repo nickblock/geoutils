@@ -1,5 +1,5 @@
 #include "osmdata.h"
-#include "assimpconstruct.h"
+#include "sceneconstruct.h"
 #include "geomconvert.h"
 #include <iostream>
 #include <algorithm>
@@ -27,9 +27,9 @@ using std::vector;
 namespace GeoUtils
 {
 
-  OSMDataImport::OSMDataImport(AssimpConstruct &ac, const ViewFilterList &filters)
+  OSMDataImport::OSMDataImport(SceneConstruct &ac, const ViewFilterList &filters)
       : mCount(0),
-        mAssimpConstruct(ac),
+        mSceneConstruct(ac),
         mFilters(filters),
         mParentNode(nullptr)
   {
@@ -72,7 +72,7 @@ namespace GeoUtils
   {
     mParentNode = node;
 
-    mAssimpConstruct.addLocator(node);
+    mSceneConstruct.addLocator(node);
   }
 
   void sanitizeName(string &name)
@@ -88,25 +88,8 @@ namespace GeoUtils
 
       aiMesh *mesh = nullptr;
 
-      //if it's just a locator
-      if (feature.type() & OSMFeature::LOCATION)
-      {
-        glm::vec2 loc = feature.coords()[0];
-        glm::vec3 glm_pos = GeomConvert::posFromLoc(loc.x, loc.y, 0.0f);
-
-        aiNode *locatorNode = new aiNode;
-        aiVector3t<float> asm_pos(glm_pos.x, glm_pos.y, glm_pos.z);
-        aiMatrix4x4t<float>::Translation(asm_pos, locatorNode->mTransformation);
-
-        locatorNode->mName.Set(feature.name());
-
-        mAssimpConstruct.addLocator(locatorNode);
-
-        return;
-      }
-
       // if it's something that wants turning into a 3d mesh
-      else if (feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) && feature.type() & OSMFeature::CLOSED)
+      if (feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) && feature.type() & OSMFeature::CLOSED)
       {
         mesh = GeomConvert::extrude2dMesh(feature.coords(), feature.height(), mCount);
       }
@@ -140,12 +123,12 @@ namespace GeoUtils
           return;
         }
 
-        mesh->mMaterialIndex = mAssimpConstruct.addMaterial(materialName, mMatColors[materialName]);
+        mesh->mMaterialIndex = mSceneConstruct.addMaterial(materialName, mMatColors[materialName]);
 
         string nameSanitize = feature.name();
         sanitizeName(nameSanitize);
 
-        mAssimpConstruct.addMesh(mesh, nameSanitize, mParentNode);
+        mSceneConstruct.addMesh(mesh, nameSanitize, mParentNode);
 
         mCount++;
 
