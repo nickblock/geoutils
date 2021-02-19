@@ -205,7 +205,7 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp/sceneconstruct.cpp
             osm2assimp/convertlatlng.cpp
             osm2assimp/eigenconversion.cpp
-            osm2assimp/osmdata.cpp
+            osm2assimp/assimpwriter.cpp
             osm2assimp/osmfeature.cpp
             osm2assimp/geomconvert.cpp
             osm2assimp/viewfilter.cpp

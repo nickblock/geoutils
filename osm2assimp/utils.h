@@ -37,7 +37,4 @@ namespace GeoUtils
 
   std::vector<glm::vec2> cornersFromBox(const osmium::Box &box);
 
-  class SceneConstruct;
-  void addGround(const std::vector<glm::vec2> &groundCorners, bool zup, SceneConstruct &sceneConstruct);
-
 } // namespace GeoUtils

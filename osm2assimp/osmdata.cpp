@@ -59,8 +59,6 @@ namespace GeoUtils
 
     if (feature.isValid())
     {
-
-      process(feature);
     }
   }
 
@@ -70,90 +68,9 @@ namespace GeoUtils
 
   void OSMDataImport::setParentAINode(aiNode *node)
   {
-    mParentNode = node;
+    // mParentNode = node;
 
-    mSceneConstruct.addLocator(node);
-  }
-
-  void sanitizeName(string &name)
-  {
-
-    EngineBlock::replaceAll(name, "&", "&amp;");
-  }
-
-  void OSMDataImport::process(const OSMFeature &feature)
-  {
-    try
-    {
-
-      aiMesh *mesh = nullptr;
-
-      // if it's something that wants turning into a 3d mesh
-      if (feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) && feature.type() & OSMFeature::CLOSED)
-      {
-        mesh = GeomConvert::extrude2dMesh(feature.coords(), feature.height(), mCount);
-      }
-
-      // if it's something that wants turning into a polygon spline
-      else if (feature.type() & OSMFeature::HIGHWAY)
-      {
-        mesh = GeomConvert::meshFromLine(feature.coords(), OSMFeature::RoadWidth, mCount);
-      }
-
-      // if we made either kind of mesh successfully
-      if (mesh)
-      {
-        string materialName = "default";
-
-        if (feature.type() & OSMFeature::BUILDING)
-        {
-          materialName = "building";
-        }
-        else if (feature.type() & OSMFeature::HIGHWAY)
-        {
-          materialName = "highway";
-        }
-        else if (feature.type() & OSMFeature::WATER)
-        {
-          materialName = "water";
-        }
-
-        if (mesh->mNumFaces == 0 || mesh->mFaces[0].mNumIndices == 0)
-        {
-          return;
-        }
-
-        mesh->mMaterialIndex = mSceneConstruct.addMaterial(materialName, mMatColors[materialName]);
-
-        string nameSanitize = feature.name();
-        sanitizeName(nameSanitize);
-
-        mSceneConstruct.addMesh(mesh, nameSanitize, mParentNode);
-
-        mCount++;
-
-        return;
-      }
-      else
-      {
-
-        static bool failed = true;
-        if (failed)
-        {
-          cout << "Failed to import some buildings, eg " << feature.name() << endl;
-          failed = false;
-        }
-      }
-    }
-    catch (std::out_of_range)
-    {
-
-      static bool once = true;
-      if (once)
-      {
-        cout << "Failed to decode some nodes" << endl;
-      }
-    }
+    // mSceneConstruct.addLocator(node);
   }
 
 } // namespace GeoUtils

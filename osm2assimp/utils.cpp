@@ -3,9 +3,6 @@
 #include "convertlatlng.h"
 #include "osmdata.h"
 #include "geomconvert.h"
-#include "sceneconstruct.h"
-
-#include "assimp/scene.h"
 
 #include <glm/vec3.hpp>
 
@@ -76,23 +73,6 @@ namespace GeoUtils
     return filename.substr(dotPos + 1);
   }
 
-  void parentNodesToS2Cell(uint64_t s2cellId, OSMDataImport &importer)
-  {
-    S2Util::LatLng s2LatLng = S2Util::getS2Center(s2cellId);
-    osmium::Location s2CellCenterLocation = osmium::Location(std::get<1>(s2LatLng), std::get<0>(s2LatLng));
-
-    //the coords are given relative to the originLocation
-    const osmium::geom::Coordinates s2CellCenterCoord = ConvertLatLngToCoords::to_coords(s2CellCenterLocation);
-    ConvertLatLngToCoords::setRefPoint(s2CellCenterLocation);
-
-    aiNode *s2CellParentAINode = new aiNode(std::to_string(s2cellId));
-
-    aiVector3t<float> asm_pos(s2CellCenterCoord.x, 0.0f, s2CellCenterCoord.y);
-    aiMatrix4x4t<float>::Translation(asm_pos, s2CellParentAINode->mTransformation);
-
-    importer.setParentAINode(s2CellParentAINode);
-  }
-
   vector<glm::vec2> cornersFromBox(const osmium::Box &box)
   {
     vector<glm::vec2> groundCorners(4);
@@ -110,19 +90,7 @@ namespace GeoUtils
     return groundCorners;
   }
 
-  void addGround(const vector<glm::vec2> &groundCorners, bool zup, SceneConstruct &sceneConstruct)
-  {
-    float groundDepth = 5.0;
-    aiMesh *mesh = GeomConvert::extrude2dMesh(groundCorners, groundDepth, 0);
-    aiNode *parent = new aiNode;
-
-    aiMatrix4x4::Translation(zup ? aiVector3D(0.0, 0.0, -(groundDepth + 0.1)) : aiVector3D(0.0, -(groundDepth + 0.1), 0.0), parent->mTransformation);
-    mesh->mMaterialIndex = sceneConstruct.addMaterial("ground", glm::vec3(149 / 255.f, 174 / 255.f, 81 / 255.f));
-    sceneConstruct.addMesh(mesh, "ground", parent);
-  }
-
-  //boudning box functions
-
+  //bounding box functions
   BBox::BBox()
   {
     mMin.x = std::numeric_limits<float>::max();

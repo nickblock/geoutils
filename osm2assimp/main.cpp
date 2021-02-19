@@ -1,6 +1,7 @@
 #include "../args.hxx"
 #include "../tinyformat.h"
 #include "sceneconstruct.h"
+#include "assimpwriter.h"
 #include "geomconvert.h"
 #include "osmdata.h"
 #include "convertlatlng.h"
@@ -33,7 +34,7 @@ using std::endl;
 using std::make_shared;
 using std::vector;
 
-using GeoUtils::addGround;
+using GeoUtils::AssimpWriter;
 using GeoUtils::BoundFilter;
 using GeoUtils::ConvertLatLngToCoords;
 using GeoUtils::cornersFromBox;
@@ -43,7 +44,6 @@ using GeoUtils::getInputFiles;
 using GeoUtils::OSMDataImport;
 using GeoUtils::OSMFeature;
 using GeoUtils::osmiumBoxFromString;
-using GeoUtils::parentNodesToS2Cell;
 using GeoUtils::refPointFromArg;
 using GeoUtils::S2CellFilter;
 using GeoUtils::S2Util;
@@ -58,12 +58,12 @@ int main(int argi, char **argc)
 
   std::clock_t start = std::clock();
 
-  SceneConstruct sceneConstruct;
+  AssimpWriter assimpWriter;
 
   args::ArgumentParser parser("osm2assimp, convert osm files to geometry to be saved in a assimp compatible format.", "You must at least specify an input and an output file");
   args::HelpFlag help(parser, "HELP", "Show this help menu.", {'h', "help"});
   args::ValueFlag<std::string> inputFileArg(parser, "*.osm|*.pbf", "Specify input .osm file or comma separated list of files.", {'i'});
-  args::ValueFlag<std::string> outputFileArg(parser, sceneConstruct.formatsAvailableStr(), "Specify output file. The extension will be used to decide the output type. The type should be compatible with assimp", {'o'});
+  args::ValueFlag<std::string> outputFileArg(parser, assimpWriter.formatsAvailableStr(), "Specify output file. The extension will be used to decide the output type. The type should be compatible with assimp", {'o'});
   args::ValueFlag<float> fixedHeightArg(parser, "100.0", "Specify a default height to be used in absence of heights data", {'f'});
   args::ValueFlag<int> consolidateArg(parser, "Consolidate", "Consolidate mesh data into single mesh '0' or Mesh per Object '2'. Default is mesh per Material/Type '1'", {'c'});
   args::Flag highwayArg(parser, "Highways", "Include roads in export", {'r'});
@@ -111,7 +111,7 @@ int main(int argi, char **argc)
       cout << parser;
       exit(1);
     }
-    sceneConstruct.setMeshGranularity(static_cast<SceneConstruct::MeshGranularity>(choice));
+    assimpWriter.setMeshGranularity(static_cast<AssimpWriter::MeshGranularity>(choice));
   }
 
   if (exportZUpArg)
@@ -127,9 +127,9 @@ int main(int argi, char **argc)
   string outputFile = args::get(outputFileArg);
   auto outExt = getFileExt(outputFile);
 
-  if (!sceneConstruct.checkFormat(outExt))
+  if (!assimpWriter.checkFormat(outExt))
   {
-    cout << "Couldnt find filetype for extension '" << outExt << "', the avialable types are " << sceneConstruct.formatsAvailableStr() << endl;
+    cout << "Couldnt find filetype for extension '" << outExt << "', the avialable types are " << assimpWriter.formatsAvailableStr() << endl;
     return 1;
   }
 
@@ -234,6 +234,16 @@ int main(int argi, char **argc)
 
   osmium::Box filesBox;
 
+  int filter = OSMFeature::BUILDING;
+  if (highwayArg)
+  {
+    filter |= OSMFeature::HIGHWAY;
+  }
+
+  viewFilters.push_back(make_shared<TypeFilter>(filter));
+
+  SceneConstruct sceneConstruct(viewFilters);
+
   for (auto &inputFile : inputFiles)
   {
     cout << inputFile << endl;
@@ -275,19 +285,9 @@ int main(int argi, char **argc)
         ConvertLatLngToCoords::setRefPoint(originLocation);
       }
 
-      int filter = OSMFeature::BUILDING;
-      if (highwayArg)
-      {
-        filter |= OSMFeature::HIGHWAY;
-      }
+      osmium::apply(osmFileReader, locationHandler, sceneConstruct);
 
-      viewFilters.push_back(make_shared<TypeFilter>(filter));
-
-      OSMDataImport geoDataImporter(sceneConstruct, viewFilters);
-
-      osmium::apply(osmFileReader, locationHandler, geoDataImporter);
-
-      cout << "Ways Exported: " << geoDataImporter.exportCount() << endl;
+      cout << "Ways Exported: " << sceneConstruct.wayCount() << endl;
     }
     catch (const std::system_error &err)
     {
@@ -302,20 +302,21 @@ int main(int argi, char **argc)
     {
       groundCorners = cornersFromBox(filesBox);
     }
-    addGround(groundCorners, exportZUpArg, sceneConstruct);
+    sceneConstruct.addGround(groundCorners);
   }
 
-  if (sceneConstruct.numMeshes())
+  if (sceneConstruct.wayCount())
   {
-    if (AI_SUCCESS != sceneConstruct.write(outputFile.c_str()))
+    SceneConstruct::OutputConfig config{exportZUpArg, args::get(uvScaleArg)};
+    if (AI_SUCCESS != sceneConstruct.write(outputFile, assimpWriter, config))
     {
-      cout << "Failed to write out to '" << outputFile << "', " << sceneConstruct.exporterErrorStr() << endl;
+      cout << "Failed to write out to '" << outputFile << "', " << assimpWriter.exporterErrorStr() << endl;
       return 1;
     }
   }
   else
   {
-    cout << "No geometry found, nothing to write" << endl;
+    cout << "No relevant features found, nothing to write" << endl;
   }
 
   double elapsed = (std::clock() - start) / (double)CLOCKS_PER_SEC;
