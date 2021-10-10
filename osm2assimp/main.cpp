@@ -3,7 +3,6 @@
 #include "sceneconstruct.h"
 #include "assimpwriter.h"
 #include "geomconvert.h"
-#include "osmdata.h"
 #include "convertlatlng.h"
 #include "eigenconversion.h"
 #include "utils.h"
@@ -285,6 +284,7 @@ int main(int argi, char **argc)
         ConvertLatLngToCoords::setRefPoint(originLocation);
       }
 
+      // this is where it all happens
       osmium::apply(osmFileReader, locationHandler, sceneConstruct);
 
       cout << "Ways Exported: " << sceneConstruct.wayCount() << endl;

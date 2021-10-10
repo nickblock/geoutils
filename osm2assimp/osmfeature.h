@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils.h"
 #include <vector>
 #include <string>
 
@@ -47,6 +48,11 @@ namespace GeoUtils
     // <summary>
     OSMFeature(const osmium::Node &node, bool getNameFromOSM = false);
 
+    // <summary>
+    // Construct an OSMFeature manually from points, for debugging
+    // <summary>
+    OSMFeature(const std::vector<glm::vec2> &points, float height, int type, const std::string &name);
+
     int type() const { return mType; }
 
     bool isValid() const { return mValid; }
@@ -58,6 +64,11 @@ namespace GeoUtils
     const std::vector<glm::vec2> &coords() const
     {
       return mWorldCoords;
+    }
+
+    const BBox &getBBox() const
+    {
+      return mBBox;
     }
 
     static int DefaultNumberOfFloors;
@@ -72,6 +83,7 @@ namespace GeoUtils
     float mHeight;
     std::string mName;
     std::vector<glm::vec2> mWorldCoords;
+    BBox mBBox;
     bool mValid;
   };
 

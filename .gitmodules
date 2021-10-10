@@ -22,3 +22,6 @@
 [submodule "ext/googletest"]
 	path = ext/googletest
 	url = https://github.com/google/googletest.git
+[submodule "ext/poly2tri"]
+	path = ext/poly2tri
+	url = git@github.com:nickblock/poly2tri.git

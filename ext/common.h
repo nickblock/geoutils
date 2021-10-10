@@ -19,6 +19,7 @@ namespace EngineBlock
 
   using IntPair = std::pair<int, int>;
   using PointList = std::vector<glm::vec3>;
+  using PointList2D = std::vector<glm::vec2>;
   using DataBuffer = std::vector<unsigned char>;
   using FloatBuffer = std::vector<float>;
   using StringList = std::vector<std::string>;

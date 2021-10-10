@@ -1,6 +1,5 @@
 
 #include "assimpwriter.h"
-#include "osmdata.h"
 
 #include <assimp/Exporter.hpp>
 #include <assimp/postprocess.h>

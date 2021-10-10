@@ -138,9 +138,11 @@ namespace GeoUtils
 
       for (auto &feature : mFeatures)
       {
-        if (feature.type() & OSMFeature::BUILDING)
+        if (feature.type() & OSMFeature::BUILDING
+            //&& (feature.name() == "Building_107794232") //|| feature.name() == "Building_160140576")*/
+        )
         {
-          ground.addSubtraction(feature.coords());
+          ground.addSubtraction(feature);
         }
       }
 

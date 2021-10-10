@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <string>
 #include <vector>
 #include <glm/vec2.hpp>
@@ -25,6 +27,8 @@ namespace GeoUtils
     glm::vec3 size();
 
     glm::vec3 fraction(const glm::vec3 &in);
+
+    bool overlaps(const BBox &other) const;
   };
 
   osmium::Box osmiumBoxFromString(string extentsStr);
@@ -40,5 +44,13 @@ namespace GeoUtils
   void parentNodesToS2Cell(uint64_t s2cellId, OSMDataImport &importer);
 
   std::vector<glm::vec2> cornersFromBox(const osmium::Box &box);
+
+  std::vector<std::vector<glm::vec2>> intersectPolygons(const std::vector<glm::vec2> &first, const std::vector<glm::vec2> &second);
+
+  bool polyOrientation(const std::vector<glm::vec2> &poly);
+
+  std::vector<glm::vec2> cleanPolyon(const std::vector<glm::vec2> &);
+
+  BBox bBoxFromPoints2D(const std::vector<glm::vec2> &points);
 
 } // namespace GeoUtils

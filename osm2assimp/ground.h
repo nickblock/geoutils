@@ -1,12 +1,11 @@
 #include <vector>
+#include <map>
 #include "glm/vec2.hpp"
-#include "clipper.hpp"
 #include "utils.h"
+#include "osmfeature.h"
 
 class aiMesh;
 
-using ClipperLib::Path;
-using ClipperLib::Paths;
 namespace GeoUtils
 {
   class Ground
@@ -14,15 +13,23 @@ namespace GeoUtils
   public:
     Ground(const std::vector<glm::vec2> &);
 
-    void addSubtraction(const std::vector<glm::vec2> &polygon);
+    void addSubtraction(const OSMFeature &feature);
 
     aiMesh *getMesh();
 
-    void writePoly(const std::string &path);
+    void writeSvg(const std::string &path, float scale);
 
   protected:
-    Path mExtents;
-    Paths mSubs;
+    using BoxPoly = std::tuple<BBox, std::vector<glm::vec2>>;
+    static constexpr int Box = 0;
+    static constexpr int Poly = 1;
+
+    std::vector<glm::vec2> mExtents;
+    std::vector<BoxPoly> mSubs;
+
+    std::vector<OSMFeature> mFeatures;
+
+    int mAdded = 0;
 
     BBox mBBox;
   };

@@ -1,7 +1,7 @@
 #include "utils.h"
+#include "clipper.hpp"
 #include "s2util.h"
 #include "convertlatlng.h"
-#include "osmdata.h"
 #include "geomconvert.h"
 
 #include <glm/vec3.hpp>
@@ -90,6 +90,85 @@ namespace GeoUtils
     return groundCorners;
   }
 
+  constexpr int FloatToIntMultiplier = 100000;
+
+  ClipperLib::Path fromPointList(const std::vector<glm::vec2> &points)
+  {
+    ClipperLib::Path path;
+
+    for (auto &p : points)
+    {
+      path.push_back({static_cast<int>(p.x * FloatToIntMultiplier),
+                      static_cast<int>(p.y * FloatToIntMultiplier)});
+    }
+    return path;
+  }
+
+  std::vector<glm::vec2> fromPath(const ClipperLib::Path &path)
+  {
+    std::vector<glm::vec2> points;
+
+    for (auto &p : path)
+    {
+      points.push_back({
+          static_cast<float>(p.X) / FloatToIntMultiplier,
+          static_cast<float>(p.Y) / FloatToIntMultiplier,
+      });
+    }
+    return points;
+  }
+
+  BBox bBoxFromPoints2D(const std::vector<glm::vec2> &points)
+  {
+    BBox bbox;
+
+    for (auto &p : points)
+    {
+      bbox.add(glm::vec3(p, 0.0));
+    }
+
+    return bbox;
+  }
+
+  std::vector<std::vector<glm::vec2>> intersectPolygons(const std::vector<glm::vec2> &first, const std::vector<glm::vec2> &second)
+  {
+    ClipperLib::Clipper clipper;
+
+    ClipperLib::Path subject = fromPointList(first);
+
+    clipper.AddPath(subject, ClipperLib::ptSubject, true);
+
+    ClipperLib::Path clip = fromPointList(second);
+
+    clipper.AddPath(clip, ClipperLib::ptClip, true);
+
+    ClipperLib::Paths solution;
+
+    clipper.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
+
+    std::vector<std::vector<glm::vec2>> result;
+
+    for (auto &path : solution)
+    {
+      result.push_back(fromPath(path));
+    }
+
+    return result;
+  }
+
+  bool polyOrientation(const std::vector<glm::vec2> &poly)
+  {
+    return ClipperLib::Orientation(fromPointList(poly));
+  }
+
+  std::vector<glm::vec2> cleanPolyon(const std::vector<glm::vec2> &points)
+  {
+    ClipperLib::Path out;
+    ClipperLib::CleanPolygon(fromPointList(points), out, 10.0);
+
+    return fromPath(out);
+  }
+
   //bounding box functions
   BBox::BBox()
   {
@@ -119,6 +198,19 @@ namespace GeoUtils
   glm::vec3 BBox::fraction(const glm::vec3 &in)
   {
     return (in - mMin) / size();
+  }
+
+  bool BBox::overlaps(const BBox &other) const
+  {
+    for (int i = 0; i < mMin.length(); i++)
+    {
+      bool overlap = this->mMax[i] >= other.mMin[i] && other.mMax[i] > this->mMin[i];
+      if (!overlap)
+      {
+        return false;
+      }
+    }
+    return true;
   }
 
   auto BBox::transform(const glm::mat4 &mat) -> BBox

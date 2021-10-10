@@ -110,6 +110,18 @@ namespace GeoUtils
     return type;
   }
 
+  OSMFeature::OSMFeature(const std::vector<glm::vec2> &points, float height, int type, const std::string &name)
+      : mWorldCoords(points),
+        mType(type),
+        mHeight(height),
+        mName(name)
+  {
+    for (auto &p : mWorldCoords)
+    {
+      mBBox.add(glm::vec3(p, 0.0));
+    }
+  }
+
   OSMFeature::OSMFeature(const osmium::Way &way, bool getNameFromOSM)
       : mHeight(determineHeightFromWay(way)),
         mType(determineTypeFromWay(way)),
@@ -141,6 +153,8 @@ namespace GeoUtils
       glm::vec2 coord(c.x, c.y);
 
       mWorldCoords.push_back(coord);
+
+      mBBox.add(glm::vec3(coord, 0.0));
     }
 
     if (
