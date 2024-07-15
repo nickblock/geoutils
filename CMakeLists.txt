@@ -1,7 +1,10 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.15)
 
 # Name of the project (will be the name of the plugin)
 project(geoutils)
+
+
+find_package(GTest REQUIRED)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(MACOSX TRUE)
@@ -186,10 +189,11 @@ if(BUILD_OSMSPLIT)
 endif()
 
 option(BUILD_OSM2ASSIMP "Build osm2assimp" ON)
-option(BUILD_GTEST "Build GoogleTest" ON)
 
 
 if(BUILD_OSM2ASSIMP)
+
+
 
       add_subdirectory(ext/assimp)
 
@@ -262,10 +266,6 @@ if(BUILD_OSM2ASSIMP)
       target_link_libraries(osm2assimp PUBLIC osm2assimpLib assimp s2 ssl crypto bz2 z expat pthread poly2tri clipper )
       endif()
 
-      if(BUILD_GTEST)
-            message("Building GTest from Geoutils")
-            add_subdirectory(ext/googletest)
-      endif()
 
       add_executable(osm2assimpTest 
             osm2assimp/test.cpp
@@ -275,8 +275,9 @@ if(BUILD_OSM2ASSIMP)
       )
       target_link_libraries(osm2assimpTest PUBLIC 
             osm2assimpLib
-            gtest_main
             poly2tri clipper
+            gtest::gtest
+            clipper
             assimp
             s2
             bz2

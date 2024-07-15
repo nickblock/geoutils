@@ -4,13 +4,22 @@ A set of tools for converting Open Street Map data into 3d geometry, also incorp
 
 ## Building
 
+Install and use Conan
+
+conan profile detect --force
+
+create a conan profile with debug setting.
+then build
+
+conan install . --output-folder=build --build=missing -pr=Debug
+
 In root directory create a build folder
 
     mkdir build
 
 cd into into it and build with cmake
 
-    cmake ..
+    cmake .. -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=debug
 
 On systems that dont have c++ filesystem (MacOS), you need to avoid one of the tools:
 
