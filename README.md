@@ -11,7 +11,7 @@ conan profile detect --force
 create a conan profile with debug setting.
 then build
 
-conan install . --output-folder=build --build=missing -pr=Debug
+conan install . --output-folder=build --build=missing -pr=debug
 
 In root directory create a build folder
 

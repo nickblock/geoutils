@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.22.6)
 
 # Name of the project (will be the name of the plugin)
 project(geoutils)
@@ -7,7 +7,7 @@ project(geoutils)
 find_package(GTest REQUIRED)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(MACOSX TRUE)
+set(MACOSX TRUE)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRAPIDJSON_HAS_STDSTRING=1 -DGLM_FORCE_RADIANS=1 -std=c++14")
@@ -269,9 +269,6 @@ if(BUILD_OSM2ASSIMP)
 
       add_executable(osm2assimpTest 
             osm2assimp/test.cpp
-      )
-      target_include_directories(osm2assimpTest PUBLIC
-            ext/googletest/googletest/include
       )
       target_link_libraries(osm2assimpTest PUBLIC 
             osm2assimpLib
