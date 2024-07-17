@@ -15,6 +15,6 @@ class GeoUtilsConan(ConanFile):
 
     def requirements(self):
         self.requires("gtest/1.14.0")
-
-    def layout(self):
-        cmake_layout(self)
+        self.requires("assimp/5.4.1")
+        self.requires("poly2tri/cci.20130502")
+        self.requires("rapidjson/cci.20230929")

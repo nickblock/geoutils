@@ -5,6 +5,10 @@ project(geoutils)
 
 
 find_package(GTest REQUIRED)
+find_package(RapidJSON REQUIRED)
+find_package(assimp REQUIRED)
+find_package(poly2tri REQUIRED)
+
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 set(MACOSX TRUE)
@@ -16,6 +20,38 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRAPIDJSON_HAS_STDSTRING=1 -DGLM_FORCE_
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gdwarf-2")
 endif()
+
+option(BUILD_OSMSPLIT "Build osmsplit" ON)
+
+if(BUILD_OSMSPLIT)
+
+      add_library(osmsplitlib STATIC
+            osmsplit/osmsplitconfig.cpp 
+            osmsplit/osmsplitwriter.cpp )
+
+      add_executable(osmsplit
+            osmsplit/main.cpp )
+
+      set(OSMSPLIT_INCLUDES
+            ext/libosmium/include 
+            ext/protozero/include
+            ext/pnghpp 
+            ext )
+
+      target_include_directories(osmsplitlib PUBLIC ${OSMSPLIT_INCLUDES} )
+      target_include_directories(osmsplit PUBLIC ${OSMSPLIT_INCLUDES})
+
+      target_link_libraries(osmsplitlib PUBLIC rapidjson)
+
+      if(MACOSX)
+            target_include_directories(osmsplit PUBLIC /usr/local/include )
+            link_directories(/usr/local/lib)
+            target_link_libraries(osmsplit PUBLIC osmsplitlib pthread bz2 z expat png rapidjson)
+      else()
+            target_link_libraries(osmsplit PUBLIC osmsplitlib pthread stdc++fs bz2 z expat png rapidjson)
+      endif()
+endif()
+
 
 option(BUILD_OSMS2SPLIT "Build osms2split" ON)
 
@@ -157,45 +193,9 @@ if(BUILD_OSMS2SPLIT)
 
 endif()
 
-
-option(BUILD_OSMSPLIT "Build osmsplit" ON)
-
-if(BUILD_OSMSPLIT)
-
-      add_library(osmsplitlib STATIC
-            osmsplit/osmsplitconfig.cpp 
-            osmsplit/osmsplitwriter.cpp )
-
-      add_executable(osmsplit
-            osmsplit/main.cpp )
-
-      set(OSMSPLIT_INCLUDES
-            ext/libosmium/include 
-            ext/protozero/include
-            ext/rapidjson/include 
-            ext/pnghpp 
-            ext )
-
-      target_include_directories(osmsplitlib PUBLIC ${OSMSPLIT_INCLUDES} )
-      target_include_directories(osmsplit PUBLIC ${OSMSPLIT_INCLUDES})
-
-      if(MACOSX)
-            target_include_directories(osmsplit PUBLIC /usr/local/include )
-            link_directories(/usr/local/lib)
-            target_link_libraries(osmsplit PUBLIC osmsplitlib pthread bz2 z expat png)
-      else()
-            target_link_libraries(osmsplit PUBLIC osmsplitlib pthread stdc++fs bz2 z expat png)
-      endif()
-endif()
-
 option(BUILD_OSM2ASSIMP "Build osm2assimp" ON)
 
-
 if(BUILD_OSM2ASSIMP)
-
-
-
-      add_subdirectory(ext/assimp)
 
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPACKAGE_VERSION=\"1\" -fcommon")
 
@@ -204,20 +204,6 @@ if(BUILD_OSM2ASSIMP)
       
       target_include_directories(clipper PRIVATE
             ext/clipper )
-
-      add_library(poly2tri STATIC
-            ext/poly2tri/poly2tri/common/shapes.cc
-            ext/poly2tri/poly2tri/sweep/advancing_front.cc
-            ext/poly2tri/poly2tri/sweep/cdt.cc
-            ext/poly2tri/poly2tri/sweep/sweep.cc
-            ext/poly2tri/poly2tri/sweep/sweep_context.cc
-      )
-
-      target_include_directories(poly2tri PRIVATE
-            ext/poly2tri/poly2tri 
-            ext/poly2tri/poly2tri/common
-            ext/poly2tri/poly2tri/sweep
-      )
 
       add_library(osm2assimpLib STATIC 
             osm2assimp/sceneconstruct.cpp
@@ -237,17 +223,14 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp
             ext/libosmium/include 
             ext/protozero/include
-            ${CMAKE_CURRENT_BINARY_DIR}/ext/assimp/include
-            ext/assimp/include
-            ext/poly2tri/poly2tri
             ext/clipper
-            ext/eigen 
-            ext/rapidjson/include 
+            ext/eigen  
             ext/glm 
             ext/s2geometry/src
             ext 
             s2util 
       )
+      target_link_libraries(osm2assimpLib PUBLIC assimp::assimp poly2tri::poly2tri)
 
       add_executable(osm2assimp
             osm2assimp/main.cpp
@@ -258,12 +241,12 @@ if(BUILD_OSM2ASSIMP)
       )
       
       if(MACOSX)
-      target_link_libraries(osm2assimp PUBLIC assimp
+      target_link_libraries(osm2assimp PUBLIC assimp::assimp
       osm2assimpLib
-      bz2 z expat pthread poly2tri clipper s2)
+      bz2 z expat pthread clipper s2)
       target_include_directories(osm2assimp PUBLIC /usr/local/include )
       else()
-      target_link_libraries(osm2assimp PUBLIC osm2assimpLib assimp s2 ssl crypto bz2 z expat pthread poly2tri clipper )
+      target_link_libraries(osm2assimp PUBLIC osm2assimpLib assimp::assimp s2 ssl crypto bz2 z expat pthread clipper )
       endif()
 
 
@@ -275,7 +258,7 @@ if(BUILD_OSM2ASSIMP)
             poly2tri clipper
             gtest::gtest
             clipper
-            assimp
+            assimp::assimp
             s2
             bz2
             expat
