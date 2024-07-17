@@ -8,6 +8,7 @@ find_package(GTest REQUIRED)
 find_package(RapidJSON REQUIRED)
 find_package(assimp REQUIRED)
 find_package(poly2tri REQUIRED)
+find_package(glm REQUIRED)
 
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -225,12 +226,11 @@ if(BUILD_OSM2ASSIMP)
             ext/protozero/include
             ext/clipper
             ext/eigen  
-            ext/glm 
             ext/s2geometry/src
             ext 
             s2util 
       )
-      target_link_libraries(osm2assimpLib PUBLIC assimp::assimp poly2tri::poly2tri)
+      target_link_libraries(osm2assimpLib PUBLIC assimp::assimp poly2tri::poly2tri glm::glm)
 
       add_executable(osm2assimp
             osm2assimp/main.cpp

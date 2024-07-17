@@ -18,3 +18,4 @@ class GeoUtilsConan(ConanFile):
         self.requires("assimp/5.4.1")
         self.requires("poly2tri/cci.20130502")
         self.requires("rapidjson/cci.20230929")
+        self.requires("glm/cci.20230113")

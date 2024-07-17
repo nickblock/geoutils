@@ -10,6 +10,3 @@
 [submodule "ext/eigen"]
 	path = ext/eigen
 	url = https://github.com/nickblock/eigen-git-mirror.git
-[submodule "ext/glm"]
-	path = ext/glm
-	url = https://github.com/g-truc/glm.git
