@@ -10,6 +10,8 @@ find_package(assimp REQUIRED)
 find_package(poly2tri REQUIRED)
 find_package(glm REQUIRED)
 find_package(s2 REQUIRED)
+find_package(protozero REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -36,14 +38,13 @@ if(BUILD_OSMSPLIT)
 
       set(OSMSPLIT_INCLUDES
             ext/libosmium/include 
-            ext/protozero/include
             ext/pnghpp 
             ext )
 
       target_include_directories(osmsplitlib PUBLIC ${OSMSPLIT_INCLUDES} )
       target_include_directories(osmsplit PUBLIC ${OSMSPLIT_INCLUDES})
 
-      target_link_libraries(osmsplitlib PUBLIC rapidjson)
+      target_link_libraries(osmsplitlib PUBLIC rapidjson protozero::protozero)
 
       if(MACOSX)
             target_include_directories(osmsplit PUBLIC /usr/local/include )
@@ -64,7 +65,6 @@ add_executable(osms2split
         osms2split/src/s2splitter.cpp)
 
       target_compile_options(osms2split PRIVATE -Wno-attributes)
-      target_include_directories(osms2split PUBLIC ext/protozero/include)
       target_include_directories(osms2split PUBLIC ext/libosmium/include)
       target_include_directories(osms2split PUBLIC ext/s2geometry/src)
       target_include_directories(osms2split PUBLIC ext)
@@ -77,7 +77,7 @@ add_executable(osms2split
                   ${CMAKE_CURRENT_LIST_DIR}/ext/openssl/mac/libopenssl.a
                   -lz -lbz2 -lexpat -lpthread)
       else()
-            target_link_libraries(osms2split PUBLIC s2::s2 ssl crypto bz2 z expat pthread)
+            target_link_libraries(osms2split PUBLIC s2::s2 ssl crypto bz2 z expat pthread protozero::protozero)
       endif()
 
 endif()
@@ -110,14 +110,12 @@ if(BUILD_OSM2ASSIMP)
 
       target_include_directories(osm2assimpLib PUBLIC 
             osm2assimp
-            ext/libosmium/include 
-            ext/protozero/include
+            ext/libosmium/include
             ext/clipper
-            ext/eigen
             ext 
             s2util 
       )
-      target_link_libraries(osm2assimpLib PUBLIC assimp::assimp poly2tri::poly2tri glm::glm s2::s2)
+      target_link_libraries(osm2assimpLib PUBLIC assimp::assimp poly2tri::poly2tri glm::glm s2::s2 Eigen3::Eigen protozero::protozero)
 
       add_executable(osm2assimp
             osm2assimp/main.cpp
@@ -163,12 +161,11 @@ if(BUILD_S2UTIL)
 
       target_include_directories(s2util PRIVATE 
             ext
-            osm2assimp
-            ext/eigen)
+            osm2assimp)
             
       if(MACOSX)
-            target_link_libraries(s2util PUBLIC s2::s2 bz2 pthread)
+            target_link_libraries(s2util PUBLIC s2::s2 bz2 pthread Eigen3::Eigen)
       else()
-            target_link_libraries(s2util PUBLIC s2::s2 ssl crypto bz2 pthread)
+            target_link_libraries(s2util PUBLIC s2::s2 ssl crypto bz2 pthread Eigen3::Eigen)
       endif()
 endif()

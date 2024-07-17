@@ -1,9 +1,3 @@
 [submodule "ext/libosmium"]
 	path = ext/libosmium
 	url = https://github.com/osmcode/libosmium.git
-[submodule "ext/protozero"]
-	path = ext/protozero
-	url = https://github.com/mapbox/protozero.git
-[submodule "ext/eigen"]
-	path = ext/eigen
-	url = https://github.com/nickblock/eigen-git-mirror.git
