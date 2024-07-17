@@ -4,9 +4,6 @@
 [submodule "ext/protozero"]
 	path = ext/protozero
 	url = https://github.com/mapbox/protozero.git
-[submodule "ext/s2geometry"]
-	path = ext/s2geometry
-	url = https://github.com/google/s2geometry.git
 [submodule "ext/eigen"]
 	path = ext/eigen
 	url = https://github.com/nickblock/eigen-git-mirror.git
