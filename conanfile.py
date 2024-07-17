@@ -19,3 +19,4 @@ class GeoUtilsConan(ConanFile):
         self.requires("poly2tri/cci.20130502")
         self.requires("rapidjson/cci.20230929")
         self.requires("glm/cci.20230113")
+        self.requires("s2geometry/0.11.1")
