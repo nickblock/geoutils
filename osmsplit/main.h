@@ -2,23 +2,23 @@
 #define MAIN_OSMSPLIT_H
 
 #include "osmsplitconfig.h"
-#include <osmium/osm/box.hpp>
-#include <osmium/index/map/sparse_mem_array.hpp>
-#include <osmium/index/map/sparse_mem_table.hpp>
-#include <osmium/index/map/dense_mmap_array.hpp>
-#include <osmium/index/map/dense_file_array.hpp>
-#include <osmium/index/map/dense_mem_array.hpp>
+#define OSMIUM_HAS_INDEX_MAP_SPARSE_MEM_ARRAY
 #include <osmium/index/id_set.hpp>
+#include <osmium/index/map/sparse_mem_array.hpp>
+#include <osmium/osm/box.hpp>
 
 #include "tinyformat.h"
 
 #include <iostream>
 #include <string>
 
-using NodeLocatorMap = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
+using NodeLocatorMap =
+    osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type,
+                                       osmium::Location>;
 
-std::string constructOutDirName(const std::string& inputFileArg, const std::string& outputDirArg);
-std::string fileNameFromPath(const std::string& path);
+std::string constructOutDirName(const std::string &inputFileArg,
+                                const std::string &outputDirArg);
+std::string fileNameFromPath(const std::string &path);
 int getMemUse();
 int getElapsedTime();
 void printMemTimeUpdate();
@@ -26,25 +26,20 @@ void printMemTimeUpdate();
 class OpCounter {
 
 public:
+  void setOps(int ops) { mTotal = mOps = ops; }
 
-  void setOps(int ops) {
-    mTotal = mOps = ops;
-  }
-
-  float percentage() {
-    return (float)mOps*100.f / mTotal;
-  }
+  float percentage() { return (float)mOps * 100.f / mTotal; }
 
   void countOff(int c) {
     std::lock_guard<std::mutex> g(mMutex);
 
     mOps -= c;
 
-    std::cout << tfm::format("Remaining [%2.2f%%] Mem : %d, Time : %d", percentage(), getMemUse(), getElapsedTime()) << std::endl;
+    std::cout << tfm::format("Remaining [%2.2f%%] Mem : %d, Time : %d",
+                             percentage(), getMemUse(), getElapsedTime())
+              << std::endl;
   }
-  int totalOps() {
-    return mTotal;
-  }
+  int totalOps() { return mTotal; }
 
 protected:
   int mTotal;
@@ -60,16 +55,11 @@ struct SplitOptions {
   bool deleteInputFiles = false;
 };
 
-void processOSMFile(
-            std::string inputFile, 
-            std::string outDir, 
-            GeoUtils::OSMSplitConfigPtr& config, 
-            SplitOptions options);
+void processOSMFile(std::string inputFile, std::string outDir,
+                    GeoUtils::OSMSplitConfigPtr &config, SplitOptions options);
 
-void processConfigFile(
-            std::string inputFile, 
-            std::string outDir, 
-            GeoUtils::OSMSplitConfigPtr& config, 
-            SplitOptions options);
+void processConfigFile(std::string inputFile, std::string outDir,
+                       GeoUtils::OSMSplitConfigPtr &config,
+                       SplitOptions options);
 
 #endif

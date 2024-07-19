@@ -1,0 +1,13 @@
+{
+  "dependencies": [
+    "assimp",
+    "glm",
+    "gtest",
+    "jhasse-poly2tri",
+    "rapidjson",
+    "s2geometry",
+    "protozero",
+    "eigen3",
+    "libosmium"
+  ]
+}
