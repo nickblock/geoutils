@@ -4,26 +4,17 @@ A set of tools for converting Open Street Map data into 3d geometry, also incorp
 
 ## Building
 
-Install and use Conan
+Install and use VcPkg
 
-conan profile detect --force
+https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-bash
 
-create a conan profile with debug setting.
-then build
+generate cmake build with ninja
 
-conan install . --output-folder=build --build=missing -pr=debug
+    cmake --preset=default
 
-In root directory create a build folder
+build all cores
 
-    mkdir build
-
-cd into into it and build with cmake
-
-    cmake .. -DCMAKE_TOOLCHAIN_FILE="conan_toolchain.cmake" -DCMAKE_BUILD_TYPE=debug
-
-On systems that dont have c++ filesystem (MacOS), you need to avoid one of the tools:
-
-    cmake -DBUILD_OSMSPLIT=OFF ..
+    cmake --build build --parallel `nproc`
 
 ## S2 Cell Split
 
@@ -46,7 +37,7 @@ convert osm data files into geometry
 Tests make use of https://github.com/bats-core/bats-core, a system for running tests in bash.
 After building to the 'build' folder export PATH:
 
-    export PATH=$PATH:`pwd`/build:`pwd`/build/ext/assimp/bin/
+    export PATH=$PATH:`pwd`/build:
 
 Run tests with:
 
