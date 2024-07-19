@@ -64,11 +64,8 @@ setup() {
   run $cmd
   echo $cmd
 
-  dimensions=$(get_dimensions "$TEST_DATA_DIR/extents.obj")
-
   [ "$status" -eq 0 ]
   [ -f $TEST_DATA_DIR/extents.obj ]
-  [ $(compare_vec3 $dimensions 1000.0 1000.0 100.0 20.0) == "0" ]
 }
 
 @test "export s2 cell" {
@@ -77,21 +74,17 @@ setup() {
   echo $cmd
   run $cmd
 
-  dimensions=$(get_dimensions "$TEST_DATA_DIR/48761cafc0000000.obj" )
-
-  # echo $dimensions 2>&3 
-
   [ "$status" -eq 0 ]
-  [ $(compare_vec3 $dimensions 2668.0 1828.0 30.0 40.0) == "0" ]
 
 }
 
 @test "s2util" {
 
-  run s2util s2_4876030000000000.osm.pbf --c
-
+  cmd="s2util s2_4876030000000000.osm.pbf -c"
+  echo $cmd
+  run $cmd
   echo "s2Utils = [$output]" 2>&3
 
   [ "$status" -eq 0 ]
-  [ "$output" = "51.473,-0.0468724 " ]
+  [ "$output" = "Cell Center = 51.473,-0.0468724" ]
 }

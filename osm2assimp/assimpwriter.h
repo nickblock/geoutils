@@ -19,7 +19,7 @@ namespace GeoUtils
   /// Meshes and Locators are added to the object and then the write function can be called
   /// to write whole sceene to file.
   /// <summary>
-  class AssimpConstruct
+  class AssimpWriter
   {
   public:
     enum MeshGranularity
@@ -29,7 +29,7 @@ namespace GeoUtils
       MeshPerObject = 2
     };
 
-    AssimpConstruct();
+    AssimpWriter();
 
     int write(const std::string &filename);
     void addMesh(aiMesh *mesh, std::string name = "", aiNode *parent = nullptr);
@@ -92,7 +92,6 @@ namespace GeoUtils
     std::vector<Material> mMaterials;
 
     MeshGranularity mGran = MeshPerMaterial;
-    static bool mZUp;
   };
 
 } // namespace GeoUtils

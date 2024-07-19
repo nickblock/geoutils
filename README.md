@@ -4,17 +4,17 @@ A set of tools for converting Open Street Map data into 3d geometry, also incorp
 
 ## Building
 
-In root directory create a build folder
+Install and use VcPkg
 
-    mkdir build
+https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-bash
 
-cd into into it and build with cmake
+generate cmake build with ninja
 
-    cmake ..
+    cmake --preset=default
 
-On systems that dont have c++ filesystem (MacOS), you need to avoid one of the tools:
+build using 12 cores
 
-    cmake -DBUILD_OSMSPLIT=OFF ..
+    cmake --build build --parallel 12
 
 ## S2 Cell Split
 
@@ -37,7 +37,7 @@ convert osm data files into geometry
 Tests make use of https://github.com/bats-core/bats-core, a system for running tests in bash.
 After building to the 'build' folder export PATH:
 
-    export PATH=$PATH:`pwd`/build:`pwd`/build/ext/assimp/bin/
+    export PATH=$PATH:`pwd`/build:
 
 Run tests with:
 
