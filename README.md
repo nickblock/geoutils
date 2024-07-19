@@ -12,9 +12,9 @@ generate cmake build with ninja
 
     cmake --preset=default
 
-build all cores
+build using 12 cores
 
-    cmake --build build --parallel `nproc`
+    cmake --build build --parallel 12
 
 ## S2 Cell Split
 

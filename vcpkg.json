@@ -8,6 +8,11 @@
     "s2geometry",
     "protozero",
     "eigen3",
-    "libosmium"
+    "libosmium",
+    "libpng",
+    "pngpp",
+    "bzip2",
+    "expat",
+    "zlib"
   ]
 }
