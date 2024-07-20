@@ -12,22 +12,22 @@ using std::cout;
 using std::endl;
 using std::string;
 
-namespace fs = std::filesystem;
-
 namespace GeoUtils {
 
-OSMSplitWriter::LockWriter::LockWriter(std::string outFilePath,
+OSMSplitWriter::LockWriter::LockWriter(fs::path outFilePath,
                                        osmium::io::Header &header) {
 
-  int lastSlash = outFilePath.find(OSMSplitConfig::suffix());
+  int lastSlash = outFilePath.string().find(OSMSplitConfig::suffix().string());
 
-  mOutWayPath = outFilePath.substr(0, lastSlash);
-  mOutWayPath += string("_ways") + OSMSplitConfig::suffix();
+  mOutWayPath = outFilePath.parent_path();
+  mOutWayPath += string("_ways") + OSMSplitConfig::suffix().string();
 
   mWayWriter = std::make_shared<osmium::io::Writer>(
-      osmium::io::File(mOutWayPath), header, osmium::io::overwrite::allow);
+      osmium::io::File(mOutWayPath.string()), header,
+      osmium::io::overwrite::allow);
   mWriter = std::make_shared<osmium::io::Writer>(
-      osmium::io::File(outFilePath), header, osmium::io::overwrite::allow);
+      osmium::io::File(outFilePath.string()), header,
+      osmium::io::overwrite::allow);
 
   mMutex = std::shared_ptr<std::mutex>(new std::mutex());
 }
@@ -47,7 +47,7 @@ void OSMSplitWriter::LockWriter::putWays() {
 
   mWayWriter = nullptr;
 
-  osmium::io::File f{mOutWayPath};
+  osmium::io::File f{mOutWayPath.string()};
   osmium::io::Reader reader{f, osmium::osm_entity_bits::way};
   auto ways = osmium::io::make_input_iterator_range<const osmium::Way>(reader);
 
@@ -60,9 +60,8 @@ void OSMSplitWriter::LockWriter::putWays() {
   fs::remove(mOutWayPath);
 }
 
-OSMSplitWriter::OSMSplitWriter(OSMSplitConfigPtr rootConfig,
-                               std::string inputFile,
-                               std::string outputDirectory,
+OSMSplitWriter::OSMSplitWriter(OSMSplitConfigPtr rootConfig, fs::path inputFile,
+                               fs::path outputDirectory,
                                NodeLocatorMap &locStore, int numThreads,
                                uint64_t wayCount)
 
@@ -76,8 +75,8 @@ OSMSplitWriter::OSMSplitWriter(OSMSplitConfigPtr rootConfig,
 
   for (auto &config : configList) {
 
-    string outFileName = config->getFileName();
-    string outFilePath = outputDirectory + outFileName;
+    auto outFileName = config->getFileName();
+    auto outFilePath = outputDirectory / outFileName;
 
     osmium::io::Header header;
     header.set("generator", "osmsplit");
@@ -110,7 +109,7 @@ OSMSplitWriter::OSMSplitWriter(OSMSplitConfigPtr rootConfig,
 
   mNodeLocatorStore.clear();
 
-  cout << "Consolidate files: " << mWriterMap.size() << endl;
+  std::cout << "Consolidate files: " << mWriterMap.size() << std::endl;
 
   mOpCount.setOps(mWriterMap.size());
 
@@ -138,7 +137,7 @@ using namespace osmium::builder::attr;
 const size_t initial_buffer_size = 16;
 
 void OSMSplitWriter::writeWays(uint64_t start, uint64_t num) {
-  osmium::io::File f{mInputFileName};
+  osmium::io::File f{mInputFileName.string()};
   osmium::io::Reader reader{f, osmium::osm_entity_bits::way};
   auto ways = osmium::io::make_input_iterator_range<const osmium::Way>(reader);
 
