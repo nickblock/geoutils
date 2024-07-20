@@ -149,7 +149,7 @@ public:
     }
   }
 
-  void finish(const std::string &imageName, uint32_t levels) {
+  void finish(const fs::path &imageName, uint32_t levels) {
 
     printMap();
 
@@ -157,7 +157,7 @@ public:
 
     split(levels, rect, mConfig);
 
-    mImage.write(imageName);
+    mImage.write(imageName.string());
   }
 
   void printSplit(uint32_t start, uint32_t len, uint32_t midPoint, bool lon) {

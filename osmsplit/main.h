@@ -12,6 +12,10 @@
 #include <iostream>
 #include <string>
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
 using NodeLocatorMap =
     osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type,
                                        osmium::Location>;
@@ -55,10 +59,10 @@ struct SplitOptions {
   bool deleteInputFiles = false;
 };
 
-void processOSMFile(std::string inputFile, std::string outDir,
+void processOSMFile(const fs::path &inputFile, const fs::path &outDir,
                     GeoUtils::OSMSplitConfigPtr &config, SplitOptions options);
 
-void processConfigFile(std::string inputFile, std::string outDir,
+void processConfigFile(const fs::path &inputFile, const fs::path &outDir,
                        GeoUtils::OSMSplitConfigPtr &config,
                        SplitOptions options);
 

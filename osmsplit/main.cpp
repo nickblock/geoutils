@@ -48,51 +48,6 @@ uint64_t numLocs = 0;
 
 const std::string configFileExt = "_conf.json";
 
-string constructOutPrefix(const string &inputFile) {
-
-  string fileName = inputFile;
-
-  int lastSlash = fileName.find_last_of("/");
-  if (lastSlash != string::npos)
-    fileName = fileName.substr(lastSlash + 1, fileName.size());
-
-  int spotPos = fileName.find_first_of(".");
-  if (spotPos != string::npos)
-    fileName = fileName.substr(0, spotPos);
-
-  return fileName;
-}
-
-string addSlash(const std::string dirName) {
-
-  string outDir = dirName;
-  if (outDir[outDir.size() - 1] != '/') {
-    outDir += string("/");
-  }
-  return outDir;
-}
-
-string fileNameFromPath(const string &path) {
-
-  string nameOnly = path;
-  int slashPos = path.find_last_of("/");
-  if (slashPos != string::npos) {
-    nameOnly = nameOnly.substr(slashPos + 1, nameOnly.size());
-  }
-
-  return nameOnly;
-}
-
-string getDirFromPath(const string &path) {
-
-  string pathOnly = path;
-  int slashPos = path.find_last_of("/");
-  if (slashPos != string::npos) {
-    pathOnly = pathOnly.substr(0, slashPos + 1);
-  }
-  return pathOnly;
-}
-
 int getMemUse() {
   osmium::MemoryUsage mem;
   return mem.current();
@@ -109,7 +64,7 @@ void printMemTimeUpdate() {
        << "elapsed " << getElapsedTime() << " mem : " << getMemUse() << endl;
 }
 
-void writeConfigFile(std::string configFileName, OSMSplitConfigPtr config) {
+void writeConfigFile(const fs::path &configFileName, OSMSplitConfigPtr config) {
 
   ofstream ofs(configFileName);
   rapidjson::OStreamWrapper osw(ofs);
@@ -120,12 +75,13 @@ void writeConfigFile(std::string configFileName, OSMSplitConfigPtr config) {
   configDoc.Accept(writer);
 }
 
-void processOSMFile(std::string inputFileName, std::string outDir,
+void processOSMFile(const fs::path &inputFileName, const fs::path &outDir,
                     OSMSplitConfigPtr &config, SplitOptions options) {
-  string outFileNamePrefix = constructOutPrefix(inputFileName);
+  auto outFileNamePrefix =
+      fs::path(inputFileName).filename().replace_extension("");
 
   if (options.updateOnly) {
-    string potentialOutFile = outDir + outFileNamePrefix;
+    auto potentialOutFile = outDir / outFileNamePrefix;
     for (int i = 0; i < options.depthLevels; i++)
       potentialOutFile += string("0");
 
@@ -143,14 +99,14 @@ void processOSMFile(std::string inputFileName, std::string outDir,
     }
   }
 
-  osmium::io::File inputOsFile{inputFileName};
+  osmium::io::File inputOsFile{inputFileName.string()};
   osmium::io::Reader reader{inputOsFile, osmium::osm_entity_bits::node |
                                              osmium::osm_entity_bits::way};
   cout << "Procssing File " << inputFileName << endl;
 
   if (config == nullptr) {
     config = std::make_shared<OSMSplitConfig>(reader.header().box(),
-                                              outFileNamePrefix);
+                                              outFileNamePrefix.string());
   }
 
   NodeLocatorMap nodeLocatorStore;
@@ -170,18 +126,20 @@ void processOSMFile(std::string inputFileName, std::string outDir,
 
   numLocs = nodeLocatorStore.size();
 
-  mapHandler.finish(outDir + config->getFileName() + ".split.png",
-                    options.depthLevels);
+  fs::path pngFile = config->getFileName().string() + ".split.png";
 
-  cout << "Writing out" << endl;
+  cout << "Writing out " << pngFile << std::endl;
+
+  mapHandler.finish(pngFile, options.depthLevels);
+
   printMemTimeUpdate();
 
   OSMSplitWriter osm_writer(config, inputFileName, outDir, nodeLocatorStore,
                             options.threadNum, mapHandler.numWays());
 }
-void processConfigFile(std::string inputFileName, std::string outDir,
+void processConfigFile(const fs::path &inputFileName, const fs::path &outDir,
                        OSMSplitConfigPtr &config, SplitOptions options) {
-  string inputDir = getDirFromPath(inputFileName);
+  auto inputDir = std::filesystem::path(inputFileName).parent_path();
 
   std::stringstream ss;
   std::ifstream file(inputFileName);
@@ -196,7 +154,7 @@ void processConfigFile(std::string inputFileName, std::string outDir,
     OSMConfigList configList = config->getLeafNodes();
     for (auto leaf : configList) {
 
-      string inputFilePath = inputDir + leaf->getFileName();
+      auto inputFilePath = inputDir / leaf->getFileName();
 
       processOSMFile(inputFilePath, outDir, leaf, options);
 
@@ -284,12 +242,12 @@ int main(int argi, char **argc) {
 
   try {
 
-    string outDir = addSlash(args::get(outputDirArg));
-    string inputFileName = args::get(inputFileArg);
+    auto outDir = args::get(outputDirArg);
+    fs::path inputFileName = args::get(inputFileArg);
 
     OSMSplitConfigPtr config;
 
-    string configFileName;
+    fs::path configFileName;
 
     int remainingDepthLevels = options.depthLevels;
 
@@ -302,12 +260,12 @@ int main(int argi, char **argc) {
         options.depthLevels = remainingDepthLevels;
         remainingDepthLevels = 0;
       }
-      if (inputFileName.substr(inputFileName.size() - configFileExt.size()) ==
-          configFileExt) {
+      if (inputFileName.extension() == configFileExt) {
 
         processConfigFile(inputFileName, outDir, config, options);
 
-        configFileName = outDir + fileNameFromPath(inputFileName);
+        configFileName =
+            outDir / std::filesystem::path(inputFileName).filename();
 
         writeConfigFile(configFileName, config);
 
@@ -320,7 +278,7 @@ int main(int argi, char **argc) {
         processOSMFile(inputFileName, outDir, config, options);
 
         configFileName =
-            outDir + constructOutPrefix(inputFileName) + configFileExt;
+            outDir / inputFileName.filename().replace_extension(configFileExt);
 
         writeConfigFile(configFileName, config);
 
