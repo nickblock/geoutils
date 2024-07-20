@@ -17,10 +17,12 @@ namespace GeoUtils {
 OSMSplitWriter::LockWriter::LockWriter(fs::path outFilePath,
                                        osmium::io::Header &header) {
 
-  int lastSlash = outFilePath.string().find(OSMSplitConfig::suffix().string());
-
-  mOutWayPath = outFilePath.parent_path();
-  mOutWayPath += string("_ways") + OSMSplitConfig::suffix().string();
+  auto filename = outFilePath.filename().string();
+  auto dotPos = filename.find(".");
+  auto basename = filename.substr(0, dotPos) + std::string("_ways");
+  auto dir = outFilePath.parent_path();
+  mOutWayPath =
+      dir / fs::path(basename).replace_extension(OSMSplitConfig::suffix());
 
   mWayWriter = std::make_shared<osmium::io::Writer>(
       osmium::io::File(mOutWayPath.string()), header,
@@ -28,6 +30,8 @@ OSMSplitWriter::LockWriter::LockWriter(fs::path outFilePath,
   mWriter = std::make_shared<osmium::io::Writer>(
       osmium::io::File(outFilePath.string()), header,
       osmium::io::overwrite::allow);
+
+  std::cout << "LockWritert out " << outFilePath << std::endl;
 
   mMutex = std::shared_ptr<std::mutex>(new std::mutex());
 }
@@ -56,6 +60,8 @@ void OSMSplitWriter::LockWriter::putWays() {
   }
 
   mWriter = nullptr;
+
+  std::cout << "LockWritert way out " << mOutWayPath << std::endl;
 
   fs::remove(mOutWayPath);
 }

@@ -126,7 +126,8 @@ void processOSMFile(const fs::path &inputFileName, const fs::path &outDir,
 
   numLocs = nodeLocatorStore.size();
 
-  fs::path pngFile = config->getFileName().string() + ".split.png";
+  fs::path pngFile =
+      outDir / config->getFileName().replace_extension(".split.png");
 
   cout << "Writing out " << pngFile << std::endl;
 
