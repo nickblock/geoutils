@@ -10,11 +10,11 @@ https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-bas
 
 generate cmake build with ninja
 
-    cmake --preset=default
+>    cmake --preset=default
 
 build using 12 cores
 
-    cmake --build build --parallel 12
+>    cmake --build build --parallel 12
 
 ## S2 Cell Split
 
@@ -22,7 +22,7 @@ Starting with an osm data file, download an area from https://www.openstreetmap.
 
 split the osm file into files comprising of S2 cells by specifying to input file, an output folder and an S2 cell level:
 
-    osms2split -i old_street.osm -o testadata -l 14
+ >   osms2split -i old_street.osm -o testadata -l 14
 
 the output folder will now contain a number of osm files for each S2 cell.
 
@@ -30,15 +30,23 @@ the output folder will now contain a number of osm files for each S2 cell.
 
 convert osm data files into geometry
 
-    osm2assimp -i example.osm -o example.obj
+ >   osm2assimp -i example.osm -o example.obj
 
 ## Run Tests
 
-Tests make use of https://github.com/bats-core/bats-core, a system for running tests in bash.
-After building to the 'build' folder export PATH:
+Tests consist of running the various utilities and assessing the output files that get prtoduced.
+The test script generates input osm files to test upon.
 
-    export PATH=$PATH:`pwd`/build:
+Requires pyassimp
+> pip install pyassimp
 
-Run tests with:
+pyassimp requires assimp dynamic lib created by vcpkg: 
 
-    bats test.bats
+> export PATH=PATH:`pwd`/build/vcpkg_installed/x64-windows/bin
+
+Add path to build folder so the test script can run the utilties
+
+> export PATH=$PATH:`pwd`/build
+
+Run tests
+> python test.py

@@ -129,20 +129,7 @@ class OSMBuilder:
         dom = xml.dom.minidom.parse(filename)
         open(filename, 'w').write(dom.toprettyxml())
 
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("output", type=str, default="test.osm")
-    parser.add_argument("--extents", "-e", type=str,
-                        default="0.0,0.0,0.001,0.001")
-    parser.add_argument("--space", "-s", type=float, default=0.0002)
-    parser.add_argument("--height", type=float, default=10.0)
-
-    args = parser.parse_args()
-
-    extents = [float(x) for x in args.extents.split(',')]
+def execute(extents: list[float], space: float, height: float, outputPath: str):
 
     builder = OSMBuilder()
 
@@ -155,7 +142,7 @@ if __name__ == "__main__":
     highway_nodes = []
 
     while True:
-        if yidx * args.space * 2 > extents[2] - extents[0]:
+        if yidx * space * 2 > extents[2] - extents[0]:
 
             print(sw_corner)
             print(ne_corner)
@@ -165,22 +152,22 @@ if __name__ == "__main__":
         xidx = 0
         while True:
 
-            if xidx * args.space * 2 > extents[3] - extents[1]:
+            if xidx * space * 2 > extents[3] - extents[1]:
                 break
 
             sw_corner = {
-                "lat": extents[0] + args.space * yidx * 2,
-                "lon": extents[1] + args.space * xidx * 2
+                "lat": extents[0] + space * yidx * 2,
+                "lon": extents[1] + space * xidx * 2
             }
 
             ne_corner = {
-                "lat": sw_corner["lat"] + args.space,
-                "lon": sw_corner["lon"] + args.space
+                "lat": sw_corner["lat"] + space,
+                "lon": sw_corner["lon"] + space
             }
 
             road_node = {
-                "lat": ne_corner["lat"] + args.space * 0.5,
-                "lon": ne_corner["lon"] + args.space * 0.5
+                "lat": ne_corner["lat"] + space * 0.5,
+                "lon": ne_corner["lon"] + space * 0.5
             }
 
             highway_nodes.append(builder.add_osm_node(None, road_node))
@@ -211,4 +198,22 @@ if __name__ == "__main__":
 
         builder.add_highway(v_nodes)
 
-    builder.write(args.output)
+    builder.write(outputPath)
+
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("output", type=str, default="test.osm")
+    parser.add_argument("--extents", "-e", type=str,
+                        default="0.0,0.0,0.001,0.001")
+    parser.add_argument("--space", "-s", type=float, default=0.0002)
+    parser.add_argument("--height", type=float, default=10.0)
+
+    args = parser.parse_args()
+
+    extents = [float(x) for x in args.extents.split(',')]
+
+    execute(extents, args.space, args.height, args.output)
