@@ -11,6 +11,8 @@ class OSMBuilder:
 
         self.nodeIdx = 0
         self.wayIdx = 0
+        self.buildingIdx = 0
+        self.highwayIdx = 0
 
         self.top = Element("osm")
         self.top.set('generator', 'osm2assimp test generator')
@@ -21,6 +23,7 @@ class OSMBuilder:
 
         self.minLatLon = {}
         self.maxLatLon = {}
+
 
     def check_minmax(self, lonlat):
 
@@ -69,6 +72,7 @@ class OSMBuilder:
 
         wayElement = SubElement(self.top, "way", id=str(self.wayIdx))
         self.wayIdx += 1
+        self.highwayIdx += 1
 
         for n in nodeIds:
             self.add_node_id(wayElement, n)
@@ -109,6 +113,7 @@ class OSMBuilder:
 
         wayElement = SubElement(self.top, "way", id=str(self.wayIdx))
         self.wayIdx += 1
+        self.buildingIdx += 1
 
         for n in nodeIds:
             self.add_node_id(wayElement, n)
@@ -127,7 +132,9 @@ class OSMBuilder:
             self.tree.write(f, xml_declaration=True, encoding='utf-8')
 
         dom = xml.dom.minidom.parse(filename)
-        open(filename, 'w').write(dom.toprettyxml())
+        
+        with open(filename, 'w') as f:
+            f.write(dom.toprettyxml())
 
 def execute(extents: list[float], space: float, height: float, outputPath: str):
 
@@ -142,22 +149,18 @@ def execute(extents: list[float], space: float, height: float, outputPath: str):
     highway_nodes = []
 
     while True:
-        if yidx * space * 2 > extents[2] - extents[0]:
-
-            print(sw_corner)
-            print(ne_corner)
-
+        if yidx * space * 2 > extents[3] - extents[1]:
             break
 
         xidx = 0
         while True:
 
-            if xidx * space * 2 > extents[3] - extents[1]:
+            if xidx * space * 2 > extents[2] - extents[0]:
                 break
 
             sw_corner = {
-                "lat": extents[0] + space * yidx * 2,
-                "lon": extents[1] + space * xidx * 2
+                "lat": extents[1] + space * yidx * 2,
+                "lon": extents[2] + space * xidx * 2
             }
 
             ne_corner = {
@@ -178,11 +181,6 @@ def execute(extents: list[float], space: float, height: float, outputPath: str):
 
         yidx += 1
 
-    print("num highway nodes " +
-          str(len(highway_nodes)) +
-          "\nwidth = " +
-          str(xidx))
-
     for i in range(xidx):
 
         # print(highway_nodes[i:i+xidx-1])
@@ -200,7 +198,7 @@ def execute(extents: list[float], space: float, height: float, outputPath: str):
 
     builder.write(outputPath)
 
-
+    return [builder.buildingIdx, builder.highwayIdx]
 
 if __name__ == "__main__":
 

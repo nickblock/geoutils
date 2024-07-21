@@ -1,3 +1,4 @@
 testdata/
 build/
 CMakeUserPresets.json
+__pycache__
