@@ -109,6 +109,7 @@ int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer,
     }
   }
 
+  int retVal = 0;
   if (mGroundCorners.size()) {
     Ground ground(mGroundCorners);
 
@@ -122,10 +123,18 @@ int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer,
     }
 
     aiMesh *mesh = ground.getMesh();
-    mesh->mMaterialIndex = writer.addMaterial("ground", mMatColors["ground"]);
-    writer.addMesh(mesh, "ground");
+    if (mesh) {
+      mesh->mMaterialIndex = writer.addMaterial("ground", mMatColors["ground"]);
+      writer.addMesh(mesh, "ground");
+    } else {
+      retVal = -1;
+    }
   }
 
-  return writer.write(outFilePath);
+  if (writer.write(outFilePath) == 0 && retVal == 0) {
+    return 0;
+  } else {
+    return -1;
+  }
 }
 } // namespace GeoUtils

@@ -121,7 +121,13 @@ aiMesh *Ground::getMesh() {
     cdt.AddHole(p2tP);
   }
 
-  cdt.Triangulate();
+  try {
+    cdt.Triangulate();
+  } catch (std::runtime_error &err) {
+    std::cout << "Failed to process ground mesh, err = " << err.what()
+              << std::endl;
+    return nullptr;
+  }
 
   auto tris = cdt.GetTriangles();
 
