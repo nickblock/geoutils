@@ -1,16 +1,22 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-
+    {
+      "name": "test.py",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/test.py",
+      "console": "integratedTerminal",
+      "python": "C:/Users/nick/Documents/geovenv/Scripts/python.exe",
+    },
     {
       "name": "s2util",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/s2util",
-      "args": ["s2_48761caf00000000"],
+      "args": [
+        "s2_48761caf00000000"
+      ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
@@ -26,41 +32,44 @@
     },
     {
       "name": "osms2split",
-      "type": "cppdbg",
+      "type": "cppvsdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/osms2split",
-      "args": ["-i", "~/Downloads/planet_-0.204,51.477_-0.049,51.539.osm.pbf", "-o", "${workspaceFolder}/../londonS2"],
+      "program": "${workspaceFolder}/build/osmsplit",
+      "args": [
+        "-i",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/test.osm",
+        "-o",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test",
+        "-s",
+        "1",
+        "-l",
+        "4"
+      ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
-      "externalConsole": false,
-      "MIMode": "gdb",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ]
+      "visualizerFile": "C:/Users/nick/glm.natvis",
+      "internalConsoleOptions": "openOnSessionStart"
     },
     {
       "name": "osm2assimp",
-      "type": "cppdbg",
+      "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/osm2assimp",
-      "args": ["-i", "${workspaceFolder}/../../server/frontend/public/world_data/old_street1001.osm.pbf", "-o", "${workspaceFolder}/../../server/frontend/public/world_data/geomX200281Y2448223_g100.ctm", "-e", "-0.084517,51.524551,-0.083618,51.525110", "-r"],,
+      "args": [
+        "-i",
+        "${workspaceFolder}/old_street.osm",
+        "-o",
+        "${workspaceFolder}oold_street.fbx",
+        "-g",
+        "-c",
+        "2"
+      ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
-      "externalConsole": false,
-      "MIMode": "gdb",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ]
+      "visualizerFile": "C:/Users/nick/glm.natvis",
+      "internalConsoleOptions": "openOnSessionStart"
     }
   ]
 }
