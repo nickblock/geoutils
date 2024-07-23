@@ -1,7 +1,8 @@
-#include "utils.h"
 
 #define _USE_MATH_DEFINES
 #include <cmath>
+
+#include "utils.h"
 
 #include "clipper.hpp"
 #include "convertlatlng.h"
@@ -12,6 +13,8 @@
 
 #include <osmium/geom/coordinates.hpp>
 
+#include <format>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -123,22 +126,22 @@ BBox bBoxFromPoints2D(const std::vector<glm::vec2> &points) {
 }
 
 std::vector<std::vector<glm::vec2>>
-intersectPolygons(const std::vector<glm::vec2> &first,
-                  const std::vector<glm::vec2> &second) {
+intersectPolygons(const std::vector<glm::vec2> &subject,
+                  const std::vector<glm::vec2> &clip, int clipType) {
   ClipperLib::Clipper clipper;
 
-  ClipperLib::Path subject = fromPointList(first);
+  ClipperLib::Path subjectClip = fromPointList(subject);
 
-  clipper.AddPath(subject, ClipperLib::ptSubject, true);
+  clipper.AddPath(subjectClip, ClipperLib::ptSubject, true);
 
-  ClipperLib::Path clip = fromPointList(second);
+  ClipperLib::Path clipClip = fromPointList(clip);
 
-  clipper.AddPath(clip, ClipperLib::ptClip, true);
+  clipper.AddPath(clipClip, ClipperLib::ptClip, true);
 
   ClipperLib::Paths solution;
 
-  clipper.Execute(ClipperLib::ctUnion, solution, ClipperLib::pftEvenOdd,
-                  ClipperLib::pftEvenOdd);
+  clipper.Execute((ClipperLib::ClipType)clipType, solution,
+                  ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
 
   std::vector<std::vector<glm::vec2>> result;
 
@@ -206,5 +209,42 @@ auto BBox::transform(const glm::mat4 &mat) -> BBox {
   tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMax.y, mMin.z, 1.0)));
 
   return tBbox;
+}
+
+void writeSvg(const std::vector<glm::vec2> &points, int scale,
+              const std::filesystem::path &filepath) {
+
+  std::ofstream file = std::ofstream(filepath);
+
+  glm::vec2 min{std::numeric_limits<float>::max(),
+                std::numeric_limits<float>::max()};
+  glm::vec2 max{std::numeric_limits<float>::min(),
+                std::numeric_limits<float>::min()};
+
+  for (auto &p : points) {
+    min.x = std::min(p.x, min.x);
+    min.y = std::min(p.y, min.y);
+    max.x = std::max(p.x, max.x);
+    max.y = std::max(p.y, max.y);
+  }
+
+  min.x -= 1;
+  min.y -= 1;
+  max.x += 1;
+  max.y += 1;
+
+  file << std::format("<svg viewBox=\"{} {} {} {}\" xmlns="
+                      "\"http://www.w3.org/2000/svg\">",
+                      0, 0, (max.x - min.x) * scale, (max.y - min.y) * scale)
+       << std::endl;
+  file << "<polygon points=\"";
+  for (auto &p : points) {
+    file << std::format("{},{} ", (p.x - min.x) * scale, (p.y - min.y) * scale)
+         << std::endl;
+  }
+
+  file << "\" fill=\"none\" stroke=\"white\" />" << std::endl;
+
+  file << "</svg>" << std::endl;
 }
 } // namespace GeoUtils

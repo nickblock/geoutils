@@ -29,7 +29,8 @@ void Ground::addSubtraction(const OSMFeature &feature) {
   while (merged) {
     merged = false;
 
-    for (auto bIter = mSubs.begin(); bIter != mSubs.end(); ++bIter) {
+    for (auto bIter = mSubtractions.begin(); bIter != mSubtractions.end();
+         ++bIter) {
       if (std::get<Box>(*bIter).overlaps(std::get<Box>(boxPoly))) {
         auto result =
             intersectPolygons(std::get<Poly>(boxPoly), std::get<Poly>(*bIter));
@@ -38,13 +39,13 @@ void Ground::addSubtraction(const OSMFeature &feature) {
           auto clean = cleanPolyon(result[0]);
           boxPoly = {bBoxFromPoints2D(clean), clean};
           merged = true;
-          mSubs.erase(bIter);
+          mSubtractions.erase(bIter);
           break;
         }
       }
     }
   }
-  mSubs.push_back(boxPoly);
+  mSubtractions.push_back(boxPoly);
 
   mBBox.add(std::get<Box>(boxPoly));
 }
@@ -71,25 +72,25 @@ stringstream pointsss(const std::vector<glm::vec2> &points,
   ss << "<polygon points=\"";
 
   for (auto &p : points) {
-    ss << tfm::format("%d, %d, ", (p.x - min.x) * scale, (p.y - min.y) * scale);
+    ss << tfm::format("%d,%d ", (p.x - min.x) * scale, (p.y - min.y) * scale);
   }
 
-  ss << "\" fill=\"none\" stroke=\"black\" />";
+  ss << "\" fill=\"none\" stroke=\"white\" />";
 
   return ss;
 }
 
-void Ground::writeSvg(const std::string &path, float scale) {
+void Ground::writeSvg(const std::filesystem::path &path, float scale) {
 
   ofstream file = ofstream(path);
 
-  file << tfm::format("<svg viewBox = \"%d %d %d %d\" xmlns = "
+  file << tfm::format("<svg viewBox=\"%d %d %d %d\" xmlns="
                       "\"http://www.w3.org/2000/svg\">",
                       0, 0, (mBBox.mMax.x - mBBox.mMin.x) * scale,
                       (mBBox.mMax.y - mBBox.mMin.y) * scale)
        << endl;
 
-  for (auto &iter : mSubs) {
+  for (auto &iter : mSubtractions) {
     file << pointsss(std::get<Poly>(iter), mBBox.mMin, scale).str() << endl;
   }
 
@@ -98,7 +99,8 @@ void Ground::writeSvg(const std::string &path, float scale) {
 
 aiMesh *Ground::getMesh() {
 
-  cout << "Features added = " << mAdded << " polys = " << mSubs.size() << endl;
+  cout << "Features added = " << mAdded << " polys = " << mSubtractions.size()
+       << endl;
 
   writeSvg("/tmp/ground.svg", 10.f);
 
@@ -113,7 +115,7 @@ aiMesh *Ground::getMesh() {
   p2t::CDT cdt(boxP2t);
 
   std::vector<std::vector<p2t::Point *>> p2tPoints;
-  for (auto &p : mSubs) {
+  for (auto &p : mSubtractions) {
     auto poly = std::get<Poly>(p);
     poly.pop_back();
     auto p2tP = fromGLM(poly);
