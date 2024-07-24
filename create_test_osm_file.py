@@ -68,7 +68,7 @@ class OSMBuilder:
 
         SubElement(parent_elem, "nd", ref=str(idx))
 
-    def add_highway(self, nodeIds):
+    def add_highway(self, nodeIds, tags = {}):
 
         wayElement = SubElement(self.top, "way", id=str(self.wayIdx))
         self.wayIdx += 1
@@ -76,8 +76,9 @@ class OSMBuilder:
 
         for n in nodeIds:
             self.add_node_id(wayElement, n)
+        for k, v in tags.items():
+            SubElement(wayElement, "tag", k=k, v=v)
 
-        SubElement(wayElement, "tag", k="highway", v="primary")
 
     def add_rect_building(self, max_lonlat, min_lonlat, height):
 
@@ -181,20 +182,27 @@ def execute(extents: list[float], space: float, height: float, outputPath: str):
 
         yidx += 1
 
-    for i in range(xidx):
+    for i in range(yidx):
 
         # print(highway_nodes[i:i+xidx-1])
         begin = i * xidx
         end = begin + xidx
-        builder.add_highway(highway_nodes[begin:end])
 
-        v_nodes = []
+        builder.add_highway(highway_nodes[begin:end], {
+            "highway": "primry",
+            "direction": "east-west"
+        })
+
+        north_south_nodes = []
         for j in range(xidx-1):
             index = j*xidx+i
             if index < len(highway_nodes):
-                v_nodes.append(highway_nodes[j*xidx+i])
+                north_south_nodes.append(highway_nodes[j*xidx+i])
 
-        builder.add_highway(v_nodes)
+        builder.add_highway(north_south_nodes, {
+            "highway": "primry",
+            "direction": "north-south"
+        })
 
     builder.write(outputPath)
 

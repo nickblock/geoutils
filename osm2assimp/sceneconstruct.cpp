@@ -48,6 +48,8 @@ int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer,
   GeomConvert::zUp = config.mZUp;
   GeomConvert::texCoordScale = config.mTexCoordScale;
 
+  int retVal = 0;
+
   int count = 0;
   for (auto &feature : mFeatures) {
     try {
@@ -105,11 +107,20 @@ int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer,
       static bool once = true;
       if (once) {
         cout << "Failed to decode some nodes" << endl;
+        once = false;
       }
+      retVal = -1;
+    } catch (std::runtime_error &err) {
+
+      static bool once = true;
+      if (once) {
+        cout << err.what() << endl;
+        once = false;
+      }
+      retVal = -1;
     }
   }
 
-  int retVal = 0;
   if (mGroundCorners.size()) {
     Ground ground(mGroundCorners);
 

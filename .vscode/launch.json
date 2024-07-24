@@ -2,6 +2,18 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "osm2AssimpTest",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/osm2AssimpTest.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "visualizerFile": "C:/Users/nick/glm.natvis",
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
       "name": "test.py",
       "type": "debugpy",
       "request": "launch",
@@ -58,10 +70,10 @@
       "program": "${workspaceFolder}/build/osm2assimp",
       "args": [
         "-i",
-        "${workspaceFolder}/old_street.osm",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/test.osm",
         "-o",
-        "${workspaceFolder}oold_street.fbx",
-        "-g",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/extents.obj",
+        "-r",
         "-c",
         "2"
       ],

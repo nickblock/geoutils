@@ -52,6 +52,14 @@ glm::vec3 GeomConvert::posFromLoc(double lon, double lat, double height) {
   }
 }
 
+glm::vec3 GeomConvert::fromGround(const glm::vec2 &groundCoords) {
+  if (zUp) {
+    return glm::vec3(groundCoords, 0.0f);
+  } else {
+    return {-groundCoords.x, 0.0f, groundCoords.y};
+  }
+}
+
 struct LineSegment {
   LineSegment(const glm::vec2 &p0, const glm::vec2 &p1, float width) {
     auto dir = glm::normalize(p1 - p0);
@@ -70,19 +78,38 @@ struct LineSegment {
   }
   std::array<glm::vec2, 2> crossPoints(const LineSegment &other) {
     std::array<glm::vec2, 2> result;
-    lineIntersects2d(this->mPoints[0].x, this->mPoints[0].y, this->mPoints[3].x,
-                     this->mPoints[3].y, other.mPoints[0].x, other.mPoints[0].y,
-                     other.mPoints[3].x, other.mPoints[3].y, &result[0]);
-    lineIntersects2d(this->mPoints[1].x, this->mPoints[1].y, this->mPoints[2].x,
-                     this->mPoints[2].y, other.mPoints[1].x, other.mPoints[1].y,
-                     other.mPoints[2].x, other.mPoints[2].y, &result[1]);
+    bool cross = true;
+    cross = cross && lineIntersects2d(this->mPoints[0].x, this->mPoints[0].y,
+                                      this->mPoints[3].x, this->mPoints[3].y,
+                                      other.mPoints[0].x, other.mPoints[0].y,
+                                      other.mPoints[3].x, other.mPoints[3].y,
+                                      &result[0]);
+    cross = cross && lineIntersects2d(this->mPoints[1].x, this->mPoints[1].y,
+                                      this->mPoints[2].x, this->mPoints[2].y,
+                                      other.mPoints[1].x, other.mPoints[1].y,
+                                      other.mPoints[2].x, other.mPoints[2].y,
+                                      &result[1]);
 
-    return result;
+    if (cross) {
+      return result;
+    } else {
+      return {this->mPoints[2], this->mPoints[3]};
+    }
   }
 
   std::array<glm::vec2, 4> mPoints;
   float mArcTan;
 };
+
+bool isnan(const glm::vec3 &v) {
+  return glm::isnan(v.x) || glm::isnan(v.y) || glm::isnan(v.z);
+}
+
+void throw_if_nan(const glm::vec3 &v) {
+  if (isnan(v)) {
+    throw std::runtime_error("vec is nan in geomconversion");
+  }
+}
 
 aiMesh *GeomConvert::meshFromLine(const std::vector<glm::vec2> &line,
                                   float width, int featureId) {
@@ -96,8 +123,10 @@ aiMesh *GeomConvert::meshFromLine(const std::vector<glm::vec2> &line,
 
   auto lastSeg = LineSegment(line[0], line[1], width);
 
-  points.push_back(glm::vec3(lastSeg.mPoints[0], 0.0f));
-  points.push_back(glm::vec3(lastSeg.mPoints[1], 0.0f));
+  points.push_back(fromGround(lastSeg.mPoints[0]));
+  throw_if_nan(points[points.size() - 1]);
+  points.push_back(fromGround(lastSeg.mPoints[1]));
+  throw_if_nan(points[points.size() - 1]);
 
   glm::vec2 uvDistance(0.0f, 0.0f);
   texcoords.push_back({0.0f, uvDistance[0], static_cast<float>(featureId)});
@@ -108,8 +137,10 @@ aiMesh *GeomConvert::meshFromLine(const std::vector<glm::vec2> &line,
 
     auto crossPoints = lastSeg.crossPoints(nextSeg);
 
-    points.push_back(glm::vec3(crossPoints[0], 0.0f));
-    points.push_back(glm::vec3(crossPoints[1], 0.0f));
+    points.push_back(fromGround(crossPoints[0]));
+    throw_if_nan(points[points.size() - 1]);
+    points.push_back(fromGround(crossPoints[1]));
+    throw_if_nan(points[points.size() - 1]);
 
     uvDistance += glm::vec2{
         glm::distance(points[i * 2 + 0], points[i * 2 - 2]) / width,
@@ -122,8 +153,10 @@ aiMesh *GeomConvert::meshFromLine(const std::vector<glm::vec2> &line,
     lastSeg = nextSeg;
   }
 
-  points.push_back(glm::vec3(lastSeg.mPoints[3], 0.0f));
-  points.push_back(glm::vec3(lastSeg.mPoints[2], 0.0f));
+  points.push_back(fromGround(lastSeg.mPoints[3]));
+  throw_if_nan(points[points.size() - 1]);
+  points.push_back(fromGround(lastSeg.mPoints[2]));
+  throw_if_nan(points[points.size() - 1]);
 
   uvDistance += glm::vec2{
       glm::distance(points[points.size() - 1], points[points.size() - 3]) /
@@ -321,8 +354,9 @@ aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices,
         n = -n;
       }
 
-      ASSERTM((glm::isnan(n.x) || glm::isnan(n.y) || glm::isnan(n.z)) == false,
-              "Normal calc failed!");
+      if (isnan(n)) {
+        throw std::runtime_error("Normal calc failed!");
+      }
 
       glm::vec3 *vNormals = &normals[index];
       vNormals[0] = n;

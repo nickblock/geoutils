@@ -23,6 +23,7 @@ public:
 
   static glm::vec3 upNormal();
   static glm::vec3 posFromLoc(double lon, double lat, double height);
+  static glm::vec3 fromGround(const glm::vec2 &groundCoords);
 
   /// <summary>
   /// Given an enclosed loop of 2d points defining a polygon the function

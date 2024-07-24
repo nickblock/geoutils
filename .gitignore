@@ -2,3 +2,4 @@ testdata/
 build/
 CMakeUserPresets.json
 __pycache__
+.vscode/geoutils.code-workspace
