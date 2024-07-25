@@ -36,8 +36,6 @@ public:
   const std::string &formatsAvailableStr();
   bool checkFormat(std::string);
 
-  size_t numMeshes() { return mMeshes.size(); }
-
   const char *exporterErrorStr() { return mExporter.GetErrorString(); }
 
   static void freezeMesh(aiMesh *, aiNode *parent);
@@ -46,6 +44,8 @@ public:
   /// set the level of granularity of mesh export
   /// </summary>
   void setMeshGranularity(MeshGranularity m);
+
+  const std::vector<aiMesh *> &meshes() { return mMeshes; }
 
 protected:
   /// <summary>

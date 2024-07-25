@@ -27,19 +27,19 @@ TEST(Test, ClipperTest) {
 
   Ground ground(corners);
 
-  std::vector<glm::vec2> clip0 = {
-      {2.0f, 2.0f}, {2.0f, 6.0}, {6.0, 6.0}, {6.0, 2.0f}, {2.0f, 2.0f},
+  std::vector<double> clip0 = {
+      2.0f, 2.0f, 2.0f, 6.0, 6.0, 6.0, 6.0, 2.0f, 2.0f, 2.0f,
   };
 
-  ground.addSubtraction(OSMFeature(clip0, 10.0, OSMFeature::BUILDING, "clip0"));
+  ground.addFootPrint(clip0);
 
-  std::vector<glm::vec2> clip1;
+  std::vector<double> clip1;
 
   for (auto &p : clip0) {
-    clip1.push_back(p + glm::vec2(5.0, 5.0));
+    clip1.push_back(p + 5.0);
   };
 
-  ground.addSubtraction(OSMFeature(clip1, 10.0, OSMFeature::BUILDING, "clip1"));
+  ground.addFootPrint(clip1);
   ground.writeSvg(fs::temp_directory_path() / "ClipperTest.svg", 100.0);
 
   auto groundMesh = ground.getMesh();
@@ -57,11 +57,11 @@ TEST(Test, GroundDonut) {
 
   Ground ground(corners);
 
-  std::vector<glm::vec2> donut = {
-      {2.0, 2.0}, {2.0, 6.0}, {6.0, 6.0}, {6.0, 2.0}, {4.0, 2.0}, {4.0, 3.0},
-      {5.0, 3.0}, {5.0, 5.0}, {3.0, 5.0}, {3.0, 3.0}, {3.5, 3.0}, {3.5, 2.0}};
+  std::vector<double> donut = {2.0, 2.0, 2.0, 6.0, 6.0, 6.0, 6.0, 2.0,
+                               4.0, 2.0, 4.0, 3.0, 5.0, 3.0, 5.0, 5.0,
+                               3.0, 5.0, 3.0, 3.0, 3.5, 3.0, 3.5, 2.0};
 
-  ground.addSubtraction(OSMFeature(donut, 10.0, OSMFeature::BUILDING, "donut"));
+  ground.addFootPrint(donut);
 
   ground.writeSvg(fs::temp_directory_path() / "GroundDonut.svg", 100.0);
 

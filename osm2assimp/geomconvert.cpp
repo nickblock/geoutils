@@ -60,6 +60,26 @@ glm::vec3 GeomConvert::fromGround(const glm::vec2 &groundCoords) {
   }
 }
 
+const float epsilon = 1e-5;
+std::vector<double>
+GeomConvert::getFootprint(std::span<const glm::vec3> vertices) {
+  std::vector<double> result;
+  int idx = 0;
+  for (auto &vertex : vertices) {
+    float height = zUp ? vertex.z : vertex.y;
+    if (abs(height - 0.f) < epsilon) {
+      if (zUp) {
+        result.push_back(vertex.x);
+        result.push_back(vertex.y);
+      } else {
+        result.push_back(-vertex.x);
+        result.push_back(vertex.z);
+      }
+    }
+  }
+  return result;
+}
+
 struct LineSegment {
   LineSegment(const glm::vec2 &p0, const glm::vec2 &p1, float width) {
     auto dir = glm::normalize(p1 - p0);

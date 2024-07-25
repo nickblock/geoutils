@@ -75,7 +75,8 @@
         "C:/Users/nick/AppData/Local/Temp/geoutils_test/extents.obj",
         "-r",
         "-c",
-        "2"
+        "2",
+        "-g"
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",

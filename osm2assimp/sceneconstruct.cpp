@@ -124,13 +124,9 @@ int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer,
   if (mGroundCorners.size()) {
     Ground ground(mGroundCorners);
 
-    for (auto &feature : mFeatures) {
-      if (feature.type() & OSMFeature::BUILDING
-          //&& (feature.name() == "Building_107794232") //|| feature.name() ==
-          //"Building_160140576")*/
-      ) {
-        ground.addSubtraction(feature);
-      }
+    for (auto &mesh : writer.meshes()) {
+      ground.addFootPrint(GeomConvert::getFootprint(
+          {(const glm::vec3 *)mesh->mVertices, mesh->mNumVertices}));
     }
 
     aiMesh *mesh = ground.getMesh();

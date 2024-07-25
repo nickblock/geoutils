@@ -1,8 +1,7 @@
 #include "ground.h"
 #include "assimp/mesh.h"
+#include "delaunator.hpp"
 #include "geomconvert.h"
-#include "poly2tri/poly2tri.h"
-#include "tinyformat.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -11,7 +10,6 @@ using std::cout;
 using std::endl;
 using std::ofstream;
 using std::stringstream;
-using namespace tinyformat;
 
 namespace GeoUtils {
 Ground::Ground(const std::vector<glm::vec2> &extents) : mExtents(extents) {
@@ -20,50 +18,24 @@ Ground::Ground(const std::vector<glm::vec2> &extents) : mExtents(extents) {
   }
 }
 
-void Ground::addSubtraction(const OSMFeature &feature) {
-  mAdded++;
-
-  bool merged = true;
-
-  BoxPoly boxPoly = {feature.getBBox(), feature.coords()};
-  while (merged) {
-    merged = false;
-
-    for (auto bIter = mSubtractions.begin(); bIter != mSubtractions.end();
-         ++bIter) {
-      if (std::get<Box>(*bIter).overlaps(std::get<Box>(boxPoly))) {
-        auto result =
-            intersectPolygons(std::get<Poly>(boxPoly), std::get<Poly>(*bIter));
-
-        if (result.size() == 1) {
-          auto clean = cleanPolyon(result[0]);
-          boxPoly = {bBoxFromPoints2D(clean), clean};
-          merged = true;
-          mSubtractions.erase(bIter);
-          break;
-        }
-      }
-    }
-  }
-  mSubtractions.push_back(boxPoly);
-
-  mBBox.add(std::get<Box>(boxPoly));
+void Ground::addFootPrint(const std::vector<double> &points) {
+  mGroundPoints.insert(mGroundPoints.end(), points.begin(), points.end());
 }
 
-std::vector<p2t::Point *> fromGLM(const std::vector<glm::vec2> points) {
-  std::vector<p2t::Point *> result(points.size());
+// std::vector<p2t::Point *> fromGLM(const std::vector<glm::vec2> points) {
+//   std::vector<p2t::Point *> result(points.size());
 
-  for (int i = 0; i < points.size(); i++) {
-    result[i] = new p2t::Point(points[i].x, points[i].y);
-  }
-  return result;
-}
+//   for (int i = 0; i < points.size(); i++) {
+//     result[i] = new p2t::Point(points[i].x, points[i].y);
+//   }
+//   return result;
+// }
 
-void freePointList(std::vector<p2t::Point *> points) {
-  for (auto p : points) {
-    delete p;
-  }
-}
+// void freePointList(std::vector<p2t::Point *> points) {
+//   for (auto p : points) {
+//     delete p;
+//   }
+// }
 
 stringstream pointsss(const std::vector<glm::vec2> &points,
                       const glm::vec2 &min, float scale) {
@@ -72,7 +44,7 @@ stringstream pointsss(const std::vector<glm::vec2> &points,
   ss << "<polygon points=\"";
 
   for (auto &p : points) {
-    ss << tfm::format("%d,%d ", (p.x - min.x) * scale, (p.y - min.y) * scale);
+    ss << std::format("%d,%d ", (p.x - min.x) * scale, (p.y - min.y) * scale);
   }
 
   ss << "\" fill=\"none\" stroke=\"white\" />";
@@ -84,23 +56,20 @@ void Ground::writeSvg(const std::filesystem::path &path, float scale) {
 
   ofstream file = ofstream(path);
 
-  file << tfm::format("<svg viewBox=\"%d %d %d %d\" xmlns="
+  file << std::format("<svg viewBox=\"%d %d %d %d\" xmlns="
                       "\"http://www.w3.org/2000/svg\">",
                       0, 0, (mBBox.mMax.x - mBBox.mMin.x) * scale,
                       (mBBox.mMax.y - mBBox.mMin.y) * scale)
        << endl;
 
-  for (auto &iter : mSubtractions) {
-    file << pointsss(std::get<Poly>(iter), mBBox.mMin, scale).str() << endl;
-  }
+  // for (auto &iter : mSubtractions) {
+  //   file << pointsss(std::get<Poly>(iter), mBBox.mMin, scale).str() << endl;
+  // }
 
   file << "</svg>" << endl;
 }
 
 aiMesh *Ground::getMesh() {
-
-  cout << "Features added = " << mAdded << " polys = " << mSubtractions.size()
-       << endl;
 
   writeSvg("/tmp/ground.svg", 10.f);
 
@@ -111,43 +80,24 @@ aiMesh *Ground::getMesh() {
       {mBBox.mMax.x + extra, mBBox.mMax.y + extra},
       {mBBox.mMax.x + extra, mBBox.mMin.y - extra}};
 
-  auto boxP2t = fromGLM(boxPoints);
-  p2t::CDT cdt(boxP2t);
-
-  std::vector<std::vector<p2t::Point *>> p2tPoints;
-  for (auto &p : mSubtractions) {
-    auto poly = std::get<Poly>(p);
-    poly.pop_back();
-    auto p2tP = fromGLM(poly);
-    p2tPoints.push_back(p2tP);
-    cdt.AddHole(p2tP);
-  }
-
-  try {
-    cdt.Triangulate();
-  } catch (std::runtime_error &err) {
-    std::cout << "Failed to process ground mesh, err = " << err.what()
-              << std::endl;
-    return nullptr;
-  }
-
-  auto tris = cdt.GetTriangles();
+  delaunator::Delaunator delaunator(mGroundPoints);
 
   aiMesh *mesh = new aiMesh();
 
-  mesh->mNumVertices = tris.size() * 3;
+  mesh->mNumVertices = delaunator.triangles.size();
   mesh->mVertices = new aiVector3D[mesh->mNumVertices];
   mesh->mTextureCoords[0] = new aiVector3D[mesh->mNumVertices];
   mesh->mNormals = new aiVector3D[mesh->mNumVertices];
   mesh->mNumUVComponents[0] = 2;
 
-  mesh->mNumFaces = tris.size();
-  mesh->mFaces = new aiFace[tris.size()];
+  mesh->mNumFaces = delaunator.triangles.size() / 3;
+  mesh->mFaces = new aiFace[delaunator.triangles.size() / 3];
 
   int vertexIdx = 0;
   auto upNormal = GeomConvert::upNormal();
-  for (size_t i = 0; i < tris.size(); i++) {
-    auto &face = mesh->mFaces[i];
+  int faceIdx = 0;
+  for (size_t i = 0; i < delaunator.triangles.size(); i += 3) {
+    auto &face = mesh->mFaces[faceIdx];
 
     face.mNumIndices = 3;
     face.mIndices = new unsigned int[face.mNumIndices];
@@ -155,10 +105,12 @@ aiMesh *Ground::getMesh() {
     for (size_t j = 0; j < 3; j++) {
       face.mIndices[j] = vertexIdx;
 
-      auto point = tris[i]->GetPoint(j);
+      glm::vec2 point = {
+          delaunator.coords[2 * delaunator.triangles[i + j]],
+          delaunator.coords[2 * delaunator.triangles[i + j] + 1]};
 
-      glm::vec3 vertex = GeomConvert::posFromLoc(point->x, point->y, 0.f);
-      glm::vec3 uv = mBBox.fraction({point->x, point->y, 0.0});
+      glm::vec3 vertex = GeomConvert::posFromLoc(point.x, point.y, 0.f);
+      glm::vec3 uv = mBBox.fraction({point.x, point.y, 0.0});
 
       mesh->mVertices[vertexIdx] = {vertex.x, vertex.y, vertex.z};
       mesh->mNormals[vertexIdx] = {upNormal.x, upNormal.y, upNormal.z};
@@ -166,12 +118,7 @@ aiMesh *Ground::getMesh() {
 
       vertexIdx++;
     }
-  }
-
-  freePointList(boxP2t);
-
-  for (auto &p : p2tPoints) {
-    freePointList(p);
+    faceIdx++;
   }
 
   return mesh;

@@ -12,7 +12,7 @@ class Ground {
 public:
   Ground(const std::vector<glm::vec2> &);
 
-  void addSubtraction(const OSMFeature &feature);
+  void addFootPrint(const std::vector<double> &points);
 
   aiMesh *getMesh();
 
@@ -23,11 +23,10 @@ protected:
   static constexpr int Box = 0;
   static constexpr int Poly = 1;
 
-  std::vector<glm::vec2> mExtents;
-  std::vector<BoxPoly> mSubtractions; // buildings / roads we want subtracted
-                                      // from the ground mesh
+  static constexpr int kPrecision = 1000;
 
-  std::vector<OSMFeature> mFeatures;
+  std::vector<glm::vec2> mExtents;
+  std::vector<double> mGroundPoints;
 
   int mAdded = 0;
 

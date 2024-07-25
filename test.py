@@ -87,7 +87,7 @@ class GeoUtilsProcesses(unittest.TestCase):
     outputFile = os.path.join(GeoUtilsProcesses.getTestDir(), "extents.fbx")
 
     result = runProcess([
-      "osm2assimp", "-i", self.getTestFile(), "-o", outputFile, "-z", "-u", "3.5", "-c", "2", "-r"
+      "osm2assimp", "-i", self.getTestFile(), "-o", outputFile, "-z", "-u", "3.5", "-c", "2", "-r", "-g"
     ])
 
     self.assertTrue(result)
@@ -97,7 +97,7 @@ class GeoUtilsProcesses(unittest.TestCase):
     with pyassimp.load(outputFile ,file_type=None, processing=pyassimp.postprocess.aiProcess_Triangulate) as scene:
       logger.info(" num meshes " + str(scene.mNumMeshes))
       
-      self.assertEqual(scene.mNumMeshes, self.numBuildings + self.numHighways)
+      self.assertEqual(scene.mNumMeshes, self.numBuildings + self.numHighways + 1) # plus one for ground
 
 if __name__ == "__main__":
     
