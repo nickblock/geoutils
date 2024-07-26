@@ -2,7 +2,7 @@
 #include "assimp/mesh.h"
 #include "assimpwriter.h"
 #include "common.h"
-#include "geomconvert.h"
+#include "geometry.h"
 #include "ground.h"
 #include <iostream>
 
@@ -41,12 +41,12 @@ void SceneConstruct::way(const osmium::Way &way) {
 
 void SceneConstruct::node(const osmium::Node &node) {}
 void SceneConstruct::addGround(const std::vector<glm::vec2> &groundCorners) {
-  mGroundCorners = groundCorners;
+  mGround = std::make_unique<Ground>(groundCorners);
 }
 int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer,
                           const OutputConfig &config) {
-  GeomConvert::zUp = config.mZUp;
-  GeomConvert::texCoordScale = config.mTexCoordScale;
+  Geometry::zUp = config.mZUp;
+  Geometry::texCoordScale = config.mTexCoordScale;
 
   int retVal = 0;
 
@@ -58,14 +58,16 @@ int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer,
       // if it's something that wants turning into a 3d mesh
       if (feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) &&
           feature.type() & OSMFeature::CLOSED) {
-        mesh = GeomConvert::extrude2dMesh(feature.coords(), feature.height(),
-                                          count);
+        mesh =
+            Geometry::extrude2dMesh(feature.coords(), feature.height(), count)
+                .simpleMesh();
       }
 
       // if it's something that wants turning into a polygon spline
       else if (feature.type() & OSMFeature::HIGHWAY) {
-        mesh = GeomConvert::meshFromLine(feature.coords(),
-                                         OSMFeature::RoadWidth, count);
+        mesh = Geometry::meshFromLine(feature.coords(), OSMFeature::RoadWidth,
+                                      count)
+                   .simpleMesh();
       }
 
       // if we made either kind of mesh successfully
@@ -121,22 +123,21 @@ int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer,
     }
   }
 
-  if (mGroundCorners.size()) {
-    Ground ground(mGroundCorners);
+  // if (mGround) {
 
-    for (auto &mesh : writer.meshes()) {
-      ground.addFootPrint(GeomConvert::getFootprint(
-          {(const glm::vec3 *)mesh->mVertices, mesh->mNumVertices}));
-    }
+  //   for (auto &mesh : writer.meshes()) {
+  //     ground.addFootPrint(GeomConvert::getFootprint(
+  //         {(const glm::vec3 *)mesh->mVertices, mesh->mNumVertices}));
+  //   }
 
-    aiMesh *mesh = ground.getMesh();
-    if (mesh) {
-      mesh->mMaterialIndex = writer.addMaterial("ground", mMatColors["ground"]);
-      writer.addMesh(mesh, "ground");
-    } else {
-      retVal = -1;
-    }
-  }
+  //   aiMesh *mesh = ground.getMesh();
+  //   if (mesh) {
+  //     mesh->mMaterialIndex = writer.addMaterial("ground",
+  //     mMatColors["ground"]); writer.addMesh(mesh, "ground");
+  //   } else {
+  //     retVal = -1;
+  //   }
+  // }
 
   if (writer.write(outFilePath) == 0 && retVal == 0) {
     return 0;

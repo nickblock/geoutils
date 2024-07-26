@@ -1,7 +1,7 @@
 #include "ground.h"
 #include "assimp/mesh.h"
 #include "delaunator.hpp"
-#include "geomconvert.h"
+#include "geometry.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -18,8 +18,40 @@ Ground::Ground(const std::vector<glm::vec2> &extents) : mExtents(extents) {
   }
 }
 
-void Ground::addFootPrint(const std::vector<double> &points) {
+inline std::size_t Ground::hashKey(Point point) const {
+  const double dx = point.first - mExtents[0].x;
+  const double dy = point.second - mExtents[0].x;
+  return delaunator::fast_mod(
+      static_cast<std::size_t>(std::llround(std::floor(
+          delaunator::pseudo_angle(dx, dy) * static_cast<double>(kHashSize)))),
+      kHashSize);
+}
+
+void Ground::addFootPrint(const std::vector<double> &points, int type) {
   mGroundPoints.insert(mGroundPoints.end(), points.begin(), points.end());
+
+  for (int i = 0; i < points.size(); i += 2) {
+
+    mPointTypes[hashKey({points[i], points[i + 1]})] = type;
+  }
+}
+
+std::vector<double>
+Ground::findGroundTris(const std::vector<double> &delaunayTris) {
+  std::vector<double> groundTris;
+
+  for (int i = 0; i < delaunayTris.size(); i += 6) {
+
+    auto p0 = Point{delaunayTris[i + 0], delaunayTris[i + 1]};
+    auto p1 = Point{delaunayTris[i + 2], delaunayTris[i + 3]};
+    auto p2 = Point{delaunayTris[i + 4], delaunayTris[i + 5]};
+
+    if (mPointTypes[hashKey(p0)] ==
+        mPointTypes[hashKey(p1) == mPointTypes[hashKey(p2)]]) {
+    }
+  }
+
+  return {0};
 }
 
 // std::vector<p2t::Point *> fromGLM(const std::vector<glm::vec2> points) {
@@ -94,9 +126,10 @@ aiMesh *Ground::getMesh() {
   mesh->mFaces = new aiFace[delaunator.triangles.size() / 3];
 
   int vertexIdx = 0;
-  auto upNormal = GeomConvert::upNormal();
+  auto upNormal = Geometry::upNormal();
   int faceIdx = 0;
   for (size_t i = 0; i < delaunator.triangles.size(); i += 3) {
+
     auto &face = mesh->mFaces[faceIdx];
 
     face.mNumIndices = 3;
@@ -109,7 +142,7 @@ aiMesh *Ground::getMesh() {
           delaunator.coords[2 * delaunator.triangles[i + j]],
           delaunator.coords[2 * delaunator.triangles[i + j] + 1]};
 
-      glm::vec3 vertex = GeomConvert::posFromLoc(point.x, point.y, 0.f);
+      glm::vec3 vertex = Geometry::posFromLoc(point.x, point.y, 0.f);
       glm::vec3 uv = mBBox.fraction({point.x, point.y, 0.0});
 
       mesh->mVertices[vertexIdx] = {vertex.x, vertex.y, vertex.z};

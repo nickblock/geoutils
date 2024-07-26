@@ -60,4 +60,7 @@ BBox bBoxFromPoints2D(const std::vector<glm::vec2> &points);
 void writeSvg(const std::vector<glm::vec2> &points, int scale,
               const std::filesystem::path &filepath);
 
+glm::vec3 min(const glm::vec3 &p1, const glm::vec3 &p2);
+glm::vec3 max(const glm::vec3 &p1, const glm::vec3 &p2);
+
 } // namespace GeoUtils

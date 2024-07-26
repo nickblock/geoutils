@@ -1,4 +1,4 @@
-#include "geomconvert.h"
+#include "geometry.h"
 #include "common.h"
 #include "glm/gtc/constants.hpp"
 #include "utils.h"
@@ -8,8 +8,8 @@ using std::vector;
 
 namespace GeoUtils {
 
-bool GeomConvert::zUp = false;
-float GeomConvert::texCoordScale = 0.0f;
+bool Geometry::zUp = false;
+float Geometry::texCoordScale = 0.0f;
 
 bool lineIntersects2d(float p0_x, float p0_y, float p1_x, float p1_y,
                       float p2_x, float p2_y, float p3_x, float p3_y,
@@ -37,14 +37,14 @@ bool lineIntersects2d(float p0_x, float p0_y, float p1_x, float p1_y,
   return false; // No collision
 }
 
-glm::vec3 GeomConvert::upNormal() {
+glm::vec3 Geometry::upNormal() {
   if (zUp) {
     return glm::vec3(0.f, 0.f, 1.f);
   } else {
     return glm::vec3(0.f, 1.f, 0.f);
   }
 }
-glm::vec3 GeomConvert::posFromLoc(double lon, double lat, double height) {
+glm::vec3 Geometry::posFromLoc(double lon, double lat, double height) {
   if (zUp) {
     return glm::vec3(lon, lat, height);
   } else {
@@ -52,7 +52,7 @@ glm::vec3 GeomConvert::posFromLoc(double lon, double lat, double height) {
   }
 }
 
-glm::vec3 GeomConvert::fromGround(const glm::vec2 &groundCoords) {
+glm::vec3 Geometry::fromGround(const glm::vec2 &groundCoords) {
   if (zUp) {
     return glm::vec3(groundCoords, 0.0f);
   } else {
@@ -62,7 +62,7 @@ glm::vec3 GeomConvert::fromGround(const glm::vec2 &groundCoords) {
 
 const float epsilon = 1e-5;
 std::vector<double>
-GeomConvert::getFootprint(std::span<const glm::vec3> vertices) {
+Geometry::getFootprint(std::span<const glm::vec3> vertices) {
   std::vector<double> result;
   int idx = 0;
   for (auto &vertex : vertices) {
@@ -131,103 +131,105 @@ void throw_if_nan(const glm::vec3 &v) {
   }
 }
 
-aiMesh *GeomConvert::meshFromLine(const std::vector<glm::vec2> &line,
-                                  float width, int featureId) {
-  if (line.size() < 2) {
-    return nullptr;
-  }
-  int numSegments = line.size() - 1;
+Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
+                                int featureId) {
 
-  std::vector<glm::vec3> points;
-  std::vector<glm::vec3> texcoords;
+  if (line.size() < 2) {
+    throw std::runtime_error("Not enough nodes (<2), to crate line segment");
+  }
+
+  Geometry geometry;
+
+  int numSegments = line.size() - 1;
 
   auto lastSeg = LineSegment(line[0], line[1], width);
 
-  points.push_back(fromGround(lastSeg.mPoints[0]));
-  throw_if_nan(points[points.size() - 1]);
-  points.push_back(fromGround(lastSeg.mPoints[1]));
-  throw_if_nan(points[points.size() - 1]);
+  geometry.mData.mVertices.push_back(fromGround(lastSeg.mPoints[0]));
+  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
+  geometry.mData.mVertices.push_back(fromGround(lastSeg.mPoints[1]));
+  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
   glm::vec2 uvDistance(0.0f, 0.0f);
-  texcoords.push_back({0.0f, uvDistance[0], static_cast<float>(featureId)});
-  texcoords.push_back({1.0f, uvDistance[1], static_cast<float>(featureId)});
+  geometry.mData.mTexCoords.push_back(
+      {0.0f, uvDistance[0], static_cast<float>(featureId)});
+  geometry.mData.mTexCoords.push_back(
+      {1.0f, uvDistance[1], static_cast<float>(featureId)});
 
   for (int i = 1; i < numSegments; i++) {
     auto nextSeg = LineSegment(line[i + 0], line[i + 1], width);
 
     auto crossPoints = lastSeg.crossPoints(nextSeg);
 
-    points.push_back(fromGround(crossPoints[0]));
-    throw_if_nan(points[points.size() - 1]);
-    points.push_back(fromGround(crossPoints[1]));
-    throw_if_nan(points[points.size() - 1]);
+    geometry.mData.mVertices.push_back(fromGround(crossPoints[0]));
+    throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
+    geometry.mData.mVertices.push_back(fromGround(crossPoints[1]));
+    throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
     uvDistance += glm::vec2{
-        glm::distance(points[i * 2 + 0], points[i * 2 - 2]) / width,
-        glm::distance(points[i * 2 + 1], points[i * 2 - 1]) / width,
+        glm::distance(geometry.mData.mVertices[i * 2 + 0],
+                      geometry.mData.mVertices[i * 2 - 2]) /
+            width,
+        glm::distance(geometry.mData.mVertices[i * 2 + 1],
+                      geometry.mData.mVertices[i * 2 - 1]) /
+            width,
     };
 
-    texcoords.push_back({0.0f, uvDistance[0], static_cast<float>(featureId)});
-    texcoords.push_back({1.0f, uvDistance[1], static_cast<float>(featureId)});
+    geometry.mData.mTexCoords.push_back(
+        {0.0f, uvDistance[0], static_cast<float>(featureId)});
+    geometry.mData.mTexCoords.push_back(
+        {1.0f, uvDistance[1], static_cast<float>(featureId)});
 
     lastSeg = nextSeg;
   }
 
-  points.push_back(fromGround(lastSeg.mPoints[3]));
-  throw_if_nan(points[points.size() - 1]);
-  points.push_back(fromGround(lastSeg.mPoints[2]));
-  throw_if_nan(points[points.size() - 1]);
+  geometry.mData.mVertices.push_back(fromGround(lastSeg.mPoints[3]));
+  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
+  geometry.mData.mVertices.push_back(fromGround(lastSeg.mPoints[2]));
+  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
   uvDistance += glm::vec2{
-      glm::distance(points[points.size() - 1], points[points.size() - 3]) /
+      glm::distance(
+          geometry.mData.mVertices[geometry.mData.mVertices.size() - 1],
+          geometry.mData.mVertices[geometry.mData.mVertices.size() - 3]) /
           width,
-      glm::distance(points[points.size() - 2], points[points.size() - 4]) /
+      glm::distance(
+          geometry.mData.mVertices[geometry.mData.mVertices.size() - 2],
+          geometry.mData.mVertices[geometry.mData.mVertices.size() - 4]) /
           width,
   };
 
-  texcoords.push_back({0.0f, uvDistance[0], static_cast<float>(featureId)});
-  texcoords.push_back({1.0f, uvDistance[1], static_cast<float>(featureId)});
+  geometry.mData.mTexCoords.push_back(
+      {0.0f, uvDistance[0], static_cast<float>(featureId)});
+  geometry.mData.mTexCoords.push_back(
+      {1.0f, uvDistance[1], static_cast<float>(featureId)});
 
-  aiMesh *mesh = new aiMesh;
-
-  mesh->mNumVertices = numSegments * 2 + 4;
-  mesh->mVertices = new aiVector3D[mesh->mNumVertices];
-  mesh->mNormals = new aiVector3D[mesh->mNumVertices];
-  mesh->mNumUVComponents[0] = 2;
-  mesh->mTextureCoords[0] = new aiVector3D[mesh->mNumVertices];
-  memcpy(mesh->mTextureCoords[0], texcoords.data(),
-         mesh->mNumVertices * sizeof(glm::vec3));
-
-  mesh->mNumFaces = numSegments;
-  mesh->mFaces = new aiFace[numSegments];
-
-  memcpy(mesh->mVertices, points.data(), sizeof(glm::vec3) * points.size());
-
-  static auto aiUpNormal = aiVector3D(upNormal().x, upNormal().y, upNormal().z);
-  for (int i = 0; i < points.size(); i++) {
-    mesh->mNormals[i] = aiUpNormal;
+  geometry.mData.mNormals.resize(geometry.mData.mVertices.size());
+  for (int i = 0; i < geometry.mData.mVertices.size(); i++) {
+    geometry.mData.mNormals[i] = upNormal();
   }
+
+  geometry.mData.mFaces.resize(numSegments);
 
   int vertIdx = 0;
   int faceIdx = 0;
 
   for (int i = 0; i < numSegments; i++) {
-    auto &face = mesh->mFaces[faceIdx++];
+    auto &face = geometry.mData.mFaces[faceIdx++];
 
-    face.mNumIndices = 4;
-    face.mIndices = new unsigned int[4];
-
-    face.mIndices[0] = (i * 2) + 0;
-    face.mIndices[1] = (i * 2) + 1;
-    face.mIndices[2] = (i * 2) + 3;
-    face.mIndices[3] = (i * 2) + 2;
+    face.resize(4);
+    face[0] = (i * 2) + 0;
+    face[1] = (i * 2) + 1;
+    face[2] = (i * 2) + 3;
+    face[3] = (i * 2) + 2;
   }
 
-  return mesh;
+  return geometry;
 }
 
-aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices,
-                                   float height, int featureId) {
+Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
+                                 float height, int featureId) {
+  Geometry geometry;
+
   using Edge = std::pair<glm::vec2, glm::vec2>;
   using EdgeList = std::vector<Edge>;
 
@@ -243,7 +245,7 @@ aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   }
 
   if (baseVertices.size() < 3) {
-    return nullptr;
+    throw std::runtime_error("Not enough vertices (<3), to create a mesh");
   }
 
   size_t numBaseVertices = baseVertices.size();
@@ -311,46 +313,43 @@ aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices,
 
   bool doExtrude = height != 0.f;
 
-  vector<glm::vec3> vertices(doExtrude ? numBaseVertices * 6 : numBaseVertices);
-  vector<glm::vec3> normals(vertices.size());
-  vector<glm::vec3> texcoords(texCoordScale != 0.0f ? vertices.size() : 0);
+  geometry.mData.mVertices.resize(doExtrude ? numBaseVertices * 6
+                                            : numBaseVertices);
+  geometry.mData.mNormals.resize(geometry.mData.mVertices.size());
+  geometry.mData.mTexCoords.resize(
+      texCoordScale != 0.0f ? geometry.mData.mVertices.size() : 0);
 
   BBox bbox;
 
   for (size_t v = 0; v < numBaseVertices; v++) {
     const glm::vec2 &nv = baseVertices[v];
 
-    vertices[v] = posFromLoc(nv.x, nv.y, 0.0);
-    normals[v] = -upNormal();
+    geometry.mData.mVertices[v] = posFromLoc(nv.x, nv.y, 0.0);
+    geometry.mData.mNormals[v] = -upNormal();
 
-    bbox.add(vertices[v]);
+    bbox.add(geometry.mData.mVertices[v]);
 
     if (height > 0.f) {
-      vertices[v + numBaseVertices] = posFromLoc(nv.x, nv.y, height);
-      bbox.add(vertices[v + numBaseVertices]);
-      normals[v + numBaseVertices] = upNormal();
+      geometry.mData.mVertices[v + numBaseVertices] =
+          posFromLoc(nv.x, nv.y, height);
+      bbox.add(geometry.mData.mVertices[v + numBaseVertices]);
+      geometry.mData.mNormals[v + numBaseVertices] = upNormal();
     }
   }
 
-  aiMesh *newMesh = new aiMesh();
-
-  newMesh->mNumFaces = height > 0.f ? 2 + numBaseVertices : 1;
-  newMesh->mFaces = new aiFace[newMesh->mNumFaces];
-
-  newMesh->mFaces[0].mNumIndices = numBaseVertices;
-  newMesh->mFaces[0].mIndices = new unsigned int[numBaseVertices];
+  geometry.mData.mFaces.resize(height > 0.f ? 2 + numBaseVertices : 1);
+  geometry.mData.mFaces[0].resize(numBaseVertices);
 
   for (size_t i = 0; i < numBaseVertices; i++) {
-    newMesh->mFaces[0].mIndices[i] = numBaseVertices - i - 1;
+    geometry.mData.mFaces[0][i] = numBaseVertices - i - 1;
   }
 
   if (doExtrude) {
 
-    newMesh->mFaces[1].mNumIndices = numBaseVertices;
-    newMesh->mFaces[1].mIndices = new unsigned int[numBaseVertices];
+    geometry.mData.mFaces[1].resize(numBaseVertices);
 
     for (size_t i = 0; i < numBaseVertices; i++) {
-      newMesh->mFaces[1].mIndices[i] = numBaseVertices + i;
+      geometry.mData.mFaces[1][i] = numBaseVertices + i;
     }
 
     for (int f = 0; f < numBaseVertices; f++) {
@@ -360,12 +359,12 @@ aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices,
         fn = -1;
 
       int index = numBaseVertices * 2 + 4 * f;
-      glm::vec3 *corners = &vertices[index];
+      glm::vec3 *corners = &geometry.mData.mVertices[index];
 
-      corners[3] = vertices[fn + 1];
-      corners[2] = vertices[f + 0];
-      corners[1] = vertices[f + numBaseVertices + 0];
-      corners[0] = vertices[fn + numBaseVertices + 1];
+      corners[3] = geometry.mData.mVertices[fn + 1];
+      corners[2] = geometry.mData.mVertices[f + 0];
+      corners[1] = geometry.mData.mVertices[f + numBaseVertices + 0];
+      corners[0] = geometry.mData.mVertices[fn + numBaseVertices + 1];
       glm::vec3 v1 = corners[1] - corners[0];
       glm::vec3 v2 = corners[2] - corners[0];
       glm::vec3 n = glm::normalize(glm::cross(v1, v2));
@@ -378,15 +377,14 @@ aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices,
         throw std::runtime_error("Normal calc failed!");
       }
 
-      glm::vec3 *vNormals = &normals[index];
+      glm::vec3 *vNormals = &geometry.mData.mNormals[index];
       vNormals[0] = n;
       vNormals[1] = n;
       vNormals[2] = n;
       vNormals[3] = n;
 
-      if (texcoords.size()) {
-        glm::vec3 *texCoord = &texcoords[index];
-
+      if (geometry.mData.mTexCoords.size()) {
+        glm::vec3 *texCoord = &geometry.mData.mTexCoords[index];
         float width = glm::distance(corners[0], corners[1]);
         float texCoordU = std::round(width / texCoordScale);
         float texCoordV = std::round(height / texCoordScale);
@@ -397,29 +395,46 @@ aiMesh *GeomConvert::extrude2dMesh(const vector<glm::vec2> &in_vertices,
         texCoord[3] = {texCoordU, 0.f, static_cast<float>(featureId)};
       }
 
-      aiFace &face = newMesh->mFaces[2 + f];
-      face.mNumIndices = 4;
-      face.mIndices = new unsigned int[4];
-      face.mIndices[0] = index + 0;
-      face.mIndices[1] = index + 1;
-      face.mIndices[2] = index + 2;
-      face.mIndices[3] = index + 3;
+      Face &face = geometry.mData.mFaces[2 + f];
+      face.resize(4);
+
+      face[0] = index + 0;
+      face[1] = index + 1;
+      face[2] = index + 2;
+      face[3] = index + 3;
     }
   }
 
-  newMesh->mNumVertices = vertices.size();
-  newMesh->mVertices = new aiVector3D[vertices.size()];
-  newMesh->mNormals = new aiVector3D[vertices.size()];
+  return geometry;
+}
 
-  memcpy(newMesh->mVertices, vertices.data(),
-         vertices.size() * sizeof(glm::vec3));
-  memcpy(newMesh->mNormals, normals.data(), normals.size() * sizeof(glm::vec3));
+aiMesh *Geometry::Data::toMesh() const {
+  aiMesh *newMesh = new aiMesh;
+  newMesh->mNumVertices = mVertices.size();
+  newMesh->mVertices = new aiVector3D[mVertices.size()];
+  newMesh->mNormals = new aiVector3D[mVertices.size()];
 
-  if (texcoords.size()) {
+  memcpy(newMesh->mVertices, mVertices.data(),
+         mVertices.size() * sizeof(glm::vec3));
+  memcpy(newMesh->mNormals, mNormals.data(),
+         mNormals.size() * sizeof(glm::vec3));
+
+  if (mTexCoords.size()) {
     newMesh->mNumUVComponents[0] = 2;
-    newMesh->mTextureCoords[0] = new aiVector3D[vertices.size()];
-    memcpy(newMesh->mTextureCoords[0], texcoords.data(),
-           vertices.size() * sizeof(glm::vec3));
+    newMesh->mTextureCoords[0] = new aiVector3D[mVertices.size()];
+    memcpy(newMesh->mTextureCoords[0], mTexCoords.data(),
+           mVertices.size() * sizeof(glm::vec3));
+  }
+
+  int numFaces = mFaces.size();
+  newMesh->mNumFaces = numFaces;
+  newMesh->mFaces = new aiFace[numFaces];
+  for (int i = 0; i < numFaces; i++) {
+    aiFace &face = newMesh->mFaces[i];
+    face.mNumIndices = mFaces[i].size();
+    face.mIndices = new unsigned int[face.mNumIndices];
+    memcpy(face.mIndices, mFaces[i].data(),
+           face.mNumIndices * sizeof(unsigned int));
   }
 
   return newMesh;

@@ -7,7 +7,7 @@
 #include "assimpwriter.h"
 #include "convertlatlng.h"
 #include "eigenconversion.h"
-#include "geomconvert.h"
+#include "geometry.h"
 #include "s2util.h"
 #include "sceneconstruct.h"
 #include "utils.h"
@@ -43,7 +43,7 @@ using GeoUtils::AssimpWriter;
 using GeoUtils::BoundFilter;
 using GeoUtils::ConvertLatLngToCoords;
 using GeoUtils::cornersFromBox;
-using GeoUtils::GeomConvert;
+using GeoUtils::Geometry;
 using GeoUtils::getFileExt;
 using GeoUtils::getInputFiles;
 using GeoUtils::OSMDataImport;
@@ -144,7 +144,7 @@ int main(int argi, char **argc) {
   }
 
   if (exportZUpArg) {
-    GeomConvert::zUp = true;
+    Geometry::zUp = true;
   }
 
   if (convertCEF) {
@@ -243,7 +243,7 @@ int main(int argi, char **argc) {
   }
 
   if (uvScaleArg) {
-    GeomConvert::texCoordScale = args::get(uvScaleArg);
+    Geometry::texCoordScale = args::get(uvScaleArg);
   }
 
   vector<string> inputFiles = getInputFiles(args::get(inputFileArg));

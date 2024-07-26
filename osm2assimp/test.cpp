@@ -2,7 +2,7 @@
 
 #include "assimpwriter.h"
 #include "clipper.hpp"
-#include "geomconvert.h"
+#include "geometry.h"
 #include "glm/glm.hpp"
 #include "ground.h"
 #include "utils.h"
@@ -16,9 +16,11 @@ namespace fs = std::filesystem;
 TEST(Test, MeshFromLine) {
   std::vector<glm::vec2> points = {{0.0, 0.0}, {0.0, 10.0}, {10.0, 20.0}};
 
-  auto results = GeomConvert::meshFromLine(points, 2.0, 0);
-
-  EXPECT_TRUE(results != nullptr);
+  try {
+    Geometry::meshFromLine(points, 2.0, 0);
+  } catch (std::runtime_error &err) {
+    EXPECT_TRUE(false);
+  }
 }
 
 TEST(Test, ClipperTest) {
@@ -31,7 +33,7 @@ TEST(Test, ClipperTest) {
       2.0f, 2.0f, 2.0f, 6.0, 6.0, 6.0, 6.0, 2.0f, 2.0f, 2.0f,
   };
 
-  ground.addFootPrint(clip0);
+  ground.addFootPrint(clip0, 0);
 
   std::vector<double> clip1;
 
@@ -39,7 +41,7 @@ TEST(Test, ClipperTest) {
     clip1.push_back(p + 5.0);
   };
 
-  ground.addFootPrint(clip1);
+  ground.addFootPrint(clip1, 0);
   ground.writeSvg(fs::temp_directory_path() / "ClipperTest.svg", 100.0);
 
   auto groundMesh = ground.getMesh();
@@ -61,7 +63,7 @@ TEST(Test, GroundDonut) {
                                4.0, 2.0, 4.0, 3.0, 5.0, 3.0, 5.0, 5.0,
                                3.0, 5.0, 3.0, 3.0, 3.5, 3.0, 3.5, 2.0};
 
-  ground.addFootPrint(donut);
+  ground.addFootPrint(donut, 0);
 
   ground.writeSvg(fs::temp_directory_path() / "GroundDonut.svg", 100.0);
 

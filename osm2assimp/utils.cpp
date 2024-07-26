@@ -6,10 +6,9 @@
 
 #include "clipper.hpp"
 #include "convertlatlng.h"
-#include "geomconvert.h"
 #include "s2util.h"
 
-#include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 
 #include <osmium/geom/coordinates.hpp>
 
@@ -163,6 +162,21 @@ std::vector<glm::vec2> cleanPolyon(const std::vector<glm::vec2> &points) {
   return fromPath(out);
 }
 
+glm::vec3 min(const glm::vec3 &p1, const glm::vec3 &p2) {
+  return {
+      std::min(p1.x, p2.x),
+      std::min(p1.y, p2.y),
+      std::min(p1.z, p2.z),
+  };
+}
+glm::vec3 max(const glm::vec3 &p1, const glm::vec3 &p2) {
+
+  return {
+      std::max(p1.x, p2.x),
+      std::max(p1.y, p2.y),
+      std::max(p1.z, p2.z),
+  };
+}
 // bounding box functions
 BBox::BBox() {
   mMin.x = std::numeric_limits<float>::max();
@@ -199,14 +213,14 @@ bool BBox::overlaps(const BBox &other) const {
 auto BBox::transform(const glm::mat4 &mat) -> BBox {
   BBox tBbox;
 
-  tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMin.y, mMin.z, 1.0)));
-  tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMax.y, mMax.z, 1.0)));
-  tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMin.y, mMin.z, 1.0)));
-  tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMax.y, mMin.z, 1.0)));
-  tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMin.y, mMax.z, 1.0)));
-  tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMax.y, mMax.z, 1.0)));
-  tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMin.y, mMax.z, 1.0)));
-  tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMax.y, mMin.z, 1.0)));
+  tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMin.y, mMin.z, 1.0f)));
+  tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMax.y, mMax.z, 1.0f)));
+  tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMin.y, mMin.z, 1.0f)));
+  tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMax.y, mMin.z, 1.0f)));
+  tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMin.y, mMax.z, 1.0f)));
+  tBbox.add(glm::vec3(mat * glm::vec4(mMin.x, mMax.y, mMax.z, 1.0f)));
+  tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMin.y, mMax.z, 1.0f)));
+  tBbox.add(glm::vec3(mat * glm::vec4(mMax.x, mMax.y, mMin.z, 1.0f)));
 
   return tBbox;
 }
