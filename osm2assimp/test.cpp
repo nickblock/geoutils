@@ -42,14 +42,14 @@ TEST(Test, ClipperTest) {
   };
 
   ground.addFootPrint(clip1, 0);
-  ground.writeSvg(fs::temp_directory_path() / "ClipperTest.svg", 100.0);
+  ground.writeSvg(testDir() / "ClipperTest.svg", 100.0);
 
   auto groundMesh = ground.getMesh();
   EXPECT_NE(groundMesh, nullptr);
 
   AssimpWriter writer;
   writer.addMesh(groundMesh);
-  EXPECT_EQ(0, writer.write(fs::temp_directory_path() / "ClipperTest.fbx"));
+  EXPECT_EQ(0, writer.write(testDir() / "ClipperTest.fbx"));
 }
 
 TEST(Test, GroundDonut) {
@@ -65,14 +65,14 @@ TEST(Test, GroundDonut) {
 
   ground.addFootPrint(donut, 0);
 
-  ground.writeSvg(fs::temp_directory_path() / "GroundDonut.svg", 100.0);
+  ground.writeSvg(testDir() / "GroundDonut.svg", 100.0);
 
   auto groundMesh = ground.getMesh();
   EXPECT_NE(groundMesh, nullptr);
 
   AssimpWriter writer;
   writer.addMesh(groundMesh);
-  EXPECT_EQ(0, writer.write(fs::temp_directory_path() / "GroundDonut.fbx"));
+  EXPECT_EQ(0, writer.write(testDir() / "GroundDonut.fbx"));
 }
 TEST(Test, ClipperLibIntersect) {
 
@@ -114,11 +114,19 @@ TEST(Test, ClipperSubtractPoly) {
   int idx = 0;
   for (auto &v : result) {
     writeSvg(v, 100,
-             std::format("{}/ClipperSubtractPoly{}.svg",
-                         fs::temp_directory_path().string(), idx++));
+             testDir() / std::format("ClipperSubtractPoly{}.svg", idx++));
   }
 }
+TEST(Test, Triangulate) {
 
+  std::vector<glm::vec3> convex = {{0.0, 0.0, 0.0}, {0.0, 1.0, 0.0},
+                                   {0.5, 1.5, 0.0}, {1.5, 1.5, 0.0},
+                                   {2.0, 1.0, 0.0}, {2.0, 0.0, 0.0}};
+
+  auto faceList = Geometry::triangulate(convex);
+
+  Geometry::writeSvg(faceList, convex, testDir() / "TriangulateConvex.svg");
+}
 auto main(int argc, char **argv) -> int {
   ::testing::InitGoogleTest(&argc, argv);
 

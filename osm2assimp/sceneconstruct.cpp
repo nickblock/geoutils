@@ -43,8 +43,8 @@ void SceneConstruct::node(const osmium::Node &node) {}
 void SceneConstruct::addGround(const std::vector<glm::vec2> &groundCorners) {
   mGround = std::make_unique<Ground>(groundCorners);
 }
-int SceneConstruct::write(const std::string &outFilePath, AssimpWriter &writer,
-                          const OutputConfig &config) {
+int SceneConstruct::write(const std::filesystem::path &outFilePath,
+                          AssimpWriter &writer, const OutputConfig &config) {
   Geometry::zUp = config.mZUp;
   Geometry::texCoordScale = config.mTexCoordScale;
 

@@ -34,6 +34,7 @@ osmium::Box osmiumBoxFromString(string extentsStr);
 osmium::Location refPointFromArg(string refPointStr);
 vector<string> getInputFiles(string input);
 std::string getFileExt(const std::string filename);
+std::filesystem::path testDir();
 
 class OSMDataImport;
 // special case: if the filename correlates to an S2 cell we use that as the

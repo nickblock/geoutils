@@ -1,8 +1,11 @@
 #include "geometry.h"
+#include "assimp/scene.h"
 #include "common.h"
 #include "glm/gtc/constants.hpp"
 #include "utils.h"
 #include <array>
+#include <format>
+#include <fstream>
 
 using std::vector;
 
@@ -318,11 +321,14 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   geometry.mData.mNormals.resize(geometry.mData.mVertices.size());
   geometry.mData.mTexCoords.resize(
       texCoordScale != 0.0f ? geometry.mData.mVertices.size() : 0);
+  geometry.mFootPrint.resize(numBaseVertices);
 
   BBox bbox;
 
   for (size_t v = 0; v < numBaseVertices; v++) {
     const glm::vec2 &nv = baseVertices[v];
+
+    // geometry.mFootPrint[v] =
 
     geometry.mData.mVertices[v] = posFromLoc(nv.x, nv.y, 0.0);
     geometry.mData.mNormals[v] = -upNormal();
@@ -438,6 +444,67 @@ aiMesh *Geometry::Data::toMesh() const {
   }
 
   return newMesh;
+}
+
+Geometry::FaceList Geometry::triangulate(const std::span<glm::vec3> &vertices) {
+
+  FaceList faceList(vertices.size() - 2);
+
+  for (int i = 0; i < vertices.size() - 2; i++) {
+    Face &face = faceList[i];
+
+    face.resize(3);
+
+    face[0] = 0;
+    face[1] = i;
+    face[2] = i + 1;
+  }
+  return faceList;
+}
+
+void Geometry::writeSvg(const Geometry::FaceList &faces,
+                        const std::vector<glm::vec3> &vertices,
+                        const std::filesystem::path &filepath) {
+
+  constexpr float kPrecision = 1e3;
+
+  std::ofstream file = std::ofstream(filepath);
+
+  glm::vec2 min{std::numeric_limits<float>::max(),
+                std::numeric_limits<float>::max()};
+  glm::vec2 max{std::numeric_limits<float>::min(),
+                std::numeric_limits<float>::min()};
+
+  for (auto &p : vertices) {
+    min.x = std::min(p.x * kPrecision, min.x);
+    min.y = std::min(p.y * kPrecision, min.y);
+    max.x = std::max(p.x * kPrecision, max.x);
+    max.y = std::max(p.y * kPrecision, max.y);
+  }
+
+  min.x -= 1;
+  min.y -= 1;
+  max.x += 1;
+  max.y += 1;
+
+  file << std::format("<svg viewBox=\"{} {} {} {}\" xmlns="
+                      "\"http://www.w3.org/2000/svg\">",
+                      0, 0, (max.x - min.x), (max.y - min.y))
+       << std::endl;
+
+  for (auto &face : faces) {
+
+    file << "<polygon points=\"";
+    for (auto &idx : face) {
+      auto &p = vertices[idx];
+      file << std::format("{},{} ", (p.x * kPrecision - min.x),
+                          (p.y * kPrecision - min.y))
+           << std::endl;
+    }
+    file << "\" fill=\"none\" stroke=\"white\" />" << std::endl;
+  }
+
+  file << "</svg>" << std::endl;
 }
 
 } // namespace GeoUtils

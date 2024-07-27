@@ -1,12 +1,13 @@
 #pragma once
 
-#include "assimp/scene.h"
-
+#include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <span>
 #include <vector>
+
+class aiMesh;
 
 namespace GeoUtils {
 
@@ -50,19 +51,29 @@ protected:
   Geometry() = default;
 
   using Face = std::vector<int>;
+  using FaceList = std::vector<Face>;
 
   struct Data {
     std::vector<glm::vec3> mVertices;
     std::vector<glm::vec3> mNormals;
     std::vector<glm::vec3> mTexCoords;
-    std::vector<Face> mFaces;
+    FaceList mFaces;
 
     aiMesh *toMesh() const;
   };
 
   Data mData;
-
   std::vector<glm::vec2> mFootPrint;
+
+public:
+  // given 2d polygon (given vec3 is assumed to flat on in one dimension),
+  // produce list of triangular faces
+  static FaceList triangulate(const std::span<glm::vec3> &vertices);
+
+  // print polygon to svg for debug purposes
+  static void writeSvg(const FaceList &faces,
+                       const std::vector<glm::vec3> &vertices,
+                       const std::filesystem::path &file);
 };
 
 } // namespace GeoUtils

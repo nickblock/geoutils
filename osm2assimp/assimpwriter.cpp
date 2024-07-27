@@ -23,7 +23,7 @@ AssimpWriter::AssimpWriter() {
       mFormatsAvailable += string("|");
 
     mFormatsAvailable += desc->fileExtension;
-    mExtMap[desc->fileExtension] = desc->id;
+    mExtMap[std::string(".") + desc->fileExtension] = desc->id;
   }
 }
 

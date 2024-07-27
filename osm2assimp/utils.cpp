@@ -66,10 +66,12 @@ osmium::Location refPointFromArg(string refPointStr) {
   return location;
 }
 
-std::string getFileExt(const std::string filename) {
-  int dotPos = filename.find_last_of('.');
-
-  return filename.substr(dotPos + 1);
+std::filesystem::path testDir() {
+  auto testDir = std::filesystem::temp_directory_path() / "geoutils_test";
+  if (!std::filesystem::exists(testDir)) {
+    std::filesystem::create_directory(testDir);
+  }
+  return testDir;
 }
 
 vector<glm::vec2> cornersFromBox(const osmium::Box &box) {

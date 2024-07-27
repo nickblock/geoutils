@@ -26,7 +26,7 @@ public:
   };
 
   // write file using assimp, returns assimp ret code
-  int write(const std::string &outFilePath, AssimpWriter &writer,
+  int write(const std::filesystem::path &outFilePath, AssimpWriter &writer,
             const OutputConfig &config);
 
 protected:

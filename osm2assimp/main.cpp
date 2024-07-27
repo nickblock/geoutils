@@ -151,10 +151,10 @@ int main(int argi, char **argc) {
     ConvertLatLngToCoords::UseCenterEarthFixed = true;
   }
 
-  string outputFile = args::get(outputFileArg);
-  auto outExt = getFileExt(outputFile);
+  std::filesystem::path outputFile = args::get(outputFileArg);
+  auto outExt = outputFile.extension();
 
-  if (!assimpWriter.checkFormat(outExt)) {
+  if (!assimpWriter.checkFormat(outExt.string())) {
     cout << "Couldnt find filetype for extension '" << outExt
          << "', the avialable types are " << assimpWriter.formatsAvailableStr()
          << endl;
