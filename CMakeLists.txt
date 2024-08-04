@@ -106,6 +106,7 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp/osmfeature.cpp
             osm2assimp/ground.cpp
             osm2assimp/geometry.cpp
+            osm2assimp/triangulate.cpp
             osm2assimp/viewfilter.cpp
             osm2assimp/utils.cpp
             ext/common.cpp
@@ -146,10 +147,10 @@ if(BUILD_OSM2ASSIMP)
             target_include_directories(osm2assimp PUBLIC /usr/local/include)
       endif()
 
-      add_executable(osm2assimpTest
+      add_executable(testOsm2assimp
             osm2assimp/test.cpp
       )
-      target_link_libraries(osm2assimpTest PUBLIC
+      target_link_libraries(testOsm2assimp PUBLIC
             osm2assimpLib
             poly2tri::poly2tri
             GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main

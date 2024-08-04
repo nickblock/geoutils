@@ -5,6 +5,7 @@
 #include "geometry.h"
 #include "glm/glm.hpp"
 #include "ground.h"
+#include "triangulate.h"
 #include "utils.h"
 #include <filesystem>
 
@@ -117,16 +118,47 @@ TEST(Test, ClipperSubtractPoly) {
              testDir() / std::format("ClipperSubtractPoly{}.svg", idx++));
   }
 }
-TEST(Test, Triangulate) {
 
-  std::vector<glm::vec3> convex = {{0.0, 0.0, 0.0}, {0.0, 1.0, 0.0},
-                                   {0.5, 1.5, 0.0}, {1.5, 1.5, 0.0},
-                                   {2.0, 1.0, 0.0}, {2.0, 0.0, 0.0}};
+TEST(Test, IntersectLine) {
+  auto line0 = Line{glm::vec2{0.0f, 0.0f}, {20.0f, 20.0f}};
+  auto line1 = Line{glm::vec2{5.0f, 0.0f}, {5.0f, 20.0f}};
+  glm::vec2 intersection;
+
+  auto result = lineIntersects2d(line0, line1, &intersection);
+
+  EXPECT_TRUE(result);
+  EXPECT_FLOAT_EQ(intersection.x, 5.0f);
+}
+TEST(Test, TriangulateConvex) {
+
+  std::vector<glm::vec2> convex = {{0.0, 0.0}, {0.0, 1.0}, {0.5, 1.5},
+                                   {1.5, 1.5}, {2.0, 1.0}, {2.0, 0.0}};
 
   auto faceList = Geometry::triangulate(convex);
 
   Geometry::writeSvg(faceList, convex, testDir() / "TriangulateConvex.svg");
+
+  Triangulate triangulate(convex);
+
+  float totalAngle = 0.f;
+  for (auto p : triangulate.getPointAngles()) {
+    totalAngle += p;
+    EXPECT_LT(p, glm::pi<float>());
+  }
+  EXPECT_FLOAT_EQ(totalAngle, glm::pi<float>() * 2.f);
 }
+
+TEST(Test, TriangulateDonut) {
+
+  std::vector<glm::vec2> donut = {
+      {2.0, 2.0}, {2.0, 6.0}, {6.0, 6.0}, {6.0, 2.0}, {4.0, 2.0}, {4.0, 3.0},
+      {5.0, 3.0}, {5.0, 5.0}, {3.0, 5.0}, {3.0, 3.0}, {4.0, 3.0}, {4.0, 2.0}};
+
+  auto faceList = Geometry::triangulate(donut);
+
+  Geometry::writeSvg(faceList, donut, testDir() / "TriangulateDonut.svg");
+}
+
 auto main(int argc, char **argv) -> int {
   ::testing::InitGoogleTest(&argc, argv);
 

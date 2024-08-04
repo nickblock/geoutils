@@ -6,6 +6,7 @@
 #include <array>
 #include <format>
 #include <fstream>
+#include <set>
 
 using std::vector;
 
@@ -14,24 +15,24 @@ namespace GeoUtils {
 bool Geometry::zUp = false;
 float Geometry::texCoordScale = 0.0f;
 
-bool lineIntersects2d(float p0_x, float p0_y, float p1_x, float p1_y,
-                      float p2_x, float p2_y, float p3_x, float p3_y,
-                      glm::vec2 *intersection) {
+using Line = std::array<glm::vec2, 2>;
+
+bool lineIntersects2d(const Line &l0, const Line &l1, glm::vec2 *intersection) {
   float s1_x, s1_y, s2_x, s2_y;
-  s1_x = p1_x - p0_x;
-  s1_y = p1_y - p0_y;
-  s2_x = p3_x - p2_x;
-  s2_y = p3_y - p2_y;
+  s1_x = l0[1].x - l0[0].x;
+  s1_y = l0[1].y - l0[1].y;
+  s2_x = l1[1].x - l1[0].x;
+  s2_y = l1[1].y - l1[0].y;
 
   float s, t;
-  s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) /
+  s = (-s1_y * (l0[0].x - l1[1].x) + s1_x * (l0[0].y - l1[0].y)) /
       (-s2_x * s1_y + s1_x * s2_y);
-  t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) /
+  t = (s2_x * (l0[0].y - l1[0].y) - s2_y * (l0[0].x - l1[0].x)) /
       (-s2_x * s1_y + s1_x * s2_y);
 
   if (intersection) {
-    intersection->x = p0_x + (t * s1_x);
-    intersection->y = p0_y + (t * s1_y);
+    intersection->x = l0[0].x + (t * s1_x);
+    intersection->y = l0[0].y + (t * s1_y);
   }
   if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
     return true;
@@ -102,16 +103,12 @@ struct LineSegment {
   std::array<glm::vec2, 2> crossPoints(const LineSegment &other) {
     std::array<glm::vec2, 2> result;
     bool cross = true;
-    cross = cross && lineIntersects2d(this->mPoints[0].x, this->mPoints[0].y,
-                                      this->mPoints[3].x, this->mPoints[3].y,
-                                      other.mPoints[0].x, other.mPoints[0].y,
-                                      other.mPoints[3].x, other.mPoints[3].y,
-                                      &result[0]);
-    cross = cross && lineIntersects2d(this->mPoints[1].x, this->mPoints[1].y,
-                                      this->mPoints[2].x, this->mPoints[2].y,
-                                      other.mPoints[1].x, other.mPoints[1].y,
-                                      other.mPoints[2].x, other.mPoints[2].y,
-                                      &result[1]);
+    cross = cross &&
+            lineIntersects2d({this->mPoints[0], this->mPoints[3]},
+                             {other.mPoints[0], other.mPoints[3]}, &result[0]);
+    cross = cross &&
+            lineIntersects2d({this->mPoints[1], this->mPoints[2]},
+                             {other.mPoints[1], other.mPoints[2]}, &result[1]);
 
     if (cross) {
       return result;
@@ -446,12 +443,12 @@ aiMesh *Geometry::Data::toMesh() const {
   return newMesh;
 }
 
-Geometry::FaceList Geometry::triangulate(const std::span<glm::vec3> &vertices) {
+Geometry::FaceList Geometry::triangulate(const std::span<glm::vec2> &vertices) {
 
   FaceList faceList(vertices.size() - 2);
 
-  for (int i = 0; i < vertices.size() - 2; i++) {
-    Face &face = faceList[i];
+  for (int i = 1; i < vertices.size() - 1; i++) {
+    Face &face = faceList[i - 1];
 
     face.resize(3);
 
@@ -463,7 +460,7 @@ Geometry::FaceList Geometry::triangulate(const std::span<glm::vec3> &vertices) {
 }
 
 void Geometry::writeSvg(const Geometry::FaceList &faces,
-                        const std::vector<glm::vec3> &vertices,
+                        const std::vector<glm::vec2> &vertices,
                         const std::filesystem::path &filepath) {
 
   constexpr float kPrecision = 1e3;

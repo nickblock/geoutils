@@ -68,12 +68,16 @@ protected:
 public:
   // given 2d polygon (given vec3 is assumed to flat on in one dimension),
   // produce list of triangular faces
-  static FaceList triangulate(const std::span<glm::vec3> &vertices);
+  static FaceList triangulate(const std::span<glm::vec2> &vertices);
 
   // print polygon to svg for debug purposes
   static void writeSvg(const FaceList &faces,
-                       const std::vector<glm::vec3> &vertices,
+                       const std::vector<glm::vec2> &vertices,
                        const std::filesystem::path &file);
 };
+
+using Line = std::array<glm::vec2, 2>;
+
+bool lineIntersects2d(const Line &l0, const Line &l1, glm::vec2 *intersection);
 
 } // namespace GeoUtils

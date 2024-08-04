@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "osm2AssimpTest",
+      "name": "testOsm2Assimp",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/osm2AssimpTest.exe",
+      "program": "${workspaceFolder}/build/testOsm2Assimp.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
