@@ -3,35 +3,25 @@
 namespace GeoUtils {
 
 Triangulate::Triangulate(const std::span<glm::vec2> &vertices)
-    : mVertices(vertices) {
+    : mInputVertices(vertices) {
+
+  mVertices.insert(mVertices.begin(), mInputVertices.begin(),
+                   mInputVertices.end());
   execute();
 }
 
-float angleDiff(float angle0, float angle1) {
-  auto diff = angle0 - angle1;
-  if (diff >= glm::pi<float>() * 2.f) {
-    diff -= glm::pi<float>() * 2.f;
-  } else if (diff <= -glm::pi<float>() * 2.f) {
-    diff += glm::pi<float>() * 2.f;
-  }
-  return diff;
-}
+float Triangulate::reflexPoint(const EdgeIdx &edge0, const EdgeIdx &edge1) {
+  auto &a = mVertices[edge0.p0];
+  auto &b = mVertices[edge0.p1];
+  auto &c = mVertices[edge1.p1];
 
-float Triangulate::edgeAngle(int p0, int p1) {
-  auto points = std::tuple{&mVertices[p0], &mVertices[p1]};
-  auto xLen = std::get<0>(points)->x - std::get<1>(points)->x;
-  auto yLen = std::get<0>(points)->y - std::get<1>(points)->y;
-  if (yLen == 0.f && xLen != 0.f) {
-    return 0.f;
-  }
-  return atan2(yLen, xLen);
+  return (b.x - a.x) * (c.y - b.y) - (c.x - b.x) * (b.y - a.y);
 }
 void Triangulate::getOuterEdges() {
 
   mEdges.resize(mVertices.size());
   mPointAngles.resize(mVertices.size());
 
-  mEdges[0] = {0, 1, edgeAngle(0, 1)};
   EdgeIdx *lastEdge = &mEdges[0];
   for (int i = 1; i < mVertices.size(); i++) {
 
@@ -43,12 +33,10 @@ void Triangulate::getOuterEdges() {
       curEdge = {.p0 = i, .p1 = 0};
     }
 
-    curEdge.angle = edgeAngle(curEdge.p0, curEdge.p1);
-
-    mPointAngles[i] = angleDiff(curEdge.angle, lastEdge->angle);
+    mPointAngles[i] = reflexPoint(*lastEdge, curEdge);
     lastEdge = &curEdge;
   }
-  mPointAngles[0] = angleDiff(lastEdge->angle, mEdges[0].angle);
+  mPointAngles[0] = reflexPoint(*lastEdge, mEdges[0]);
 }
 void Triangulate::execute() {
   getOuterEdges();

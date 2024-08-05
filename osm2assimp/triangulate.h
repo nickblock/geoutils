@@ -15,21 +15,22 @@ public:
   const std::vector<float> &getPointAngles() { return mPointAngles; }
 
 private:
-  using TriIdx = std::array<int, 3>;
+  using Tri = std::array<glm::vec2, 3>;
 
-  const std::span<glm::vec2> &mVertices;
+  const std::span<glm::vec2> &mInputVertices;
+  std::vector<glm::vec2> mVertices;
 
-  std::vector<TriIdx> mTris;
+  std::vector<Tri> mTris;
   std::vector<float> mPointAngles;
 
   struct EdgeIdx {
     int p0, p1;
-    float angle;
   };
 
   std::vector<EdgeIdx> mEdges;
 
-  float edgeAngle(int p0, int p1);
+  float reflexPoint(const EdgeIdx &edge0, const EdgeIdx &edge1);
+  void removeTriangle();
   void getOuterEdges();
   void execute();
 };
