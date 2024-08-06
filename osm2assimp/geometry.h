@@ -78,6 +78,7 @@ public:
 
 using Line = std::array<glm::vec2, 2>;
 
-bool lineIntersects2d(const Line &l0, const Line &l1, glm::vec2 *intersection);
+bool lineIntersects2d(const Line &l0, const Line &l1,
+                      glm::vec2 *intersection = nullptr);
 
 } // namespace GeoUtils

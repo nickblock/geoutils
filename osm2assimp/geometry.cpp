@@ -2,6 +2,7 @@
 #include "assimp/scene.h"
 #include "common.h"
 #include "glm/gtc/constants.hpp"
+#include "triangulate.h"
 #include "utils.h"
 #include <array>
 #include <format>
@@ -14,8 +15,6 @@ namespace GeoUtils {
 
 bool Geometry::zUp = false;
 float Geometry::texCoordScale = 0.0f;
-
-using Line = std::array<glm::vec2, 2>;
 
 bool lineIntersects2d(const Line &l0, const Line &l1, glm::vec2 *intersection) {
   float s1_x, s1_y, s2_x, s2_y;
@@ -445,16 +444,19 @@ aiMesh *Geometry::Data::toMesh() const {
 
 Geometry::FaceList Geometry::triangulate(const std::span<glm::vec2> &vertices) {
 
-  FaceList faceList(vertices.size() - 2);
+  auto triangles = Triangulate(vertices).getTriangles();
 
-  for (int i = 1; i < vertices.size() - 1; i++) {
-    Face &face = faceList[i - 1];
+  FaceList faceList(triangles.size());
+
+  for (int i = 0; i < triangles.size(); i++) {
+    auto &tri = triangles[i];
+    Face &face = faceList[i];
 
     face.resize(3);
 
-    face[0] = 0;
-    face[1] = i;
-    face[2] = i + 1;
+    face[0] = tri[0];
+    face[1] = tri[1];
+    face[2] = tri[2];
   }
   return faceList;
 }
