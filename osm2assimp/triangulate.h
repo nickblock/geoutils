@@ -19,6 +19,9 @@ public:
   const std::vector<float> &getPointAngles() { return mPointAngles; }
   const std::vector<Tri> &getTriangles() { return mTris; }
 
+  static float reflexPoint(const glm::vec2 &a, const glm::vec2 &b,
+                           const glm::vec2 &c);
+
 private:
   int firstVertex();
   int lastVertex();
@@ -35,6 +38,7 @@ private:
 
   std::vector<EdgeIdx> mEdges;
 
+  float angleBetweenEdges(const EdgeIdx &edge0, const EdgeIdx &edge1);
   float reflexPoint(const EdgeIdx &edge0, const EdgeIdx &edge1);
   bool findAndRemoveTriangle();
   void clipTriangle(const EdgeIdx &edge0, const EdgeIdx &edge1);

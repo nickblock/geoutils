@@ -120,14 +120,32 @@ TEST(Test, ClipperSubtractPoly) {
 }
 
 TEST(Test, IntersectLine) {
-  auto line0 = Line{glm::vec2{0.0f, 0.0f}, {20.0f, 20.0f}};
-  auto line1 = Line{glm::vec2{5.0f, 0.0f}, {5.0f, 20.0f}};
-  glm::vec2 intersection;
+  {
 
-  auto result = lineIntersects2d(line0, line1, &intersection);
+    auto line0 = Line{glm::vec2{0.0f, 0.0f}, {20.0f, 20.0f}};
+    auto line1 = Line{glm::vec2{5.0f, 0.0f}, {5.0f, 20.0f}};
+    glm::vec2 intersection;
 
-  EXPECT_TRUE(result);
-  EXPECT_FLOAT_EQ(intersection.x, 5.0f);
+    auto result = lineIntersects2d(line0, line1, &intersection);
+
+    EXPECT_TRUE(result);
+    EXPECT_FLOAT_EQ(intersection.x, 5.0f);
+  }
+  {
+
+    auto line0 = Line{glm::vec2{0.0f, 0.0f}, {0.0f, 2.0f}};
+    auto line1 = Line{glm::vec2{0.0f, 2.0f}, {2.0f, 1.0f}};
+
+    auto lineDir = glm::normalize(line1[1] - line1[0]);
+    line1[0] += lineDir * glm::epsilon<float>();
+    line1[1] -= lineDir * glm::epsilon<float>();
+
+    glm::vec2 intersection;
+
+    auto result = lineIntersects2d(line0, line1, &intersection);
+
+    EXPECT_FALSE(result);
+  }
 }
 TEST(Test, TriangulateConvex) {
 
@@ -138,27 +156,63 @@ TEST(Test, TriangulateConvex) {
 
   Geometry::writeSvg(faceList, convex, testDir() / "TriangulateConvex.svg");
 
-  // Triangulate triangulate(convex);
-
-  // float totalAngle = 0.f;
-  // for (auto p : triangulate.getPointAngles()) {
-  //   totalAngle += p;
-  //   EXPECT_LT(p, glm::pi<float>());
-  // }
-  // EXPECT_FLOAT_EQ(totalAngle, glm::pi<float>() * 2.f);
+  EXPECT_EQ(faceList.size(), 5);
 }
 
+TEST(Test, TriangulateL) {
+
+  std::vector<glm::vec2> L = {{0.0, 0.0}, {0.0, 2.0}, {2.0, 2.0},
+                              {2.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}};
+
+  auto faceList = Geometry::triangulate(L);
+
+  Geometry::writeSvg(faceList, L, testDir() / "TriangulateL.svg");
+}
 TEST(Test, TriangulateDonut) {
 
   std::vector<glm::vec2> donut = {
-      {2.0, 2.0}, {2.0, 6.0}, {6.0, 6.0}, {6.0, 2.0}, {4.0, 2.0}, {4.0, 3.0},
-      {5.0, 3.0}, {5.0, 5.0}, {3.0, 5.0}, {3.0, 3.0}, {4.0, 3.0}, {4.0, 2.0}};
+      {0.0, 0.0}, {0.0, 4.0}, {4.0, 4.0}, {4.0, 0.0}, {2.0, 0.0}, {2.0, 1.0},
+      {3.0, 1.0}, {3.0, 3.0}, {1.0, 3.0}, {1.0, 1.0}, {2.0, 1.0}, {2.0, 0.0}};
 
   auto faceList = Geometry::triangulate(donut);
 
   Geometry::writeSvg(faceList, donut, testDir() / "TriangulateDonut.svg");
+}
 
-  Triangulate triangulate(donut);
+TEST(Test, ReflexPoint) {
+  std::vector<glm::vec2> points = {
+      {0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {2.0, 1.0}};
+
+  auto reflx0 = Triangulate::reflexPoint(points[0], points[1], points[2]);
+  auto reflx1 = Triangulate::reflexPoint(points[1], points[2], points[3]);
+
+  bool opp = reflx0 > 0.f ? reflx1 < 0.f : reflx1 > 0.f;
+
+  EXPECT_TRUE(opp);
+}
+
+TEST(Test, PointOnLine) {
+  {
+
+    auto line = Line{glm::vec2{0.0f, 0.0f}, glm::vec2{1.0f, 2.0f}};
+
+    auto point = glm::vec2(0.5, 1.0);
+
+    bool on = pointOnLine(line, point);
+    EXPECT_TRUE(on);
+
+    point = glm::vec2(0.5, 1.5);
+    on = pointOnLine(line, point);
+    EXPECT_FALSE(on);
+  }
+  {
+
+    auto line = Line{glm::vec2{0.0f, 4.0f}, glm::vec2{4.0f, 0.0f}};
+    auto point = glm::vec2(3.0, 1.0);
+
+    bool on = pointOnLine(line, point);
+    EXPECT_TRUE(on);
+  }
 }
 
 auto main(int argc, char **argv) -> int {

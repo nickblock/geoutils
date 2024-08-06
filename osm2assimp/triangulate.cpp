@@ -1,4 +1,6 @@
 #include "triangulate.h"
+#include <format>
+#include <iostream>
 
 namespace GeoUtils {
 
@@ -8,12 +10,28 @@ Triangulate::Triangulate(const std::span<glm::vec2> &vertices)
   execute();
 }
 
+float Triangulate::angleBetweenEdges(const EdgeIdx &edge0,
+                                     const EdgeIdx &edge1) {
+  glm::vec2 l0 = mVertices[edge0.p1] - mVertices[edge0.p0];
+  glm::vec2 l1 = mVertices[edge1.p1] - mVertices[edge1.p0];
+
+  auto dot = glm::dot(l0, l1);
+  auto cross = l0.x * l1.y - l0.y * l1.x;
+
+  return cross * dot;
+}
+
+float Triangulate::reflexPoint(const glm::vec2 &a, const glm::vec2 &b,
+                               const glm::vec2 &c) {
+  return (b.x - a.x) * (c.y - b.y) - (c.x - b.x) * (b.y - a.y);
+}
+
 float Triangulate::reflexPoint(const EdgeIdx &edge0, const EdgeIdx &edge1) {
   auto &a = mVertices[edge0.p0];
   auto &b = mVertices[edge0.p1];
   auto &c = mVertices[edge1.p1];
 
-  return (b.x - a.x) * (c.y - b.y) - (c.x - b.x) * (b.y - a.y);
+  return reflexPoint(a, b, c);
 }
 
 void Triangulate::clearPolyData() {
@@ -23,10 +41,11 @@ void Triangulate::clearPolyData() {
 void Triangulate::findPolyPerimeter() {
 
   mEdges.resize(mVertices.size() - mRemovedVertices.size());
-  mPointAngles.resize(mEdges.size());
+  mPointAngles.resize(mVertices.size());
 
-  EdgeIdx *lastEdge = &mEdges[0];
   int currentVertex = firstVertex();
+
+  EdgeIdx lastEdge = {lastVertex(), currentVertex};
   for (int i = 0; i < mEdges.size(); i++) {
 
     EdgeIdx &curEdge = mEdges[i];
@@ -38,10 +57,9 @@ void Triangulate::findPolyPerimeter() {
     }
     currentVertex = curEdge.p1;
 
-    mPointAngles[i] = reflexPoint(*lastEdge, curEdge);
-    lastEdge = &curEdge;
+    mPointAngles[currentVertex] = reflexPoint(lastEdge, curEdge);
+    lastEdge = curEdge;
   }
-  mPointAngles[0] = reflexPoint(*lastEdge, mEdges[0]);
 }
 void Triangulate::execute() {
 
@@ -94,6 +112,10 @@ bool Triangulate::findAndRemoveTriangle() {
       edge1 = mEdges[0];
     }
 
+    if (mPointAngles[edge0.p1] > 0.f) {
+      continue;
+    }
+
     Tri tri = {
         edge0.p0,
         edge0.p1,
@@ -101,6 +123,16 @@ bool Triangulate::findAndRemoveTriangle() {
     };
 
     EdgeIdx testEdge{edge0.p0, edge1.p1};
+
+    float reflex = reflexPoint(edge0, testEdge);
+
+    float reflexCorner = mPointAngles[edge0.p0];
+
+    auto opp = (reflex > 0.f && reflexCorner > 0.f) ||
+               (reflex < 0.0 && reflexCorner < 0.0f);
+
+    if (!opp)
+      continue;
 
     if (!checkEdgeIntersection(testEdge)) {
       clipTriangle(edge0, edge1);
@@ -123,6 +155,11 @@ bool Triangulate::checkEdgeIntersection(const EdgeIdx &edge) {
 
   for (auto &side : mEdges) {
 
+    if (side.p0 == edge.p0 || side.p0 == edge.p1 || side.p1 == edge.p0 ||
+        side.p1 == edge.p1) {
+      continue;
+    }
+
     Line polyEdge = {mVertices[side.p0], mVertices[side.p1]};
 
     glm::vec2 intersection;
@@ -131,6 +168,18 @@ bool Triangulate::checkEdgeIntersection(const EdgeIdx &edge) {
 
     if (result)
       return true;
+
+    if (side.p0 != edge.p0 && side.p0 != edge.p1) {
+      if (pointOnLine(testLine, polyEdge[0])) {
+        return true;
+      }
+    }
+
+    if (side.p1 != edge.p0 && side.p1 != edge.p1) {
+      if (pointOnLine(testLine, polyEdge[1])) {
+        return true;
+      }
+    }
   }
   return false;
 }

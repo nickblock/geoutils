@@ -81,4 +81,6 @@ using Line = std::array<glm::vec2, 2>;
 bool lineIntersects2d(const Line &l0, const Line &l1,
                       glm::vec2 *intersection = nullptr);
 
+bool pointOnLine(const Line &line, const glm::vec2 &point);
+
 } // namespace GeoUtils

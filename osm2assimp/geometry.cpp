@@ -16,15 +16,38 @@ namespace GeoUtils {
 bool Geometry::zUp = false;
 float Geometry::texCoordScale = 0.0f;
 
+bool pointOnLine(const Line &line, const glm::vec2 &point) {
+  float line_x = line[1].x - line[0].x;
+  float line_y = line[1].y - line[0].y;
+
+  float point_x = point.x - line[0].x;
+  float point_y = point.y - line[0].y;
+
+  float slopeLine = line_y / line_x;
+  float slopePoint = point_y / point_x;
+
+  if (abs(slopeLine - slopePoint) > glm::epsilon<float>()) {
+    return false;
+  }
+
+  float minX = std::min(line[0].x, line[1].x);
+  float maxX = std::max(line[0].x, line[1].x);
+  float minY = std::min(line[0].y, line[1].y);
+  float maxY = std::max(line[0].y, line[1].y);
+
+  return (point.x >= minX && point.x <= maxX) &&
+         (point.y >= minY && point.y <= maxY);
+}
+
 bool lineIntersects2d(const Line &l0, const Line &l1, glm::vec2 *intersection) {
   float s1_x, s1_y, s2_x, s2_y;
   s1_x = l0[1].x - l0[0].x;
-  s1_y = l0[1].y - l0[1].y;
+  s1_y = l0[1].y - l0[0].y;
   s2_x = l1[1].x - l1[0].x;
   s2_y = l1[1].y - l1[0].y;
 
   float s, t;
-  s = (-s1_y * (l0[0].x - l1[1].x) + s1_x * (l0[0].y - l1[0].y)) /
+  s = (-s1_y * (l0[0].x - l1[0].x) + s1_x * (l0[0].y - l1[0].y)) /
       (-s2_x * s1_y + s1_x * s2_y);
   t = (s2_x * (l0[0].y - l1[0].y) - s2_y * (l0[0].x - l1[0].x)) /
       (-s2_x * s1_y + s1_x * s2_y);
@@ -33,7 +56,7 @@ bool lineIntersects2d(const Line &l0, const Line &l1, glm::vec2 *intersection) {
     intersection->x = l0[0].x + (t * s1_x);
     intersection->y = l0[0].y + (t * s1_y);
   }
-  if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
+  if (s > 0 && s < 1 && t > 0 && t < 1) {
     return true;
   }
 
@@ -291,8 +314,8 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
     //   glm::vec3 intersect;
     //   if(lineIntersects2d(other.first.x, other.first.y, other.second.x,
     //   other.second.y,
-    //     newEdge.first.x, newEdge.first.y, newEdge.second.x, newEdge.second.y,
-    //     &intersect)) {
+    //     newEdge.first.x, newEdge.first.y, newEdge.second.x,
+    //     newEdge.second.y, &intersect)) {
 
     //     return nullptr;
     //   }
