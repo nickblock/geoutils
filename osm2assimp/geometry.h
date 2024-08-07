@@ -40,10 +40,7 @@ public:
   static glm::vec3 posFromLoc(double lon, double lat, double height);
   static glm::vec3 fromGround(const glm::vec2 &groundCoords);
 
-  // given mesh vertices extract ground points by looking at height value (z or
-  // y) being zero
-  //  returns vector of double to be used in delaunator.hpp
-  static std::vector<double> getFootprint(std::span<const glm::vec3> vertices);
+  std::vector<double> getFootprint();
 
   aiMesh *simpleMesh() { return mData.toMesh(); }
 

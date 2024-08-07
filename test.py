@@ -97,7 +97,7 @@ class GeoUtilsProcesses(unittest.TestCase):
     with pyassimp.load(outputFile ,file_type=None, processing=pyassimp.postprocess.aiProcess_Triangulate) as scene:
       logger.info(" num meshes " + str(scene.mNumMeshes))
       
-      self.assertEqual(scene.mNumMeshes, self.numBuildings + self.numHighways) # plus one for ground
+      self.assertEqual(scene.mNumMeshes, self.numBuildings + self.numHighways + 1) # plus one for ground
 
 if __name__ == "__main__":
     

@@ -1,7 +1,6 @@
 #include "gtest/gtest.h"
 
 #include "assimpwriter.h"
-#include "clipper.hpp"
 #include "geometry.h"
 #include "glm/glm.hpp"
 #include "ground.h"
@@ -74,49 +73,6 @@ TEST(Test, GroundDonut) {
   AssimpWriter writer;
   writer.addMesh(groundMesh);
   EXPECT_EQ(0, writer.write(testDir() / "GroundDonut.fbx"));
-}
-TEST(Test, ClipperLibIntersect) {
-
-  std::vector<glm::vec2> clip0 = {
-      {2.0f, 2.0f}, {2.0f, 6.0}, {6.0, 6.0}, {6.0, 2.0f}};
-  std::vector<glm::vec2> clip1;
-
-  for (auto &p : clip0) {
-    clip1.push_back(p + glm::vec2(2.0, 2.0));
-  };
-
-  auto result = intersectPolygons(clip0, clip1);
-
-  EXPECT_EQ(1, result.size());
-  EXPECT_EQ(true, polyOrientation(result[0]));
-
-  for (auto &p : clip1) {
-    p += glm::vec2(5.0, 5.0);
-  };
-
-  result = intersectPolygons(clip0, clip1);
-
-  EXPECT_EQ(2, result.size());
-  EXPECT_EQ(true, polyOrientation(result[0]));
-  EXPECT_EQ(true, polyOrientation(result[0]));
-}
-
-TEST(Test, ClipperSubtractPoly) {
-
-  std::vector<glm::vec2> background = {
-      {0.0, 0.0}, {0.0, 10.0}, {10.0, 10.0}, {10.0, 0.0}};
-
-  std::vector<glm::vec2> donut = {
-      {2.0, 2.0}, {2.0, 6.0}, {6.0, 6.0}, {6.0, 2.0}, {4.0, 2.0}, {4.0, 3.0},
-      {5.0, 3.0}, {5.0, 5.0}, {3.0, 5.0}, {3.0, 3.0}, {4.0, 3.0}, {4.0, 2.0}};
-
-  auto result = intersectPolygons(background, donut, 0 /*intersection*/);
-
-  int idx = 0;
-  for (auto &v : result) {
-    writeSvg(v, 100,
-             testDir() / std::format("ClipperSubtractPoly{}.svg", idx++));
-  }
 }
 
 TEST(Test, IntersectLine) {

@@ -92,12 +92,6 @@ option(BUILD_OSM2ASSIMP "Build osm2assimp" ON)
 if(BUILD_OSM2ASSIMP)
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPACKAGE_VERSION=\"1\" -fcommon")
 
-      add_library(clipper STATIC
-            ext/clipper/clipper.cpp)
-
-      target_include_directories(clipper PRIVATE
-            ext/clipper)
-
       add_library(osm2assimpLib STATIC
             osm2assimp/sceneconstruct.cpp
             osm2assimp/convertlatlng.cpp
@@ -115,7 +109,6 @@ if(BUILD_OSM2ASSIMP)
       target_include_directories(osm2assimpLib PUBLIC
             ${OSMIUM_INCLUDE_DIRS}
             osm2assimp
-            ext/clipper
             ext
             s2util
       )
@@ -136,11 +129,12 @@ if(BUILD_OSM2ASSIMP)
 
       target_include_directories(osm2assimp PUBLIC
             osm2assimp
+            ext
       )
 
       target_link_libraries(osm2assimp PUBLIC
             osm2assimpLib
-            clipper s2::s2
+            s2::s2
       )
 
       if(MACOSX)
@@ -154,7 +148,6 @@ if(BUILD_OSM2ASSIMP)
             osm2assimpLib
             poly2tri::poly2tri
             GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main
-            clipper
       )
 endif()
 

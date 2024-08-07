@@ -52,24 +52,25 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
 
   int count = 0;
 
+  std::vector<Geometry> geoms;
   for (auto &feature : mFeatures) {
     try {
-      aiMesh *mesh = nullptr;
 
       // if it's something that wants turning into a 3d mesh
       if (feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) &&
           feature.type() & OSMFeature::CLOSED) {
-        mesh =
-            Geometry::extrude2dMesh(feature.coords(), feature.height(), count)
-                .simpleMesh();
+        geoms.emplace_back(
+            Geometry::extrude2dMesh(feature.coords(), feature.height(), count));
       }
 
       // if it's something that wants turning into a polygon spline
       else if (feature.type() & OSMFeature::HIGHWAY) {
-        mesh = Geometry::meshFromLine(feature.coords(), OSMFeature::RoadWidth,
-                                      count)
-                   .simpleMesh();
+        geoms.emplace_back(Geometry::meshFromLine(
+            feature.coords(), OSMFeature::RoadWidth, count));
       }
+
+      // create mesh from last geometry
+      aiMesh *mesh = geoms[geoms.size() - 1].simpleMesh();
 
       // if we made either kind of mesh successfully
       if (mesh) {
@@ -124,21 +125,20 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
     }
   }
 
-  // if (mGround) {
+  if (mGround) {
 
-  //   for (auto &mesh : writer.meshes()) {
-  //     ground.addFootPrint(GeomConvert::getFootprint(
-  //         {(const glm::vec3 *)mesh->mVertices, mesh->mNumVertices}));
-  //   }
+    for (auto &geom : geoms) {
+      mGround->addFootPrint(geom.getFootprint(), 0);
+    }
 
-  //   aiMesh *mesh = ground.getMesh();
-  //   if (mesh) {
-  //     mesh->mMaterialIndex = writer.addMaterial("ground",
-  //     mMatColors["ground"]); writer.addMesh(mesh, "ground");
-  //   } else {
-  //     retVal = -1;
-  //   }
-  // }
+    aiMesh *mesh = mGround->getMesh();
+    if (mesh) {
+      mesh->mMaterialIndex = writer.addMaterial("ground", mMatColors["ground"]);
+      writer.addMesh(mesh, "ground");
+    } else {
+      retVal = -1;
+    }
+  }
 
   if (writer.write(outFilePath) == 0 && retVal == 0) {
     return 0;

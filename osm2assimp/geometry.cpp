@@ -87,21 +87,12 @@ glm::vec3 Geometry::fromGround(const glm::vec2 &groundCoords) {
 }
 
 const float epsilon = 1e-5;
-std::vector<double>
-Geometry::getFootprint(std::span<const glm::vec3> vertices) {
-  std::vector<double> result;
-  int idx = 0;
-  for (auto &vertex : vertices) {
-    float height = zUp ? vertex.z : vertex.y;
-    if (abs(height - 0.f) < epsilon) {
-      if (zUp) {
-        result.push_back(vertex.x);
-        result.push_back(vertex.y);
-      } else {
-        result.push_back(-vertex.x);
-        result.push_back(vertex.z);
-      }
-    }
+std::vector<double> Geometry::getFootprint() {
+  std::vector<double> result(mFootPrint.size() * 2);
+
+  for (int i = 0; i < mFootPrint.size(); i++) {
+    result[i * 2 + 0] = mFootPrint[i].x;
+    result[i * 2 + 1] = mFootPrint[i].y;
   }
   return result;
 }

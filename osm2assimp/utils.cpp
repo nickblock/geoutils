@@ -4,7 +4,6 @@
 
 #include "utils.h"
 
-#include "clipper.hpp"
 #include "convertlatlng.h"
 #include "s2util.h"
 
@@ -94,28 +93,6 @@ vector<glm::vec2> cornersFromBox(const osmium::Box &box) {
 
 constexpr int FloatToIntMultiplier = 100000;
 
-ClipperLib::Path fromPointList(const std::vector<glm::vec2> &points) {
-  ClipperLib::Path path;
-
-  for (auto &p : points) {
-    path.push_back({static_cast<int>(p.x * FloatToIntMultiplier),
-                    static_cast<int>(p.y * FloatToIntMultiplier)});
-  }
-  return path;
-}
-
-std::vector<glm::vec2> fromPath(const ClipperLib::Path &path) {
-  std::vector<glm::vec2> points;
-
-  for (auto &p : path) {
-    points.push_back({
-        static_cast<float>(p.X) / FloatToIntMultiplier,
-        static_cast<float>(p.Y) / FloatToIntMultiplier,
-    });
-  }
-  return points;
-}
-
 BBox bBoxFromPoints2D(const std::vector<glm::vec2> &points) {
   BBox bbox;
 
@@ -124,44 +101,6 @@ BBox bBoxFromPoints2D(const std::vector<glm::vec2> &points) {
   }
 
   return bbox;
-}
-
-std::vector<std::vector<glm::vec2>>
-intersectPolygons(const std::vector<glm::vec2> &subject,
-                  const std::vector<glm::vec2> &clip, int clipType) {
-  ClipperLib::Clipper clipper;
-
-  ClipperLib::Path subjectClip = fromPointList(subject);
-
-  clipper.AddPath(subjectClip, ClipperLib::ptSubject, true);
-
-  ClipperLib::Path clipClip = fromPointList(clip);
-
-  clipper.AddPath(clipClip, ClipperLib::ptClip, true);
-
-  ClipperLib::Paths solution;
-
-  clipper.Execute((ClipperLib::ClipType)clipType, solution,
-                  ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
-
-  std::vector<std::vector<glm::vec2>> result;
-
-  for (auto &path : solution) {
-    result.push_back(fromPath(path));
-  }
-
-  return result;
-}
-
-bool polyOrientation(const std::vector<glm::vec2> &poly) {
-  return ClipperLib::Orientation(fromPointList(poly));
-}
-
-std::vector<glm::vec2> cleanPolyon(const std::vector<glm::vec2> &points) {
-  ClipperLib::Path out;
-  ClipperLib::CleanPolygon(fromPointList(points), out, 10.0);
-
-  return fromPath(out);
 }
 
 glm::vec3 min(const glm::vec3 &p1, const glm::vec3 &p2) {

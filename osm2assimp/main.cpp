@@ -2,14 +2,14 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
-#include "../args.hxx"
-#include "../tinyformat.h"
+#include "args.hxx"
 #include "assimpwriter.h"
 #include "convertlatlng.h"
 #include "eigenconversion.h"
 #include "geometry.h"
 #include "s2util.h"
 #include "sceneconstruct.h"
+#include "tinyformat.h"
 #include "utils.h"
 #include "viewfilter.h"
 
