@@ -41,7 +41,7 @@ public:
   static glm::vec3 fromGround(const glm::vec2 &groundCoords);
 
   // given mesh vertices extract ground points by looking at height value (z or
-  // y) beig zero
+  // y) being zero
   //  returns vector of double to be used in delaunator.hpp
   static std::vector<double> getFootprint(std::span<const glm::vec3> vertices);
 
@@ -66,7 +66,7 @@ protected:
   std::vector<glm::vec2> mFootPrint;
 
 public:
-  // given 2d polygon (given vec3 is assumed to flat on in one dimension),
+  // given 2d polygon,
   // produce list of triangular faces
   static FaceList triangulate(const std::span<glm::vec2> &vertices);
 

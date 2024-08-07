@@ -51,6 +51,7 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
   int retVal = 0;
 
   int count = 0;
+
   for (auto &feature : mFeatures) {
     try {
       aiMesh *mesh = nullptr;

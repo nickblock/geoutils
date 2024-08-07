@@ -162,13 +162,18 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
 
   Geometry geometry;
 
+  auto appendVertex = [&geometry](const glm::vec2 &point) {
+    geometry.mData.mVertices.push_back(fromGround(point));
+    geometry.mFootPrint.push_back(point);
+  };
+
   int numSegments = line.size() - 1;
 
   auto lastSeg = LineSegment(line[0], line[1], width);
 
-  geometry.mData.mVertices.push_back(fromGround(lastSeg.mPoints[0]));
+  appendVertex(lastSeg.mPoints[0]);
   throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
-  geometry.mData.mVertices.push_back(fromGround(lastSeg.mPoints[1]));
+  appendVertex(lastSeg.mPoints[1]);
   throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
   glm::vec2 uvDistance(0.0f, 0.0f);
@@ -182,9 +187,9 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
 
     auto crossPoints = lastSeg.crossPoints(nextSeg);
 
-    geometry.mData.mVertices.push_back(fromGround(crossPoints[0]));
+    appendVertex(crossPoints[0]);
     throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
-    geometry.mData.mVertices.push_back(fromGround(crossPoints[1]));
+    appendVertex(crossPoints[1]);
     throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
     uvDistance += glm::vec2{
@@ -204,9 +209,9 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
     lastSeg = nextSeg;
   }
 
-  geometry.mData.mVertices.push_back(fromGround(lastSeg.mPoints[3]));
+  appendVertex(lastSeg.mPoints[3]);
   throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
-  geometry.mData.mVertices.push_back(fromGround(lastSeg.mPoints[2]));
+  appendVertex(lastSeg.mPoints[2]);
   throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
   uvDistance += glm::vec2{
@@ -255,22 +260,20 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   using Edge = std::pair<glm::vec2, glm::vec2>;
   using EdgeList = std::vector<Edge>;
 
-  vector<glm::vec2> baseVertices;
-
   bool begin_eq_end = in_vertices[0] == in_vertices[in_vertices.size() - 1];
 
-  baseVertices.insert(baseVertices.begin(), in_vertices.begin(),
-                      in_vertices.end());
+  geometry.mFootPrint.insert(geometry.mFootPrint.begin(), in_vertices.begin(),
+                             in_vertices.end());
 
   if (begin_eq_end) {
-    baseVertices.pop_back();
+    geometry.mFootPrint.pop_back();
   }
 
-  if (baseVertices.size() < 3) {
+  if (geometry.mFootPrint.size() < 3) {
     throw std::runtime_error("Not enough vertices (<3), to create a mesh");
   }
 
-  size_t numBaseVertices = baseVertices.size();
+  size_t numBaseVertices = geometry.mFootPrint.size();
 
   EdgeList edges;
 
@@ -281,10 +284,10 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
 
   for (size_t i = 0; i < numBaseVertices; i++) {
 
-    auto &v1 = baseVertices[i];
+    auto &v1 = geometry.mFootPrint[i];
 
     bool lastV = i + 1 == numBaseVertices;
-    auto &v2 = lastV ? baseVertices[0] : baseVertices[i + 1];
+    auto &v2 = lastV ? geometry.mFootPrint[0] : geometry.mFootPrint[i + 1];
 
     center += v1;
 
@@ -327,9 +330,9 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   if (accumEdge > 0.0) {
 
     for (size_t i = 0; i < numBaseVertices / 2; i++) {
-      auto tmp = baseVertices[i];
-      baseVertices[i] = baseVertices[numBaseVertices - i - 1];
-      baseVertices[numBaseVertices - i - 1] = tmp;
+      auto tmp = geometry.mFootPrint[i];
+      geometry.mFootPrint[i] = geometry.mFootPrint[numBaseVertices - i - 1];
+      geometry.mFootPrint[numBaseVertices - i - 1] = tmp;
     }
   }
 
@@ -345,7 +348,7 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   BBox bbox;
 
   for (size_t v = 0; v < numBaseVertices; v++) {
-    const glm::vec2 &nv = baseVertices[v];
+    const glm::vec2 &nv = geometry.mFootPrint[v];
 
     // geometry.mFootPrint[v] =
 
