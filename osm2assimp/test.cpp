@@ -23,22 +23,21 @@ TEST(Test, MeshFromLine) {
   }
 }
 
-TEST(Test, ClipperTest) {
+TEST(Test, GroundTest) {
   std::vector<glm::vec2> corners = {
       {0.0f, 0.0f}, {0.0f, 10.0f}, {10.0f, 10.0f}, {10.0f, 0.0f}};
 
   Ground ground(corners);
 
-  std::vector<double> clip0 = {
-      2.0f, 2.0f, 2.0f, 6.0, 6.0, 6.0, 6.0, 2.0f, 2.0f, 2.0f,
-  };
+  std::vector<glm::vec2> clip0 = {
+      {2.0f, 2.0f}, {2.0f, 6.0}, {6.0, 6.0}, {6.0, 2.0f}, {2.0f, 2.0f}};
 
   ground.addFootPrint(clip0, 0);
 
-  std::vector<double> clip1;
+  std::vector<glm::vec2> clip1;
 
   for (auto &p : clip0) {
-    clip1.push_back(p + 5.0);
+    clip1.push_back({p.x + 5.0, p.y + 5.0});
   };
 
   ground.addFootPrint(clip1, 0);
@@ -59,9 +58,9 @@ TEST(Test, GroundDonut) {
 
   Ground ground(corners);
 
-  std::vector<double> donut = {2.0, 2.0, 2.0, 6.0, 6.0, 6.0, 6.0, 2.0,
-                               4.0, 2.0, 4.0, 3.0, 5.0, 3.0, 5.0, 5.0,
-                               3.0, 5.0, 3.0, 3.0, 3.5, 3.0, 3.5, 2.0};
+  std::vector<glm::vec2> donut = {
+      {2.0, 2.0}, {2.0, 6.0}, {6.0, 6.0}, {6.0, 2.0}, {4.0, 2.0}, {4.0, 3.0},
+      {5.0, 3.0}, {5.0, 5.0}, {3.0, 5.0}, {3.0, 3.0}, {3.5, 3.0}, {3.5, 2.0}};
 
   ground.addFootPrint(donut, 0);
 
@@ -108,11 +107,11 @@ TEST(Test, TriangulateConvex) {
   std::vector<glm::vec2> convex = {{0.0, 0.0}, {0.0, 1.0}, {0.5, 1.5},
                                    {1.5, 1.5}, {2.0, 1.0}, {2.0, 0.0}};
 
-  auto faceList = Geometry::triangulate(convex);
+  auto [faceList, verts] = Geometry::triangulate(convex);
 
   Geometry::writeSvg(faceList, convex, testDir() / "TriangulateConvex.svg");
 
-  EXPECT_EQ(faceList.size(), 5);
+  EXPECT_EQ(faceList.size(), 4);
 }
 
 TEST(Test, TriangulateL) {
@@ -120,7 +119,7 @@ TEST(Test, TriangulateL) {
   std::vector<glm::vec2> L = {{0.0, 0.0}, {0.0, 2.0}, {2.0, 2.0},
                               {2.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}};
 
-  auto faceList = Geometry::triangulate(L);
+  auto [faceList, verts] = Geometry::triangulate(L);
 
   Geometry::writeSvg(faceList, L, testDir() / "TriangulateL.svg");
 }
@@ -129,23 +128,11 @@ TEST(Test, TriangulateDonut) {
   std::vector<glm::vec2> donut = {
       {0.0, 0.0}, {0.0, 4.0}, {4.0, 4.0}, {4.0, 0.0}, {2.0, 0.0}, {2.5, 2.5},
       {3.0, 0.2}, {3.0, 3.0}, {1.0, 3.0}, {1.0, 2.5}, {2.0, 2.5}, {2.0, 1.5},
-      {1.0, 1.5}, {1.0, 1.0}, {2.0, 1.0}, {2.0, 0.0}};
+      {1.0, 1.5}, {1.0, 1.0}, {1.5, 1.0}, {1.5, 0.0}};
 
-  auto faceList = Geometry::triangulate(donut);
+  auto [faceList, verts] = Geometry::triangulate(donut);
 
   Geometry::writeSvg(faceList, donut, testDir() / "TriangulateDonut.svg");
-}
-
-TEST(Test, ReflexPoint) {
-  std::vector<glm::vec2> points = {
-      {0.0, 0.0}, {1.0, 0.0}, {1.0, 1.0}, {2.0, 1.0}};
-
-  auto reflx0 = Triangulate::reflexPoint(points[0], points[1], points[2]);
-  auto reflx1 = Triangulate::reflexPoint(points[1], points[2], points[3]);
-
-  bool opp = reflx0 > 0.f ? reflx1 < 0.f : reflx1 > 0.f;
-
-  EXPECT_TRUE(opp);
 }
 
 TEST(Test, PointOnLine) {

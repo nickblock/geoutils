@@ -1,4 +1,5 @@
 #include "ground.h"
+#include "CDT.h"
 #include "assimp/mesh.h"
 #include "delaunator.hpp"
 #include "geometry.h"
@@ -27,13 +28,13 @@ inline std::size_t Ground::hashKey(Point point) const {
       kHashSize);
 }
 
-void Ground::addFootPrint(const std::vector<double> &points, int type) {
+void Ground::addFootPrint(const std::vector<glm::vec2> &points, int type) {
   mGroundPoints.insert(mGroundPoints.end(), points.begin(), points.end());
 
-  for (int i = 0; i < points.size(); i += 2) {
+  // for (int i = 0; i < points.size(); i += 2) {
 
-    mPointTypes[hashKey({points[i], points[i + 1]})] = type;
-  }
+  //   mPointTypes[hashKey({points[i], points[i + 1]})] = type;
+  // }
 }
 
 std::vector<double>
@@ -105,6 +106,8 @@ aiMesh *Ground::getMesh() {
 
   writeSvg("/tmp/ground.svg", 10.f);
 
+  auto cdt = CDT::Triangulation<float>();
+
   float extra = 1.f;
   std::vector<glm::vec2> boxPoints = {
       {mBBox.mMin.x - extra, mBBox.mMin.y - extra},
@@ -112,47 +115,64 @@ aiMesh *Ground::getMesh() {
       {mBBox.mMax.x + extra, mBBox.mMax.y + extra},
       {mBBox.mMax.x + extra, mBBox.mMin.y - extra}};
 
-  delaunator::Delaunator delaunator(mGroundPoints);
+
+  cdt.insertVertices(
+      mGroundPoints.begin(), mGroundPoints.end(),
+      [](const glm::vec2 &p) { return p[0]; },
+      [](const glm::vec2 &p) { return p[1]; });
+      
+  cdt.insertVertices(
+      boxPoints.begin(), boxPoints.end(),
+      [](const glm::vec2 &p) { return p[0]; },
+      [](const glm::vec2 &p) { return p[1]; });
+  
+  
+
+  cdt.fixedEdges.insert({0, 1});
+  cdt.fixedEdges.insert({1, 2});
+  cdt.fixedEdges.insert({2, 3});
+  cdt.fixedEdges.insert({3, 0});
 
   aiMesh *mesh = new aiMesh();
+  // delaunator::Delaunator delaunator(mGroundPoints);
 
-  mesh->mNumVertices = delaunator.triangles.size();
-  mesh->mVertices = new aiVector3D[mesh->mNumVertices];
-  mesh->mTextureCoords[0] = new aiVector3D[mesh->mNumVertices];
-  mesh->mNormals = new aiVector3D[mesh->mNumVertices];
-  mesh->mNumUVComponents[0] = 2;
+  // mesh->mNumVertices = delaunator.triangles.size();
+  // mesh->mVertices = new aiVector3D[mesh->mNumVertices];
+  // mesh->mTextureCoords[0] = new aiVector3D[mesh->mNumVertices];
+  // mesh->mNormals = new aiVector3D[mesh->mNumVertices];
+  // mesh->mNumUVComponents[0] = 2;
 
-  mesh->mNumFaces = delaunator.triangles.size() / 3;
-  mesh->mFaces = new aiFace[delaunator.triangles.size() / 3];
+  // mesh->mNumFaces = delaunator.triangles.size() / 3;
+  // mesh->mFaces = new aiFace[delaunator.triangles.size() / 3];
 
-  int vertexIdx = 0;
-  auto upNormal = Geometry::upNormal();
-  int faceIdx = 0;
-  for (size_t i = 0; i < delaunator.triangles.size(); i += 3) {
+  // int vertexIdx = 0;
+  // auto upNormal = Geometry::upNormal();
+  // int faceIdx = 0;
+  // for (size_t i = 0; i < delaunator.triangles.size(); i += 3) {
 
-    auto &face = mesh->mFaces[faceIdx];
+  //   auto &face = mesh->mFaces[faceIdx];
 
-    face.mNumIndices = 3;
-    face.mIndices = new unsigned int[face.mNumIndices];
+  //   face.mNumIndices = 3;
+  //   face.mIndices = new unsigned int[face.mNumIndices];
 
-    for (size_t j = 0; j < 3; j++) {
-      face.mIndices[j] = vertexIdx;
+  //   for (size_t j = 0; j < 3; j++) {
+  //     face.mIndices[j] = vertexIdx;
 
-      glm::vec2 point = {
-          delaunator.coords[2 * delaunator.triangles[i + j]],
-          delaunator.coords[2 * delaunator.triangles[i + j] + 1]};
+  //     glm::vec2 point = {
+  //         delaunator.coords[2 * delaunator.triangles[i + j]],
+  //         delaunator.coords[2 * delaunator.triangles[i + j] + 1]};
 
-      glm::vec3 vertex = Geometry::posFromLoc(point.x, point.y, 0.f);
-      glm::vec3 uv = mBBox.fraction({point.x, point.y, 0.0});
+  //     glm::vec3 vertex = Geometry::posFromLoc(point.x, point.y, 0.f);
+  //     glm::vec3 uv = mBBox.fraction({point.x, point.y, 0.0});
 
-      mesh->mVertices[vertexIdx] = {vertex.x, vertex.y, vertex.z};
-      mesh->mNormals[vertexIdx] = {upNormal.x, upNormal.y, upNormal.z};
-      mesh->mTextureCoords[0][vertexIdx] = {uv.x, uv.y, uv.z};
+  //     mesh->mVertices[vertexIdx] = {vertex.x, vertex.y, vertex.z};
+  //     mesh->mNormals[vertexIdx] = {upNormal.x, upNormal.y, upNormal.z};
+  //     mesh->mTextureCoords[0][vertexIdx] = {uv.x, uv.y, uv.z};
 
-      vertexIdx++;
-    }
-    faceIdx++;
-  }
+  //     vertexIdx++;
+  //   }
+  //   faceIdx++;
+  // }
 
   return mesh;
 }

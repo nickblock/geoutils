@@ -17,7 +17,7 @@ class Ground {
 public:
   Ground(const std::vector<glm::vec2> &);
 
-  void addFootPrint(const std::vector<double> &points, int type);
+  void addFootPrint(const std::vector<glm::vec2> &points, int type);
 
   aiMesh *getMesh();
 
@@ -37,7 +37,7 @@ protected:
   static constexpr int kHashSize = 1000000;
 
   std::vector<glm::vec2> mExtents;
-  std::vector<double> mGroundPoints;
+  std::vector<glm::vec2> mGroundPoints;
 
   std::unordered_map<std::size_t, int> mPointTypes;
 

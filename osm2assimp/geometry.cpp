@@ -86,17 +86,6 @@ glm::vec3 Geometry::fromGround(const glm::vec2 &groundCoords) {
   }
 }
 
-const float epsilon = 1e-5;
-std::vector<double> Geometry::getFootprint() {
-  std::vector<double> result(mFootPrint.size() * 2);
-
-  for (int i = 0; i < mFootPrint.size(); i++) {
-    result[i * 2 + 0] = mFootPrint[i].x;
-    result[i * 2 + 1] = mFootPrint[i].y;
-  }
-  return result;
-}
-
 struct LineSegment {
   LineSegment(const glm::vec2 &p0, const glm::vec2 &p1, float width) {
     auto dir = glm::normalize(p1 - p0);
@@ -155,7 +144,7 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
 
   auto appendVertex = [&geometry](const glm::vec2 &point) {
     geometry.mData.mVertices.push_back(fromGround(point));
-    geometry.mFootPrint.push_back(point);
+    geometry.mDataFlat.mVertices.push_back(point);
   };
 
   int numSegments = line.size() - 1;
@@ -253,18 +242,18 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
 
   bool begin_eq_end = in_vertices[0] == in_vertices[in_vertices.size() - 1];
 
-  geometry.mFootPrint.insert(geometry.mFootPrint.begin(), in_vertices.begin(),
-                             in_vertices.end());
+  geometry.mDataFlat.mVertices.insert(geometry.mDataFlat.mVertices.begin(),
+                                      in_vertices.begin(), in_vertices.end());
 
   if (begin_eq_end) {
-    geometry.mFootPrint.pop_back();
+    geometry.mDataFlat.mVertices.pop_back();
   }
 
-  if (geometry.mFootPrint.size() < 3) {
+  if (geometry.mDataFlat.mVertices.size() < 3) {
     throw std::runtime_error("Not enough vertices (<3), to create a mesh");
   }
 
-  size_t numBaseVertices = geometry.mFootPrint.size();
+  size_t numBaseVertices = geometry.mDataFlat.mVertices.size();
 
   EdgeList edges;
 
@@ -275,10 +264,11 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
 
   for (size_t i = 0; i < numBaseVertices; i++) {
 
-    auto &v1 = geometry.mFootPrint[i];
+    auto &v1 = geometry.mDataFlat.mVertices[i];
 
     bool lastV = i + 1 == numBaseVertices;
-    auto &v2 = lastV ? geometry.mFootPrint[0] : geometry.mFootPrint[i + 1];
+    auto &v2 = lastV ? geometry.mDataFlat.mVertices[0]
+                     : geometry.mDataFlat.mVertices[i + 1];
 
     center += v1;
 
@@ -321,9 +311,10 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   if (accumEdge > 0.0) {
 
     for (size_t i = 0; i < numBaseVertices / 2; i++) {
-      auto tmp = geometry.mFootPrint[i];
-      geometry.mFootPrint[i] = geometry.mFootPrint[numBaseVertices - i - 1];
-      geometry.mFootPrint[numBaseVertices - i - 1] = tmp;
+      auto tmp = geometry.mDataFlat.mVertices[i];
+      geometry.mDataFlat.mVertices[i] =
+          geometry.mDataFlat.mVertices[numBaseVertices - i - 1];
+      geometry.mDataFlat.mVertices[numBaseVertices - i - 1] = tmp;
     }
   }
 
@@ -334,14 +325,14 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   geometry.mData.mNormals.resize(geometry.mData.mVertices.size());
   geometry.mData.mTexCoords.resize(
       texCoordScale != 0.0f ? geometry.mData.mVertices.size() : 0);
-  geometry.mFootPrint.resize(numBaseVertices);
+  geometry.mDataFlat.mVertices.resize(numBaseVertices);
 
   BBox bbox;
 
   for (size_t v = 0; v < numBaseVertices; v++) {
-    const glm::vec2 &nv = geometry.mFootPrint[v];
+    const glm::vec2 &nv = geometry.mDataFlat.mVertices[v];
 
-    // geometry.mFootPrint[v] =
+    // geometry.mDataFlat.mVertices[v] =
 
     geometry.mData.mVertices[v] = posFromLoc(nv.x, nv.y, 0.0);
     geometry.mData.mNormals[v] = -upNormal();
@@ -427,7 +418,7 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   return geometry;
 }
 
-aiMesh *Geometry::Data::toMesh() const {
+aiMesh *Geometry::Data3D::toMesh() const {
   aiMesh *newMesh = new aiMesh;
   newMesh->mNumVertices = mVertices.size();
   newMesh->mVertices = new aiVector3D[mVertices.size()];
@@ -459,10 +450,12 @@ aiMesh *Geometry::Data::toMesh() const {
   return newMesh;
 }
 
-Geometry::FaceList Geometry::triangulate(const std::span<glm::vec2> &vertices) {
+std::tuple<Geometry::FaceList, std::vector<glm::vec2>>
+Geometry::triangulate(const std::span<glm::vec2> &vertices) {
 
-  auto triangles = Triangulate(vertices).getTriangles();
+  auto triangulate = Triangulate(vertices);
 
+  auto triangles = triangulate.getTriangles();
   FaceList faceList(triangles.size());
 
   for (int i = 0; i < triangles.size(); i++) {
@@ -475,7 +468,9 @@ Geometry::FaceList Geometry::triangulate(const std::span<glm::vec2> &vertices) {
     face[1] = tri[1];
     face[2] = tri[2];
   }
-  return faceList;
+
+  auto verts = triangulate.getVertices();
+  return {faceList, verts};
 }
 
 void Geometry::writeSvg(const Geometry::FaceList &faces,
@@ -517,7 +512,7 @@ void Geometry::writeSvg(const Geometry::FaceList &faces,
                           (p.y * kPrecision - min.y))
            << std::endl;
     }
-    file << "\" fill=\"none\" stroke=\"white\" />" << std::endl;
+    file << "\" fill=\"white\" stroke=\"red\" />" << std::endl;
   }
 
   file << "</svg>" << std::endl;

@@ -40,9 +40,9 @@ public:
   static glm::vec3 posFromLoc(double lon, double lat, double height);
   static glm::vec3 fromGround(const glm::vec2 &groundCoords);
 
-  std::vector<double> getFootprint();
+  const std::vector<glm::vec2> &getFootprint() { return mDataFlat.mVertices; }
 
-  aiMesh *simpleMesh() { return mData.toMesh(); }
+  aiMesh *simpleMesh() const { return mData.toMesh(); }
 
 protected:
   Geometry() = default;
@@ -50,7 +50,7 @@ protected:
   using Face = std::vector<int>;
   using FaceList = std::vector<Face>;
 
-  struct Data {
+  struct Data3D {
     std::vector<glm::vec3> mVertices;
     std::vector<glm::vec3> mNormals;
     std::vector<glm::vec3> mTexCoords;
@@ -59,13 +59,20 @@ protected:
     aiMesh *toMesh() const;
   };
 
-  Data mData;
-  std::vector<glm::vec2> mFootPrint;
+  Data3D mData;
+
+  struct DataFlat {
+    std::vector<glm::vec2> mVertices;
+    FaceList mFaces;
+  };
+
+  DataFlat mDataFlat;
 
 public:
   // given 2d polygon,
   // produce list of triangular faces
-  static FaceList triangulate(const std::span<glm::vec2> &vertices);
+  static std::tuple<FaceList, std::vector<glm::vec2>>
+  triangulate(const std::span<glm::vec2> &vertices);
 
   // print polygon to svg for debug purposes
   static void writeSvg(const FaceList &faces,

@@ -7,7 +7,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/build/testOsm2Assimp.exe",
       "args": [
-        "--gtest_filter=Test.TriangulateDonut"
+        "--gtest_filter=Test.Triangulate*"
       ],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
