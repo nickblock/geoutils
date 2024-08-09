@@ -32,18 +32,20 @@ void Triangulate::execute() {
 
   cdt.eraseOuterTriangles();
 
+  mData.mFaces.resize(cdt.triangles.size());
   for (int i = 0; i < cdt.triangles.size(); i++) {
     auto &cdtTri = cdt.triangles[i];
-    mTris.push_back(Tri{
+
+    mData.mFaces[i] = {
         cdtTri.vertices[0],
         cdtTri.vertices[1],
         cdtTri.vertices[2],
-    });
+    };
   }
-
+  mData.mVertices.resize(cdt.vertices.size());
   for (int i = 0; i < cdt.vertices.size(); i++) {
     auto &cdtVert = cdt.vertices[i];
-    mNewVertices.push_back({cdtVert.x, cdtVert.y});
+    mData.mVertices[i] = {cdtVert.x, cdtVert.y};
   }
 }
 

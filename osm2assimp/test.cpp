@@ -4,10 +4,9 @@
 #include "geometry.h"
 #include "glm/glm.hpp"
 #include "ground.h"
-#include "triangulate.h"
 #include "utils.h"
 #include <filesystem>
-
+#include <glm/ext/scalar_constants.hpp>
 #include <vector>
 
 using namespace GeoUtils;
@@ -29,26 +28,32 @@ TEST(Test, GroundTest) {
 
   Ground ground(corners);
 
-  std::vector<glm::vec2> clip0 = {
-      {2.0f, 2.0f}, {2.0f, 6.0}, {6.0, 6.0}, {6.0, 2.0f}, {2.0f, 2.0f}};
+  std::vector<glm::vec2> input = {
+      {2.0f, 2.0f}, {2.0f, 6.0}, {6.0, 6.0}, {6.0, 2.0f}};
 
-  ground.addFootPrint(clip0, 0);
+  Geometry::DataFlat footprint(std::move(Geometry::triangulate(input)));
 
-  std::vector<glm::vec2> clip1;
+  ground.addFootPrint(footprint);
 
-  for (auto &p : clip0) {
-    clip1.push_back({p.x + 5.0, p.y + 5.0});
+  // std::vector<glm::vec2> clip1;
+
+  for (auto &p : input) {
+    p.x += 5.0;
+    p.y += 5.0;
   };
 
-  ground.addFootPrint(clip1, 0);
-  ground.writeSvg(testDir() / "ClipperTest.svg", 100.0);
+  footprint = Geometry::triangulate(input);
+
+  ground.addFootPrint(footprint);
 
   auto groundMesh = ground.getMesh();
   EXPECT_NE(groundMesh, nullptr);
 
+  ground.writeSvg(testDir() / "GroundTest.svg");
+
   AssimpWriter writer;
   writer.addMesh(groundMesh);
-  EXPECT_EQ(0, writer.write(testDir() / "ClipperTest.fbx"));
+  EXPECT_EQ(0, writer.write(testDir() / "GroundTest.fbx"));
 }
 
 TEST(Test, GroundDonut) {
@@ -58,15 +63,19 @@ TEST(Test, GroundDonut) {
 
   Ground ground(corners);
 
-  std::vector<glm::vec2> donut = {
-      {2.0, 2.0}, {2.0, 6.0}, {6.0, 6.0}, {6.0, 2.0}, {4.0, 2.0}, {4.0, 3.0},
-      {5.0, 3.0}, {5.0, 5.0}, {3.0, 5.0}, {3.0, 3.0}, {3.5, 3.0}, {3.5, 2.0}};
+  {
 
-  ground.addFootPrint(donut, 0);
+    std::vector<glm::vec2> verts = {
+        {2.0, 2.0}, {2.0, 6.0}, {6.0, 6.0}, {6.0, 2.0}, {4.0, 2.0}, {4.0, 3.0},
+        {5.0, 3.0}, {5.0, 5.0}, {3.0, 5.0}, {3.0, 3.0}, {3.5, 3.0}, {3.5, 2.0}};
 
-  ground.writeSvg(testDir() / "GroundDonut.svg", 100.0);
+    auto footprint = Geometry::triangulate(verts);
+
+    ground.addFootPrint(footprint);
+  }
 
   auto groundMesh = ground.getMesh();
+
   EXPECT_NE(groundMesh, nullptr);
 
   AssimpWriter writer;
@@ -107,11 +116,11 @@ TEST(Test, TriangulateConvex) {
   std::vector<glm::vec2> convex = {{0.0, 0.0}, {0.0, 1.0}, {0.5, 1.5},
                                    {1.5, 1.5}, {2.0, 1.0}, {2.0, 0.0}};
 
-  auto [faceList, verts] = Geometry::triangulate(convex);
+  auto footprint = Geometry::triangulate(convex);
 
-  Geometry::writeSvg(faceList, convex, testDir() / "TriangulateConvex.svg");
+  Geometry::writeSvg(footprint, testDir() / "TriangulateConvex.svg");
 
-  EXPECT_EQ(faceList.size(), 4);
+  EXPECT_EQ(footprint.mFaces.size(), 4);
 }
 
 TEST(Test, TriangulateL) {
@@ -119,20 +128,20 @@ TEST(Test, TriangulateL) {
   std::vector<glm::vec2> L = {{0.0, 0.0}, {0.0, 2.0}, {2.0, 2.0},
                               {2.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}};
 
-  auto [faceList, verts] = Geometry::triangulate(L);
+  auto footprint = Geometry::triangulate(L);
 
-  Geometry::writeSvg(faceList, L, testDir() / "TriangulateL.svg");
+  Geometry::writeSvg(footprint, testDir() / "TriangulateL.svg");
 }
 TEST(Test, TriangulateDonut) {
 
-  std::vector<glm::vec2> donut = {
+  std::vector<glm::vec2> awkward = {
       {0.0, 0.0}, {0.0, 4.0}, {4.0, 4.0}, {4.0, 0.0}, {2.0, 0.0}, {2.5, 2.5},
       {3.0, 0.2}, {3.0, 3.0}, {1.0, 3.0}, {1.0, 2.5}, {2.0, 2.5}, {2.0, 1.5},
       {1.0, 1.5}, {1.0, 1.0}, {1.5, 1.0}, {1.5, 0.0}};
 
-  auto [faceList, verts] = Geometry::triangulate(donut);
+  auto footprint = Geometry::triangulate(awkward);
 
-  Geometry::writeSvg(faceList, donut, testDir() / "TriangulateDonut.svg");
+  Geometry::writeSvg(footprint, testDir() / "TriangulateAwkward.svg");
 }
 
 TEST(Test, PointOnLine) {

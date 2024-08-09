@@ -19,94 +19,34 @@ Ground::Ground(const std::vector<glm::vec2> &extents) : mExtents(extents) {
   }
 }
 
-inline std::size_t Ground::hashKey(Point point) const {
-  const double dx = point.first - mExtents[0].x;
-  const double dy = point.second - mExtents[0].x;
-  return delaunator::fast_mod(
-      static_cast<std::size_t>(std::llround(std::floor(
-          delaunator::pseudo_angle(dx, dy) * static_cast<double>(kHashSize)))),
-      kHashSize);
-}
+void Ground::addFootPrint(const Geometry::DataFlat &footprint) {
 
-void Ground::addFootPrint(const std::vector<glm::vec2> &points, int type) {
-  mGroundPoints.insert(mGroundPoints.end(), points.begin(), points.end());
+  Geometry::TVertIdx lastIdx = mGroundPoints.size();
 
-  // for (int i = 0; i < points.size(); i += 2) {
+  mGroundPoints.insert(mGroundPoints.end(), footprint.mVertices.begin(),
+                       footprint.mVertices.end());
 
-  //   mPointTypes[hashKey({points[i], points[i + 1]})] = type;
-  // }
-}
+  for (int i = 0; i < footprint.mFaces.size() - 1; i++) {
+    const Geometry::Face &face = footprint.mFaces[i];
+    for (int f = 0; f < face.size() - 1; f++) {
 
-std::vector<double>
-Ground::findGroundTris(const std::vector<double> &delaunayTris) {
-  std::vector<double> groundTris;
-
-  for (int i = 0; i < delaunayTris.size(); i += 6) {
-
-    auto p0 = Point{delaunayTris[i + 0], delaunayTris[i + 1]};
-    auto p1 = Point{delaunayTris[i + 2], delaunayTris[i + 3]};
-    auto p2 = Point{delaunayTris[i + 4], delaunayTris[i + 5]};
-
-    if (mPointTypes[hashKey(p0)] ==
-        mPointTypes[hashKey(p1) == mPointTypes[hashKey(p2)]]) {
+      mEdges.push_back({f + lastIdx, f + lastIdx + 1});
     }
+    mEdges.push_back(
+        {static_cast<Geometry::TVertIdx>(lastIdx + face.size() - 1), lastIdx});
   }
-
-  return {0};
 }
 
-// std::vector<p2t::Point *> fromGLM(const std::vector<glm::vec2> points) {
-//   std::vector<p2t::Point *> result(points.size());
+void Ground::writeSvg(const std::filesystem::path &path) {
 
-//   for (int i = 0; i < points.size(); i++) {
-//     result[i] = new p2t::Point(points[i].x, points[i].y);
-//   }
-//   return result;
-// }
-
-// void freePointList(std::vector<p2t::Point *> points) {
-//   for (auto p : points) {
-//     delete p;
-//   }
-// }
-
-stringstream pointsss(const std::vector<glm::vec2> &points,
-                      const glm::vec2 &min, float scale) {
-  stringstream ss;
-
-  ss << "<polygon points=\"";
-
-  for (auto &p : points) {
-    ss << std::format("%d,%d ", (p.x - min.x) * scale, (p.y - min.y) * scale);
-  }
-
-  ss << "\" fill=\"none\" stroke=\"white\" />";
-
-  return ss;
-}
-
-void Ground::writeSvg(const std::filesystem::path &path, float scale) {
-
-  ofstream file = ofstream(path);
-
-  file << std::format("<svg viewBox=\"%d %d %d %d\" xmlns="
-                      "\"http://www.w3.org/2000/svg\">",
-                      0, 0, (mBBox.mMax.x - mBBox.mMin.x) * scale,
-                      (mBBox.mMax.y - mBBox.mMin.y) * scale)
-       << endl;
-
-  // for (auto &iter : mSubtractions) {
-  //   file << pointsss(std::get<Poly>(iter), mBBox.mMin, scale).str() << endl;
-  // }
-
-  file << "</svg>" << endl;
+  Geometry::writeSvg(mDataFlat, path);
 }
 
 aiMesh *Ground::getMesh() {
 
-  writeSvg("/tmp/ground.svg", 10.f);
-
-  auto cdt = CDT::Triangulation<float>();
+  auto cdt = CDT::Triangulation<float>(
+      CDT::VertexInsertionOrder::Auto,
+      CDT::IntersectingConstraintEdges::TryResolve, 0.1f);
 
   float extra = 1.f;
   std::vector<glm::vec2> boxPoints = {
@@ -115,64 +55,76 @@ aiMesh *Ground::getMesh() {
       {mBBox.mMax.x + extra, mBBox.mMax.y + extra},
       {mBBox.mMax.x + extra, mBBox.mMin.y - extra}};
 
-
   cdt.insertVertices(
       mGroundPoints.begin(), mGroundPoints.end(),
       [](const glm::vec2 &p) { return p[0]; },
       [](const glm::vec2 &p) { return p[1]; });
-      
-  cdt.insertVertices(
-      boxPoints.begin(), boxPoints.end(),
-      [](const glm::vec2 &p) { return p[0]; },
-      [](const glm::vec2 &p) { return p[1]; });
-  
-  
 
-  cdt.fixedEdges.insert({0, 1});
-  cdt.fixedEdges.insert({1, 2});
-  cdt.fixedEdges.insert({2, 3});
-  cdt.fixedEdges.insert({3, 0});
+  cdt.insertEdges(
+      mEdges.begin(), mEdges.end(), [](const Edge &edge) { return edge[0]; },
+      [](const Edge &edge) { return edge[1]; });
+
+  // cdt.eraseOuterTriangles();
+
+  mDataFlat.mFaces.resize(cdt.triangles.size());
+
+  for (int i = 0; i < cdt.triangles.size(); i++) {
+    auto &cdtTri = cdt.triangles[i];
+
+    auto &tri = mDataFlat.mFaces[i];
+    tri.resize(3);
+
+    tri[0] = cdtTri.vertices[0];
+    tri[1] = cdtTri.vertices[1];
+    tri[2] = cdtTri.vertices[2];
+  }
+
+  mDataFlat.mVertices.resize(cdt.vertices.size());
+
+  for (int i = 0; i < cdt.vertices.size(); i++) {
+    auto &p = mDataFlat.mVertices[i];
+    p.x = cdt.vertices[i].x;
+    p.y = cdt.vertices[i].y;
+  }
 
   aiMesh *mesh = new aiMesh();
-  // delaunator::Delaunator delaunator(mGroundPoints);
 
-  // mesh->mNumVertices = delaunator.triangles.size();
-  // mesh->mVertices = new aiVector3D[mesh->mNumVertices];
-  // mesh->mTextureCoords[0] = new aiVector3D[mesh->mNumVertices];
-  // mesh->mNormals = new aiVector3D[mesh->mNumVertices];
-  // mesh->mNumUVComponents[0] = 2;
+  mesh->mNumVertices = cdt.vertices.size();
+  mesh->mVertices = new aiVector3D[mesh->mNumVertices];
+  mesh->mTextureCoords[0] = new aiVector3D[mesh->mNumVertices];
+  mesh->mNormals = new aiVector3D[mesh->mNumVertices];
+  mesh->mNumUVComponents[0] = 2;
 
-  // mesh->mNumFaces = delaunator.triangles.size() / 3;
-  // mesh->mFaces = new aiFace[delaunator.triangles.size() / 3];
+  mesh->mNumFaces = cdt.triangles.size();
+  mesh->mFaces = new aiFace[cdt.triangles.size()];
 
-  // int vertexIdx = 0;
-  // auto upNormal = Geometry::upNormal();
-  // int faceIdx = 0;
-  // for (size_t i = 0; i < delaunator.triangles.size(); i += 3) {
+  auto upNormal = Geometry::upNormal();
+  for (size_t i = 0; i < cdt.triangles.size(); i++) {
 
-  //   auto &face = mesh->mFaces[faceIdx];
+    auto &face = mesh->mFaces[i];
 
-  //   face.mNumIndices = 3;
-  //   face.mIndices = new unsigned int[face.mNumIndices];
+    face.mNumIndices = 3;
+    face.mIndices = new unsigned int[face.mNumIndices];
 
-  //   for (size_t j = 0; j < 3; j++) {
-  //     face.mIndices[j] = vertexIdx;
+    auto &cdtTri = cdt.triangles[i];
 
-  //     glm::vec2 point = {
-  //         delaunator.coords[2 * delaunator.triangles[i + j]],
-  //         delaunator.coords[2 * delaunator.triangles[i + j] + 1]};
+    for (size_t j = 0; j < 3; j++) {
 
-  //     glm::vec3 vertex = Geometry::posFromLoc(point.x, point.y, 0.f);
-  //     glm::vec3 uv = mBBox.fraction({point.x, point.y, 0.0});
+      auto cdtIdx = cdtTri.vertices[j];
+      auto &cdtVertex = cdt.vertices[cdtIdx];
 
-  //     mesh->mVertices[vertexIdx] = {vertex.x, vertex.y, vertex.z};
-  //     mesh->mNormals[vertexIdx] = {upNormal.x, upNormal.y, upNormal.z};
-  //     mesh->mTextureCoords[0][vertexIdx] = {uv.x, uv.y, uv.z};
+      face.mIndices[j] = cdtIdx;
 
-  //     vertexIdx++;
-  //   }
-  //   faceIdx++;
-  // }
+      glm::vec2 point = {cdtVertex.x, cdtVertex.y};
+
+      glm::vec3 vertex = Geometry::posFromLoc(point.x, point.y, 0.f);
+      glm::vec3 uv = mBBox.fraction({point.x, point.y, 0.0});
+
+      mesh->mVertices[cdtIdx] = {vertex.x, vertex.y, vertex.z};
+      mesh->mNormals[cdtIdx] = {upNormal.x, upNormal.y, upNormal.z};
+      mesh->mTextureCoords[0][cdtIdx] = {uv.x, uv.y, uv.z};
+    }
+  }
 
   return mesh;
 }

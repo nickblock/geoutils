@@ -1,7 +1,9 @@
 #pragma once
 
+#include "geometry.h"
 #include "glm/vec2.hpp"
 #include "osmfeature.h"
+#include "triangulate.h"
 #include "utils.h"
 #include <filesystem>
 #include <map>
@@ -11,25 +13,19 @@ class aiMesh;
 
 namespace GeoUtils {
 
-using Point = std::pair<double, double>;
+using Edge = std::array<Geometry::TVertIdx, 2>;
 
 class Ground {
 public:
   Ground(const std::vector<glm::vec2> &);
 
-  void addFootPrint(const std::vector<glm::vec2> &points, int type);
+  void addFootPrint(const Geometry::DataFlat &footprint);
 
   aiMesh *getMesh();
 
-  void writeSvg(const std::filesystem::path &path, float scale);
+  void writeSvg(const std::filesystem::path &path);
 
 protected:
-  std::size_t hashKey(Point point) const;
-
-  // from the delaunay tris remove all tris that encompass a road or building,
-  // leaving the inbetween tris; the ground
-  std::vector<double> findGroundTris(const std::vector<double> &delaunayTris);
-
   using BoxPoly = std::tuple<BBox, std::vector<glm::vec2>>;
   static constexpr int Box = 0;
   static constexpr int Poly = 1;
@@ -38,6 +34,9 @@ protected:
 
   std::vector<glm::vec2> mExtents;
   std::vector<glm::vec2> mGroundPoints;
+  std::vector<Edge> mEdges;
+
+  Geometry::DataFlat mDataFlat;
 
   std::unordered_map<std::size_t, int> mPointTypes;
 

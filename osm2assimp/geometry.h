@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <iostream>
 #include <span>
 #include <vector>
 
@@ -16,6 +17,9 @@ namespace GeoUtils {
 class Geometry {
 
 public:
+  using TVertIdx = uint32_t;
+  using Tri = std::array<TVertIdx, 3>;
+
   /// <summary>
   /// Given an enclosed loop of 2d points defining a polygon the function
   /// returns a 3d mesh with the polygon as it's base and top extruded to the
@@ -40,14 +44,7 @@ public:
   static glm::vec3 posFromLoc(double lon, double lat, double height);
   static glm::vec3 fromGround(const glm::vec2 &groundCoords);
 
-  const std::vector<glm::vec2> &getFootprint() { return mDataFlat.mVertices; }
-
-  aiMesh *simpleMesh() const { return mData.toMesh(); }
-
-protected:
-  Geometry() = default;
-
-  using Face = std::vector<int>;
+  using Face = std::vector<TVertIdx>;
   using FaceList = std::vector<Face>;
 
   struct Data3D {
@@ -59,25 +56,31 @@ protected:
     aiMesh *toMesh() const;
   };
 
-  Data3D mData;
-
   struct DataFlat {
     std::vector<glm::vec2> mVertices;
     FaceList mFaces;
   };
+
+  const DataFlat &getFootprint() { return mDataFlat; }
+
+  aiMesh *simpleMesh() const { return mData.toMesh(); }
+
+protected:
+  Geometry() = default;
+
+  Data3D mData;
 
   DataFlat mDataFlat;
 
 public:
   // given 2d polygon,
   // produce list of triangular faces
-  static std::tuple<FaceList, std::vector<glm::vec2>>
-  triangulate(const std::span<glm::vec2> &vertices);
+  static Geometry::DataFlat triangulate(const std::span<glm::vec2> &vertices);
 
   // print polygon to svg for debug purposes
-  static void writeSvg(const FaceList &faces,
-                       const std::vector<glm::vec2> &vertices,
-                       const std::filesystem::path &file);
+  static void writeSvg(const DataFlat &data, const std::filesystem::path &file);
+
+  friend class Ground;
 };
 
 using Line = std::array<glm::vec2, 2>;

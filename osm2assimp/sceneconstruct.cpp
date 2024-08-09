@@ -128,7 +128,7 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
   if (mGround) {
 
     for (auto &geom : geoms) {
-      mGround->addFootPrint(geom.getFootprint(), 0);
+      mGround->addFootPrint(geom.getFootprint());
     }
 
     aiMesh *mesh = mGround->getMesh();

@@ -216,18 +216,24 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
   }
 
   geometry.mData.mFaces.resize(numSegments);
+  geometry.mDataFlat.mFaces.resize(numSegments);
 
   int vertIdx = 0;
   int faceIdx = 0;
 
   for (int i = 0; i < numSegments; i++) {
-    auto &face = geometry.mData.mFaces[faceIdx++];
+    auto &face = geometry.mData.mFaces[faceIdx];
+    auto &flatFace = geometry.mDataFlat.mFaces[faceIdx];
 
     face.resize(4);
     face[0] = (i * 2) + 0;
     face[1] = (i * 2) + 1;
     face[2] = (i * 2) + 3;
     face[3] = (i * 2) + 2;
+
+    flatFace.insert(flatFace.begin(), face.begin(), face.end());
+
+    faceIdx++;
   }
 
   return geometry;
@@ -350,8 +356,12 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   geometry.mData.mFaces.resize(height > 0.f ? 2 + numBaseVertices : 1);
   geometry.mData.mFaces[0].resize(numBaseVertices);
 
+  geometry.mDataFlat.mFaces.resize(1);
+  geometry.mDataFlat.mFaces[0].resize(numBaseVertices);
+
   for (size_t i = 0; i < numBaseVertices; i++) {
     geometry.mData.mFaces[0][i] = numBaseVertices - i - 1;
+    geometry.mDataFlat.mFaces[0][i] = numBaseVertices - i - 1;
   }
 
   if (doExtrude) {
@@ -450,31 +460,13 @@ aiMesh *Geometry::Data3D::toMesh() const {
   return newMesh;
 }
 
-std::tuple<Geometry::FaceList, std::vector<glm::vec2>>
-Geometry::triangulate(const std::span<glm::vec2> &vertices) {
+Geometry::DataFlat Geometry::triangulate(const std::span<glm::vec2> &vertices) {
 
-  auto triangulate = Triangulate(vertices);
-
-  auto triangles = triangulate.getTriangles();
-  FaceList faceList(triangles.size());
-
-  for (int i = 0; i < triangles.size(); i++) {
-    auto &tri = triangles[i];
-    Face &face = faceList[i];
-
-    face.resize(3);
-
-    face[0] = tri[0];
-    face[1] = tri[1];
-    face[2] = tri[2];
-  }
-
-  auto verts = triangulate.getVertices();
-  return {faceList, verts};
+  // TODO avoid copy / check RVO
+  return Triangulate(vertices).getData();
 }
 
-void Geometry::writeSvg(const Geometry::FaceList &faces,
-                        const std::vector<glm::vec2> &vertices,
+void Geometry::writeSvg(const DataFlat &data,
                         const std::filesystem::path &filepath) {
 
   constexpr float kPrecision = 1e3;
@@ -486,7 +478,7 @@ void Geometry::writeSvg(const Geometry::FaceList &faces,
   glm::vec2 max{std::numeric_limits<float>::min(),
                 std::numeric_limits<float>::min()};
 
-  for (auto &p : vertices) {
+  for (auto &p : data.mVertices) {
     min.x = std::min(p.x * kPrecision, min.x);
     min.y = std::min(p.y * kPrecision, min.y);
     max.x = std::max(p.x * kPrecision, max.x);
@@ -503,11 +495,11 @@ void Geometry::writeSvg(const Geometry::FaceList &faces,
                       0, 0, (max.x - min.x), (max.y - min.y))
        << std::endl;
 
-  for (auto &face : faces) {
+  for (auto &face : data.mFaces) {
 
     file << "<polygon points=\"";
     for (auto &idx : face) {
-      auto &p = vertices[idx];
+      auto &p = data.mVertices[idx];
       file << std::format("{},{} ", (p.x * kPrecision - min.x),
                           (p.y * kPrecision - min.y))
            << std::endl;

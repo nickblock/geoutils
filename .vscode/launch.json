@@ -6,9 +6,7 @@
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/testOsm2Assimp.exe",
-      "args": [
-        "--gtest_filter=Test.Triangulate*"
-      ],
+      "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],
@@ -74,7 +72,7 @@
         "-i",
         "C:/Users/nick/AppData/Local/Temp/geoutils_test/test.osm",
         "-o",
-        "C:/Users/nick/AppData/Local/Temp/geoutils_test/extents.obj",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/extents.fbx",
         "-r",
         "-c",
         "2",
