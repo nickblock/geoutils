@@ -13,8 +13,6 @@ class aiMesh;
 
 namespace GeoUtils {
 
-using Edge = std::array<Geometry::TVertIdx, 2>;
-
 class Ground {
 public:
   Ground(const std::vector<glm::vec2> &);

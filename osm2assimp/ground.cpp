@@ -21,19 +21,19 @@ Ground::Ground(const std::vector<glm::vec2> &extents) : mExtents(extents) {
 
 void Ground::addFootPrint(const Geometry::DataFlat &footprint) {
 
-  Geometry::TVertIdx lastIdx = mGroundPoints.size();
+  TVertIdx lastIdx = mGroundPoints.size();
 
   mGroundPoints.insert(mGroundPoints.end(), footprint.mVertices.begin(),
                        footprint.mVertices.end());
 
   for (int i = 0; i < footprint.mFaces.size() - 1; i++) {
-    const Geometry::Face &face = footprint.mFaces[i];
+    const Face &face = footprint.mFaces[i];
     for (int f = 0; f < face.size() - 1; f++) {
 
       mEdges.push_back({f + lastIdx, f + lastIdx + 1});
     }
     mEdges.push_back(
-        {static_cast<Geometry::TVertIdx>(lastIdx + face.size() - 1), lastIdx});
+        {static_cast<TVertIdx>(lastIdx + face.size() - 1), lastIdx});
   }
 }
 

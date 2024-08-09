@@ -31,7 +31,7 @@ TEST(Test, GroundTest) {
   std::vector<glm::vec2> input = {
       {2.0f, 2.0f}, {2.0f, 6.0}, {6.0, 6.0}, {6.0, 2.0f}};
 
-  Geometry::DataFlat footprint(std::move(Geometry::triangulate(input)));
+  Geometry::DataFlat footprint = Geometry::triangulate(input);
 
   ground.addFootPrint(footprint);
 

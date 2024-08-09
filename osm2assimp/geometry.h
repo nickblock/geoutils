@@ -12,14 +12,16 @@ class aiMesh;
 
 namespace GeoUtils {
 
+using TVertIdx = uint32_t;
+using Face = std::vector<TVertIdx>;
+using FaceList = std::vector<Face>;
+using Edge = std::array<TVertIdx, 2>;
+
 // Geomtry class handles creation of 3d objects from osm data
 
 class Geometry {
 
 public:
-  using TVertIdx = uint32_t;
-  using Tri = std::array<TVertIdx, 3>;
-
   /// <summary>
   /// Given an enclosed loop of 2d points defining a polygon the function
   /// returns a 3d mesh with the polygon as it's base and top extruded to the
@@ -43,9 +45,6 @@ public:
   static glm::vec3 upNormal();
   static glm::vec3 posFromLoc(double lon, double lat, double height);
   static glm::vec3 fromGround(const glm::vec2 &groundCoords);
-
-  using Face = std::vector<TVertIdx>;
-  using FaceList = std::vector<Face>;
 
   struct Data3D {
     std::vector<glm::vec3> mVertices;
