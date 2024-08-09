@@ -151,9 +151,9 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
 
   auto lastSeg = LineSegment(line[0], line[1], width);
 
-  appendVertex(lastSeg.mPoints[0]);
-  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
   appendVertex(lastSeg.mPoints[1]);
+  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
+  appendVertex(lastSeg.mPoints[0]);
   throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
   glm::vec2 uvDistance(0.0f, 0.0f);
@@ -189,9 +189,9 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
     lastSeg = nextSeg;
   }
 
-  appendVertex(lastSeg.mPoints[3]);
-  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
   appendVertex(lastSeg.mPoints[2]);
+  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
+  appendVertex(lastSeg.mPoints[3]);
   throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
   uvDistance += glm::vec2{
