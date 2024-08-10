@@ -50,7 +50,7 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
 
   int retVal = 0;
 
-  int count = 0;
+  int featureIdx = 0;
 
   std::vector<Geometry> geoms;
   for (auto &feature : mFeatures) {
@@ -59,14 +59,14 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
       // if it's something that wants turning into a 3d mesh
       if (feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) &&
           feature.type() & OSMFeature::CLOSED) {
-        geoms.emplace_back(
-            Geometry::extrude2dMesh(feature.coords(), feature.height(), count));
+        geoms.emplace_back(Geometry::extrude2dMesh(
+            feature.coords(), feature.height(), featureIdx));
       }
 
       // if it's something that wants turning into a polygon spline
       else if (feature.type() & OSMFeature::HIGHWAY) {
         geoms.emplace_back(Geometry::meshFromLine(
-            feature.coords(), OSMFeature::RoadWidth, count));
+            feature.coords(), OSMFeature::RoadWidth, featureIdx));
       }
 
       // create mesh from last geometry
@@ -96,7 +96,7 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
 
         writer.addMesh(mesh, nameSanitize, nullptr);
 
-        count++;
+        featureIdx++;
       } else {
 
         static bool failed = true;

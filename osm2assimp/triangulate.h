@@ -7,13 +7,25 @@
 #include <vector>
 
 namespace GeoUtils {
-
 class Triangulate {
 
 public:
-  Triangulate(const std::span<glm::vec2> &vertices);
+  struct EdgeIdx {
+    TVertIdx p0, p1;
+  };
 
-  Geometry::DataFlat getData() { return mData; }
+  struct Data {
+    Data(Geometry::DataFlat &sourcePoly) : source(sourcePoly) {}
+    Geometry::DataFlat &source;
+    std::vector<float> mPointAngles;
+    std::vector<EdgeIdx> mEdges;
+  };
+
+  std::unique_ptr<Data> mData;
+
+  Triangulate(Geometry::DataFlat &inputPoly);
+
+  std::unique_ptr<Triangulate::Data> getData() { return std::move(mData); }
 
   static float reflexPoint(const glm::vec2 &a, const glm::vec2 &b,
                            const glm::vec2 &c);
@@ -21,22 +33,10 @@ public:
 private:
   void execute();
 
-  const std::span<glm::vec2> &mVertices;
-
-  Geometry::DataFlat mData;
-
-  TVertIdx firstVertex();
-  TVertIdx lastVertex();
-  TVertIdx nextVertex(int currentVertex);
-  std::set<TVertIdx> mRemovedVertices;
-
-  std::vector<float> mPointAngles;
-
-  struct EdgeIdx {
-    TVertIdx p0, p1;
-  };
-
-  std::vector<EdgeIdx> mEdges;
+  std::vector<glm::vec2> mVertices;
+  std::vector<TVertIdx> mIndices;
+  std::vector<float> mInterPointAngles;
+  std::vector<EdgeIdx> mInterEdges;
 
   float angleBetweenEdges(const EdgeIdx &edge0, const EdgeIdx &edge1);
   float reflexPoint(const EdgeIdx &edge0, const EdgeIdx &edge1);

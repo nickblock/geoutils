@@ -5,13 +5,17 @@
 
 namespace GeoUtils {
 
-Triangulate::Triangulate(const std::span<glm::vec2> &vertices)
-    : mVertices(vertices) {
+Triangulate::Triangulate(Geometry::DataFlat &inputPoly)
+    : mData(std::make_unique<Data>(inputPoly)) {
 
+  mVertices.insert(mVertices.begin(), inputPoly.mVertices.begin(),
+                   inputPoly.mVertices.end());
+
+  mIndices.resize(mVertices.size());
+  for (TVertIdx i = 0; i < mVertices.size(); i++) {
+    mIndices[i] = i;
+  }
   execute();
-
-  mData.mVertices.insert(mData.mVertices.begin(), mVertices.begin(),
-                         mVertices.end());
 }
 
 float Triangulate::angleBetweenEdges(const EdgeIdx &edge0,
@@ -39,90 +43,68 @@ float Triangulate::reflexPoint(const EdgeIdx &edge0, const EdgeIdx &edge1) {
 }
 
 void Triangulate::clearPolyData() {
-  mEdges.clear();
-  mPointAngles.clear();
+  mInterEdges.clear();
+  mInterPointAngles.clear();
 }
 void Triangulate::findPolyPerimeter() {
 
-  mEdges.resize(mVertices.size() - mRemovedVertices.size());
-  mPointAngles.resize(mVertices.size());
+  mInterEdges.resize(mVertices.size());
+  mInterPointAngles.resize(mVertices.size());
 
-  TVertIdx currentVertex = firstVertex();
+  EdgeIdx lastEdge = {(TVertIdx)mVertices.size() - 1, (TVertIdx)0};
 
-  EdgeIdx lastEdge = {lastVertex(), currentVertex};
-  for (int i = 0; i < mEdges.size(); i++) {
+  for (TVertIdx i = 0; i < mVertices.size() - 1; i++) {
 
-    EdgeIdx &curEdge = mEdges[i];
+    EdgeIdx &curEdge = mInterEdges[i];
 
-    if (i + 1 != mEdges.size()) {
-      curEdge = {.p0 = currentVertex, .p1 = nextVertex(currentVertex)};
+    if (i + 1 != mInterEdges.size()) {
+      curEdge = {.p0 = i, .p1 = i + 1};
     } else {
-      curEdge = {.p0 = currentVertex, .p1 = firstVertex()};
+      curEdge = {.p0 = i, .p1 = 0};
     }
-    currentVertex = curEdge.p1;
 
-    mPointAngles[currentVertex] = reflexPoint(lastEdge, curEdge);
+    mInterPointAngles[i] = reflexPoint(lastEdge, curEdge);
     lastEdge = curEdge;
   }
 }
 void Triangulate::execute() {
 
   findPolyPerimeter();
+
+  // after the first pass we have thee inital outer perimater, edges, angles at
+  // each vertex
+  mData->mEdges.insert(mData->mEdges.begin(), mInterEdges.begin(),
+                       mInterEdges.end());
+  mData->mPointAngles.insert(mData->mPointAngles.begin(),
+                             mInterPointAngles.begin(),
+                             mInterPointAngles.end());
+
+  // susequently we clip triangles
   while (findAndRemoveTriangle()) {
-    if (mVertices.size() - mRemovedVertices.size() >= 4) {
+    if (mVertices.size() >= 4) {
       clearPolyData();
       findPolyPerimeter();
     } else {
-      TVertIdx first = firstVertex();
-      TVertIdx second = nextVertex(first);
-      TVertIdx third = nextVertex(second);
-      mData.mFaces.push_back({first, second, third});
+      mData->source.mFaces.push_back({mIndices[0], mIndices[1], mIndices[2]});
       break;
     }
   }
 }
-
-TVertIdx Triangulate::firstVertex() {
-  TVertIdx next = 0;
-  while (mRemovedVertices.find(next) != mRemovedVertices.end()) {
-    next++;
-    assert(next < mVertices.size());
-  }
-  return next;
-}
-TVertIdx Triangulate::lastVertex() {
-  TVertIdx last = mVertices.size() - 1;
-
-  while (mRemovedVertices.find(last) != mRemovedVertices.end()) {
-    last--;
-    assert(last != 0);
-  }
-  return last;
-}
-TVertIdx Triangulate::nextVertex(int currentVertex) {
-  TVertIdx next = ++currentVertex;
-  while (mRemovedVertices.find(next) != mRemovedVertices.end()) {
-    next++;
-    assert(next < mVertices.size());
-  }
-  return next;
-}
-
 bool Triangulate::findAndRemoveTriangle() {
-  if (mEdges.size() < 4) {
+  if (mInterEdges.size() < 4) {
     return false;
   }
 
-  for (int i = 0; i < mEdges.size(); i++) {
-    auto edge0 = mEdges[i];
+  for (int i = 0; i < mInterEdges.size(); i++) {
+    auto edge0 = mInterEdges[i];
     EdgeIdx edge1;
-    if (i + 1 < mEdges.size()) {
-      edge1 = mEdges[i + 1];
+    if (i + 1 < mInterEdges.size()) {
+      edge1 = mInterEdges[i + 1];
     } else {
-      edge1 = mEdges[0];
+      edge1 = mInterEdges[0];
     }
 
-    if (mPointAngles[edge0.p1] > 0.f) {
+    if (mInterPointAngles[edge0.p1] > 0.f) {
       continue;
     }
 
@@ -136,7 +118,7 @@ bool Triangulate::findAndRemoveTriangle() {
 
     float reflex = reflexPoint(edge0, testEdge);
 
-    float reflexCorner = mPointAngles[edge0.p0];
+    float reflexCorner = mInterPointAngles[edge0.p0];
 
     auto opp = (reflex > 0.f && reflexCorner > 0.f) ||
                (reflex < 0.0 && reflexCorner < 0.0f);
@@ -146,7 +128,6 @@ bool Triangulate::findAndRemoveTriangle() {
 
     if (!checkEdgeIntersection(testEdge)) {
       clipTriangle(edge0, edge1);
-      mData.mFaces.push_back(tri);
       return true;
     }
   }
@@ -154,7 +135,10 @@ bool Triangulate::findAndRemoveTriangle() {
 }
 
 void Triangulate::clipTriangle(const EdgeIdx &edge0, const EdgeIdx &edge1) {
-  mRemovedVertices.insert(edge0.p1);
+  mData->source.mFaces.push_back(
+      {mIndices[edge0.p0], mIndices[edge0.p1], mIndices[edge1.p1]});
+  mVertices.erase(mVertices.begin() + edge0.p1);
+  mIndices.erase(mIndices.begin() + edge0.p1);
 }
 bool Triangulate::checkEdgeIntersection(const EdgeIdx &edge) {
   Line testLine = {mVertices[edge.p0], mVertices[edge.p1]};
@@ -163,7 +147,7 @@ bool Triangulate::checkEdgeIntersection(const EdgeIdx &edge) {
   testLine[0] += lineDir * glm::epsilon<float>();
   testLine[1] -= lineDir * glm::epsilon<float>();
 
-  for (auto &side : mEdges) {
+  for (auto &side : mInterEdges) {
 
     if (side.p0 == edge.p0 || side.p0 == edge.p1 || side.p1 == edge.p0 ||
         side.p1 == edge.p1) {

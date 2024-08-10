@@ -31,20 +31,26 @@ TEST(Test, GroundTest) {
   std::vector<glm::vec2> input = {
       {2.0f, 2.0f}, {2.0f, 6.0}, {6.0, 6.0}, {6.0, 2.0f}};
 
-  Geometry::DataFlat footprint = Geometry::triangulate(input);
+  {
+    auto flat = Geometry::DataFlat{input, {}};
 
-  ground.addFootPrint(footprint);
+    auto tri = Triangulate(flat);
 
-  // std::vector<glm::vec2> clip1;
+    ground.addFootPrint(flat);
+  }
 
   for (auto &p : input) {
     p.x += 5.0;
     p.y += 5.0;
   };
 
-  footprint = Geometry::triangulate(input);
+  {
+    auto flat = Geometry::DataFlat{input, {}};
 
-  ground.addFootPrint(footprint);
+    auto tri = Triangulate(flat);
+
+    ground.addFootPrint(flat);
+  }
 
   auto groundMesh = ground.getMesh();
   EXPECT_NE(groundMesh, nullptr);
@@ -69,9 +75,11 @@ TEST(Test, GroundDonut) {
         {2.0, 2.0}, {2.0, 6.0}, {6.0, 6.0}, {6.0, 2.0}, {4.0, 2.0}, {4.0, 3.0},
         {5.0, 3.0}, {5.0, 5.0}, {3.0, 5.0}, {3.0, 3.0}, {3.5, 3.0}, {3.5, 2.0}};
 
-    auto footprint = Geometry::triangulate(verts);
+    auto flat = Geometry::DataFlat(verts, {});
 
-    ground.addFootPrint(footprint);
+    auto footprint = Triangulate(flat);
+
+    ground.addFootPrint(flat);
   }
 
   auto groundMesh = ground.getMesh();
@@ -116,7 +124,8 @@ TEST(Test, TriangulateConvex) {
   std::vector<glm::vec2> convex = {{0.0, 0.0}, {0.0, 1.0}, {0.5, 1.5},
                                    {1.5, 1.5}, {2.0, 1.0}, {2.0, 0.0}};
 
-  auto footprint = Geometry::triangulate(convex);
+  auto footprint = Geometry::DataFlat{convex, {}};
+  auto tri = Triangulate(footprint);
 
   footprint.writeSvg(testDir() / "TriangulateConvex.svg");
 
@@ -128,7 +137,8 @@ TEST(Test, TriangulateL) {
   std::vector<glm::vec2> L = {{0.0, 0.0}, {0.0, 2.0}, {2.0, 2.0},
                               {2.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}};
 
-  auto footprint = Geometry::triangulate(L);
+  auto footprint = Geometry::DataFlat{L, {}};
+  auto tri = Triangulate(footprint);
 
   footprint.writeSvg(testDir() / "TriangulateL.svg");
 }
@@ -139,7 +149,8 @@ TEST(Test, TriangulateDonut) {
       {3.0, 0.2}, {3.0, 3.0}, {1.0, 3.0}, {1.0, 2.5}, {2.0, 2.5}, {2.0, 1.5},
       {1.0, 1.5}, {1.0, 1.0}, {1.5, 1.0}, {1.5, 0.0}};
 
-  auto footprint = Geometry::triangulate(awkward);
+  auto footprint = Geometry::DataFlat{awkward, {}};
+  auto tri = Triangulate(footprint);
 
   footprint.writeSvg(testDir() / "TriangulateAwkward.svg");
 }

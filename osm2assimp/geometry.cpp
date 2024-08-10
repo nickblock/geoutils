@@ -460,12 +460,6 @@ aiMesh *Geometry::Data3D::toMesh() const {
   return newMesh;
 }
 
-Geometry::DataFlat Geometry::triangulate(const std::span<glm::vec2> &vertices) {
-
-  // TODO avoid copy / check RVO
-  return Triangulate(vertices).getData();
-}
-
 void Geometry::DataFlat::writeSvg(const std::filesystem::path &filepath) {
 
   constexpr float kPrecision = 1e3;

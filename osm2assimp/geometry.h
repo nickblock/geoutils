@@ -27,14 +27,14 @@ public:
   /// returns a 3d mesh with the polygon as it's base and top extruded to the
   /// value of the given height. <summary>
   static Geometry extrude2dMesh(const std::vector<glm::vec2> &baseVertices,
-                                float height, int featureId);
+                                float height, int featureId = 0);
 
   /// <summary>`
   /// Given a list of points as a line, creates a flat mesh along the line of
   /// the given width.
   /// </summary>
   static Geometry meshFromLine(const std::vector<glm::vec2> &line, float width,
-                               int featureId);
+                               int featureId = 0);
 
   /// <summary>
   /// A boolean deciding the up axis as z
@@ -73,13 +73,6 @@ protected:
   Data3D mData;
 
   DataFlat mDataFlat;
-
-public:
-  // given 2d polygon,
-  // produce list of triangular faces
-  static Geometry::DataFlat triangulate(const std::span<glm::vec2> &vertices);
-
-  friend class Ground;
 };
 
 using Line = std::array<glm::vec2, 2>;
