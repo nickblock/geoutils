@@ -64,7 +64,7 @@ aiMesh *Ground::getMesh() {
       mEdges.begin(), mEdges.end(), [](const Edge &edge) { return edge[0]; },
       [](const Edge &edge) { return edge[1]; });
 
-  // cdt.eraseOuterTriangles();
+  cdt.eraseOuterTriangles();
 
   mDataFlat.mFaces.resize(cdt.triangles.size());
 

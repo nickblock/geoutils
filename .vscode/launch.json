@@ -70,12 +70,13 @@
       "program": "${workspaceFolder}/build/osm2assimp",
       "args": [
         "-i",
-        "${workspaceFolder}/old_street.osm",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/test.osm",
         "-o",
-        "C:/Users/nick/AppData/Local/Temp/geoutils_test/old_street.fbx",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/extents.fbx",
         "-r",
         "-c",
-        "2"
+        "2",
+        "-g"
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",

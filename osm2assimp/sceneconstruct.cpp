@@ -135,6 +135,9 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
     if (mesh) {
       mesh->mMaterialIndex = writer.addMaterial("ground", mMatColors["ground"]);
       writer.addMesh(mesh, "ground");
+
+      auto svgPath = outFilePath;
+      mGround->writeSvg(svgPath.replace_extension(".svg"));
     } else {
       retVal = -1;
     }
