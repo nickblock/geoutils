@@ -118,7 +118,7 @@ TEST(Test, TriangulateConvex) {
 
   auto footprint = Geometry::triangulate(convex);
 
-  Geometry::writeSvg(footprint, testDir() / "TriangulateConvex.svg");
+  footprint.writeSvg(testDir() / "TriangulateConvex.svg");
 
   EXPECT_EQ(footprint.mFaces.size(), 4);
 }
@@ -130,7 +130,7 @@ TEST(Test, TriangulateL) {
 
   auto footprint = Geometry::triangulate(L);
 
-  Geometry::writeSvg(footprint, testDir() / "TriangulateL.svg");
+  footprint.writeSvg(testDir() / "TriangulateL.svg");
 }
 TEST(Test, TriangulateDonut) {
 
@@ -141,7 +141,7 @@ TEST(Test, TriangulateDonut) {
 
   auto footprint = Geometry::triangulate(awkward);
 
-  Geometry::writeSvg(footprint, testDir() / "TriangulateAwkward.svg");
+  footprint.writeSvg(testDir() / "TriangulateAwkward.svg");
 }
 
 TEST(Test, PointOnLine) {

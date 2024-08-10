@@ -39,7 +39,7 @@ void Ground::addFootPrint(const Geometry::DataFlat &footprint) {
 
 void Ground::writeSvg(const std::filesystem::path &path) {
 
-  Geometry::writeSvg(mDataFlat, path);
+  mDataFlat.writeSvg(path);
 }
 
 aiMesh *Ground::getMesh() {

@@ -466,8 +466,7 @@ Geometry::DataFlat Geometry::triangulate(const std::span<glm::vec2> &vertices) {
   return Triangulate(vertices).getData();
 }
 
-void Geometry::writeSvg(const DataFlat &data,
-                        const std::filesystem::path &filepath) {
+void Geometry::DataFlat::writeSvg(const std::filesystem::path &filepath) {
 
   constexpr float kPrecision = 1e3;
 
@@ -478,7 +477,7 @@ void Geometry::writeSvg(const DataFlat &data,
   glm::vec2 max{std::numeric_limits<float>::min(),
                 std::numeric_limits<float>::min()};
 
-  for (auto &p : data.mVertices) {
+  for (auto &p : mVertices) {
     min.x = std::min(p.x * kPrecision, min.x);
     min.y = std::min(p.y * kPrecision, min.y);
     max.x = std::max(p.x * kPrecision, max.x);
@@ -495,11 +494,11 @@ void Geometry::writeSvg(const DataFlat &data,
                       0, 0, (max.x - min.x), (max.y - min.y))
        << std::endl;
 
-  for (auto &face : data.mFaces) {
+  for (auto &face : mFaces) {
 
     file << "<polygon points=\"";
     for (auto &idx : face) {
-      auto &p = data.mVertices[idx];
+      auto &p = mVertices[idx];
       file << std::format("{},{} ", (p.x * kPrecision - min.x),
                           (p.y * kPrecision - min.y))
            << std::endl;

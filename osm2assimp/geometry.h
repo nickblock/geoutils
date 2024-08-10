@@ -58,6 +58,9 @@ public:
   struct DataFlat {
     std::vector<glm::vec2> mVertices;
     FaceList mFaces;
+
+    // print polygon to svg for debug purposes
+    void writeSvg(const std::filesystem::path &file);
   };
 
   const DataFlat &getFootprint() { return mDataFlat; }
@@ -75,9 +78,6 @@ public:
   // given 2d polygon,
   // produce list of triangular faces
   static Geometry::DataFlat triangulate(const std::span<glm::vec2> &vertices);
-
-  // print polygon to svg for debug purposes
-  static void writeSvg(const DataFlat &data, const std::filesystem::path &file);
 
   friend class Ground;
 };
