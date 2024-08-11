@@ -4,6 +4,7 @@
 #include "geometry.h"
 #include "glm/glm.hpp"
 #include "ground.h"
+#include "roadnetwork.h"
 #include "utils.h"
 #include <filesystem>
 #include <glm/ext/scalar_constants.hpp>
@@ -16,7 +17,20 @@ TEST(Test, MeshFromLine) {
   std::vector<glm::vec2> points = {{0.0, 0.0}, {0.0, 10.0}, {10.0, 20.0}};
 
   try {
-    Geometry::meshFromLine(points, 2.0, 0);
+    auto geometry = Geometry::meshFromLine(points, 2.0, 0);
+
+    auto aiMesh = geometry.simpleMesh();
+    EXPECT_EQ(aiMesh->mNumVertices, 6);
+
+    auto footprint = geometry.getFootprint();
+    footprint.writeSvg(testDir() / "MeshFromLine.svg");
+    EXPECT_EQ(footprint.mFaces.size(), 1);
+    EXPECT_EQ(footprint.mFaces[0].size(), 6);
+
+    auto tri = Triangulate(footprint).getData();
+
+    tri->writeSvg(testDir() / "MeshFromLineTri.svg");
+
   } catch (std::runtime_error &err) {
     EXPECT_TRUE(false);
   }
@@ -34,9 +48,9 @@ TEST(Test, GroundTest) {
   {
     auto flat = Geometry::DataFlat{input, {}};
 
-    auto tri = Triangulate(flat);
+    auto tri = Triangulate(flat).getData();
 
-    ground.addFootPrint(flat);
+    ground.addFootPrint(*tri);
   }
 
   for (auto &p : input) {
@@ -47,9 +61,9 @@ TEST(Test, GroundTest) {
   {
     auto flat = Geometry::DataFlat{input, {}};
 
-    auto tri = Triangulate(flat);
+    auto tri = Triangulate(flat).getData();
 
-    ground.addFootPrint(flat);
+    ground.addFootPrint(*tri);
   }
 
   auto groundMesh = ground.getMesh();
@@ -77,9 +91,9 @@ TEST(Test, GroundDonut) {
 
     auto flat = Geometry::DataFlat(verts, {});
 
-    auto footprint = Triangulate(flat);
+    auto tri = Triangulate(flat).getData();
 
-    ground.addFootPrint(flat);
+    ground.addFootPrint(*tri);
   }
 
   auto groundMesh = ground.getMesh();
@@ -124,12 +138,15 @@ TEST(Test, TriangulateConvex) {
   std::vector<glm::vec2> convex = {{0.0, 0.0}, {0.0, 1.0}, {0.5, 1.5},
                                    {1.5, 1.5}, {2.0, 1.0}, {2.0, 0.0}};
 
+  // test with CCW input (should get reversed by triangulate)
+  std::reverse(convex.begin(), convex.end());
+
   auto footprint = Geometry::DataFlat{convex, {}};
-  auto tri = Triangulate(footprint);
+  auto tri = Triangulate(footprint).getData();
 
-  footprint.writeSvg(testDir() / "TriangulateConvex.svg");
+  tri->writeSvg(testDir() / "TriangulateConvex.svg");
 
-  EXPECT_EQ(footprint.mFaces.size(), 4);
+  EXPECT_EQ(tri->mFaces.size(), 4);
 }
 
 TEST(Test, TriangulateL) {
@@ -138,9 +155,9 @@ TEST(Test, TriangulateL) {
                               {2.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}};
 
   auto footprint = Geometry::DataFlat{L, {}};
-  auto tri = Triangulate(footprint);
+  auto tri = Triangulate(footprint).getData();
 
-  footprint.writeSvg(testDir() / "TriangulateL.svg");
+  tri->writeSvg(testDir() / "TriangulateL.svg");
 }
 TEST(Test, TriangulateDonut) {
 
@@ -150,9 +167,9 @@ TEST(Test, TriangulateDonut) {
       {1.0, 1.5}, {1.0, 1.0}, {1.5, 1.0}, {1.5, 0.0}};
 
   auto footprint = Geometry::DataFlat{awkward, {}};
-  auto tri = Triangulate(footprint);
+  auto tri = Triangulate(footprint).getData();
 
-  footprint.writeSvg(testDir() / "TriangulateAwkward.svg");
+  tri->writeSvg(testDir() / "TriangulateAwkward.svg");
 }
 
 TEST(Test, PointOnLine) {
@@ -177,6 +194,40 @@ TEST(Test, PointOnLine) {
     bool on = pointOnLine(line, point);
     EXPECT_TRUE(on);
   }
+}
+
+TEST(Test, RoadNetwork) {
+  auto roadNetwork = RoadNetwork();
+
+  auto width = 0.5f;
+
+  {
+    auto road = Geometry::meshFromLine({{0.0f, 2.0f}, {10.0f, 0.0f}}, width);
+    auto tri = Triangulate(road.getFootprint()).getData();
+    roadNetwork.addRoad(*tri);
+  }
+  {
+    auto road = Geometry::meshFromLine({{0.0f, 8.0f}, {10.0f, 8.0f}}, width);
+    auto tri = Triangulate(road.getFootprint()).getData();
+    roadNetwork.addRoad(*tri);
+  }
+  {
+    auto road = Geometry::meshFromLine({{2.0f, 0.0f}, {8.0f, 0.0f}}, width);
+    auto tri = Triangulate(road.getFootprint()).getData();
+    roadNetwork.addRoad(*tri);
+  }
+  {
+    auto road = Geometry::meshFromLine({{2.0f, 10.0f}, {8.0f, 8.0f}}, width);
+    auto tri = Triangulate(road.getFootprint()).getData();
+    roadNetwork.addRoad(*tri);
+  }
+
+  // given a simple grid of four interesecting roads we would like to get the
+  // internal rectangle contained
+
+  auto internalSpace = roadNetwork.getInternalSpaces();
+
+  internalSpace.writeSvg(testDir() / "RoadNetwork.svg");
 }
 
 auto main(int argc, char **argv) -> int {

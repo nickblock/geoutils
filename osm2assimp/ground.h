@@ -17,7 +17,7 @@ class Ground {
 public:
   Ground(const std::vector<glm::vec2> &);
 
-  void addFootPrint(const Geometry::DataFlat &footprint);
+  void addFootPrint(const Triangulate::Data &footprint);
 
   aiMesh *getMesh();
 

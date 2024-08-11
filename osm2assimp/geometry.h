@@ -63,7 +63,7 @@ public:
     void writeSvg(const std::filesystem::path &file);
   };
 
-  const DataFlat &getFootprint() { return mDataFlat; }
+  DataFlat &getFootprint() { return mDataFlat; }
 
   aiMesh *simpleMesh() const { return mData.toMesh(); }
 

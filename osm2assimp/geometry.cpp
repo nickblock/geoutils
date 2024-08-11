@@ -142,9 +142,15 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
 
   Geometry geometry;
 
-  auto appendVertex = [&geometry](const glm::vec2 &point) {
+  std::vector<glm::vec2> side0;
+  std::vector<glm::vec2> side1;
+
+  auto appendVertex = [&geometry, &side0, &side1](const glm::vec2 &point) {
     geometry.mData.mVertices.push_back(fromGround(point));
-    geometry.mDataFlat.mVertices.push_back(point);
+
+    static bool appendSide0 = true;
+    appendSide0 ? side0.push_back(point) : side1.push_back(point);
+    appendSide0 = !appendSide0;
   };
 
   int numSegments = line.size() - 1;
@@ -231,9 +237,21 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
     face[2] = (i * 2) + 3;
     face[3] = (i * 2) + 2;
 
-    flatFace.insert(flatFace.begin(), face.begin(), face.end());
-
     faceIdx++;
+  }
+
+
+  geometry.mDataFlat.mVertices.insert(geometry.mDataFlat.mVertices.begin(),
+                                      side1.begin(), side1.end());
+
+  std::reverse(side0.begin(), side0.end());
+  geometry.mDataFlat.mVertices.insert(geometry.mDataFlat.mVertices.end(),
+                                      side0.begin(), side0.end());
+
+  geometry.mDataFlat.mFaces.resize(1);
+  geometry.mDataFlat.mFaces[0].resize(geometry.mDataFlat.mVertices.size());
+  for (int i = 0; i < geometry.mDataFlat.mVertices.size(); i++) {
+    geometry.mDataFlat.mFaces[0][i] = i;
   }
 
   return geometry;

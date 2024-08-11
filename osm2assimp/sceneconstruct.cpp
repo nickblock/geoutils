@@ -128,7 +128,9 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
   if (mGround) {
 
     for (auto &geom : geoms) {
-      mGround->addFootPrint(geom.getFootprint());
+
+      auto triData = Triangulate(geom.getFootprint()).getData();
+      mGround->addFootPrint(*triData);
     }
 
     aiMesh *mesh = mGround->getMesh();

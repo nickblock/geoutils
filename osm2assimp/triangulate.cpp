@@ -5,9 +5,10 @@
 
 namespace GeoUtils {
 
-Triangulate::Triangulate(Geometry::DataFlat &inputPoly)
+Triangulate::Triangulate(const Geometry::DataFlat &inputPoly)
     : mData(std::make_unique<Data>(inputPoly)) {
 
+  mData->mFaces.clear();
   mVertices.insert(mVertices.begin(), inputPoly.mVertices.begin(),
                    inputPoly.mVertices.end());
 
@@ -66,10 +67,19 @@ void Triangulate::findPolyPerimeter() {
     mInterPointAngles[i] = reflexPoint(lastEdge, curEdge);
     lastEdge = curEdge;
   }
+  mInterEdges[mVertices.size() - 1] = {(TVertIdx)mVertices.size() - 1, 0};
+  mInterPointAngles[mVertices.size() - 1] = reflexPoint(lastEdge, {0, 1});
 }
 void Triangulate::execute() {
 
   findPolyPerimeter();
+
+  if (!checkWindingOrder()) {
+    clearPolyData();
+    std::reverse(mVertices.begin(), mVertices.end());
+    std::reverse(mData->mVertices.begin(), mData->mVertices.end());
+    findPolyPerimeter();
+  }
 
   // after the first pass we have thee inital outer perimater, edges, angles at
   // each vertex
@@ -85,10 +95,18 @@ void Triangulate::execute() {
       clearPolyData();
       findPolyPerimeter();
     } else {
-      mData->source.mFaces.push_back({mIndices[0], mIndices[1], mIndices[2]});
+      mData->mFaces.push_back({mIndices[0], mIndices[1], mIndices[2]});
       break;
     }
   }
+}
+
+bool Triangulate::checkWindingOrder() {
+  int negCount = 0;
+  for (int i = 0; i < mInterPointAngles.size(); i++) {
+    mInterPointAngles[i] < 0 ? negCount++ : negCount--;
+  }
+  return negCount > 0;
 }
 bool Triangulate::findAndRemoveTriangle() {
   if (mInterEdges.size() < 4) {
@@ -135,7 +153,7 @@ bool Triangulate::findAndRemoveTriangle() {
 }
 
 void Triangulate::clipTriangle(const EdgeIdx &edge0, const EdgeIdx &edge1) {
-  mData->source.mFaces.push_back(
+  mData->mFaces.push_back(
       {mIndices[edge0.p0], mIndices[edge0.p1], mIndices[edge1.p1]});
   mVertices.erase(mVertices.begin() + edge0.p1);
   mIndices.erase(mIndices.begin() + edge0.p1);

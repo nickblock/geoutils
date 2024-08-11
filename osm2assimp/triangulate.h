@@ -14,16 +14,14 @@ public:
     TVertIdx p0, p1;
   };
 
-  struct Data {
-    Data(Geometry::DataFlat &sourcePoly) : source(sourcePoly) {}
-    Geometry::DataFlat &source;
+  struct Data : Geometry::DataFlat {
     std::vector<float> mPointAngles;
     std::vector<EdgeIdx> mEdges;
   };
 
   std::unique_ptr<Data> mData;
 
-  Triangulate(Geometry::DataFlat &inputPoly);
+  Triangulate(const Geometry::DataFlat &inputPoly);
 
   std::unique_ptr<Triangulate::Data> getData() { return std::move(mData); }
 
@@ -44,6 +42,7 @@ private:
   void clipTriangle(const EdgeIdx &edge0, const EdgeIdx &edge1);
   void findPolyPerimeter();
   void clearPolyData();
+  bool checkWindingOrder();
 
   // returns true if edge intersects with other edges of polygon
   bool checkEdgeIntersection(const EdgeIdx &edge);

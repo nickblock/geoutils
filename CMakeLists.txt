@@ -101,6 +101,7 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp/osmfeature.cpp
             osm2assimp/ground.cpp
             osm2assimp/geometry.cpp
+            osm2assimp/roadnetwork.cpp
             osm2assimp/triangulate.cpp
             osm2assimp/viewfilter.cpp
             osm2assimp/utils.cpp
