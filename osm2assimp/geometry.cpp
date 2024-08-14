@@ -477,49 +477,6 @@ aiMesh *Geometry::Data3D::toMesh() const {
   return newMesh;
 }
 
-void Geometry::DataFlat::writeSvg(const std::filesystem::path &filepath) {
-
-  constexpr float kPrecision = 1e3;
-
-  std::ofstream file = std::ofstream(filepath);
-
-  glm::vec2 min{std::numeric_limits<float>::max(),
-                std::numeric_limits<float>::max()};
-  glm::vec2 max{std::numeric_limits<float>::min(),
-                std::numeric_limits<float>::min()};
-
-  for (auto &p : mVertices) {
-    min.x = std::min(p.x * kPrecision, min.x);
-    min.y = std::min(p.y * kPrecision, min.y);
-    max.x = std::max(p.x * kPrecision, max.x);
-    max.y = std::max(p.y * kPrecision, max.y);
-  }
-
-  min.x -= 1;
-  min.y -= 1;
-  max.x += 1;
-  max.y += 1;
-
-  file << std::format("<svg viewBox=\"{} {} {} {}\" xmlns="
-                      "\"http://www.w3.org/2000/svg\">",
-                      0, 0, (max.x - min.x), (max.y - min.y))
-       << std::endl;
-
-  for (auto &face : mFaces) {
-
-    file << "<polygon points=\"";
-    for (auto &idx : face) {
-      auto &p = mVertices[idx];
-      file << std::format("{},{} ", (p.x * kPrecision - min.x),
-                          (p.y * kPrecision - min.y))
-           << std::endl;
-    }
-    file << "\" fill=\"white\" stroke=\"red\" />" << std::endl;
-  }
-
-  file << "</svg>" << std::endl;
-}
-
 Geometry::DataFlat &
 Geometry::DataFlat::operator+(const Geometry::DataFlat &otherData) {
 

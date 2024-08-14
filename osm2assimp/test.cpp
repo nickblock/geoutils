@@ -5,6 +5,7 @@
 #include "glm/glm.hpp"
 #include "ground.h"
 #include "roadnetwork.h"
+#include "svg.h"
 #include "utils.h"
 #include <filesystem>
 #include <glm/ext/scalar_constants.hpp>
@@ -23,13 +24,13 @@ TEST(Test, MeshFromLine) {
     EXPECT_EQ(aiMesh->mNumVertices, 6);
 
     auto footprint = geometry.getFootprint();
-    footprint.writeSvg(testDir() / "MeshFromLine.svg");
+    SVGWriter().addPolygons(footprint).write(testDir() / "MeshFromLine.svg");
     EXPECT_EQ(footprint.mFaces.size(), 1);
     EXPECT_EQ(footprint.mFaces[0].size(), 6);
 
     auto tri = Triangulate(footprint).getData();
 
-    tri->writeSvg(testDir() / "MeshFromLineTri.svg");
+    SVGWriter().addPolygons(*tri).write(testDir() / "MeshFromLineTri.svg");
 
   } catch (std::runtime_error &err) {
     EXPECT_TRUE(false);
@@ -168,7 +169,7 @@ TEST(Test, TriangulateConvex) {
   auto footprint = Geometry::DataFlat{convex, {}};
   auto tri = Triangulate(footprint).getData();
 
-  tri->writeSvg(testDir() / "TriangulateConvex.svg");
+  SVGWriter().addPolygons(*tri).write(testDir() / "TriangulateConvex.svg");
 
   EXPECT_EQ(tri->mFaces.size(), 4);
 }
@@ -181,7 +182,7 @@ TEST(Test, TriangulateL) {
   auto footprint = Geometry::DataFlat{L, {}};
   auto tri = Triangulate(footprint).getData();
 
-  tri->writeSvg(testDir() / "TriangulateL.svg");
+  SVGWriter().addPolygons(*tri).write(testDir() / "TriangulateL.svg");
 }
 TEST(Test, TriangulateDonut) {
 
@@ -193,7 +194,7 @@ TEST(Test, TriangulateDonut) {
   auto footprint = Geometry::DataFlat{awkward, {}};
   auto tri = Triangulate(footprint).getData();
 
-  tri->writeSvg(testDir() / "TriangulateAwkward.svg");
+  SVGWriter().addPolygons(*tri).write(testDir() / "TriangulateAwkward.svg");
 }
 
 TEST(Test, PointOnLine) {
@@ -255,7 +256,7 @@ TEST(Test, RoadNetwork) {
 
   auto internalSpace = roadNetwork.getInternalSpaces();
 
-  internalSpace.writeSvg(testDir() / "RoadNetwork.svg");
+  SVGWriter().addPolygons(internalSpace).write(testDir() / "RoadNetwork.svg");
 }
 
 auto main(int argc, char **argv) -> int {

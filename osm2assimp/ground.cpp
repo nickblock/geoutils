@@ -3,6 +3,7 @@
 #include "assimp/mesh.h"
 #include "delaunator.hpp"
 #include "geometry.h"
+#include "svg.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -29,7 +30,7 @@ void Ground::addFootPrint(const Triangulate::Data &footprint) {
 
 void Ground::writeSvg(const std::filesystem::path &path) {
 
-  mDataFlat.writeSvg(path);
+  SVGWriter().addPolygons(mDataFlat).write(path);
 }
 
 aiMesh *Ground::getMesh() {

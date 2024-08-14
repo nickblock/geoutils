@@ -1,4 +1,5 @@
 #include "roadnetwork.h"
+#include "svg.h"
 #include <glm/ext/scalar_constants.hpp>
 
 namespace GeoUtils {
@@ -219,8 +220,13 @@ Geometry::DataFlat RoadNetwork::getInternalSpaces() {
       internalSpace = internalSpace + newSpace;
 
       static int idx = 0;
-      internalSpace.writeSvg(testDir() /
-                             std::format("RoadNetwork_{}.svg", idx++));
+      auto svg = SVGWriter();
+      svg.addPolygons(internalSpace);
+
+      for(auto sp : mRoadEdges) {
+        svg.addLine(sp.vertices());
+      }
+      svg.write(testDir() / std::format("RoadNetwork_{}.svg", idx++));
     }
 
     roadIdx = getNextRoadIdx();

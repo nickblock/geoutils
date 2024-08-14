@@ -17,8 +17,11 @@ public:
   std::optional<Split> intersectSegment(const Line &segment);
 
   // reduces this Spline up to split, returns new spline after split
-  // if the split occurs at the very beginning or end, we dont split and return nullopt
+  // if the split occurs at the very beginning or end, we dont split and return
+  // nullopt
   std::optional<Spline> split(const Split &splitPoiint);
+
+  const std::vector<glm::vec2> &vertices() { return mVertices; }
 
 protected:
   std::vector<glm::vec2> mVertices;
