@@ -133,6 +133,30 @@ TEST(Test, IntersectLine) {
     EXPECT_FALSE(result);
   }
 }
+
+TEST(Test, ReflexPoint) {
+
+  {
+    // right turn
+
+    auto a = glm::vec2(0.f, 0.f);
+    auto b = glm::vec2(0.f, 1.f);
+    auto c = glm::vec2(1.f, 1.f);
+
+    auto reflex = Triangulate::reflexPoint(a, b, c);
+    EXPECT_LT(reflex, 0.0f);
+  }
+  {
+    // left turn
+
+    auto a = glm::vec2(0.f, 0.f);
+    auto b = glm::vec2(0.f, 1.f);
+    auto c = glm::vec2(-1.f, 1.f);
+
+    auto reflex = Triangulate::reflexPoint(a, b, c);
+    EXPECT_GT(reflex, 0.0f);
+  }
+}
 TEST(Test, TriangulateConvex) {
 
   std::vector<glm::vec2> convex = {{0.0, 0.0}, {0.0, 1.0}, {0.5, 1.5},
@@ -197,12 +221,16 @@ TEST(Test, PointOnLine) {
 }
 
 TEST(Test, RoadNetwork) {
-  auto roadNetwork = RoadNetwork();
 
-  auto width = 0.5f;
+  BBox box;
+  box.add({0.0, 0.0, 0.0});
+  box.add({10.0, 10.0, 0.0});
+  auto roadNetwork = RoadNetwork(box);
+
+  auto width = 2.0f;
 
   {
-    auto road = Geometry::meshFromLine({{0.0f, 2.0f}, {10.0f, 0.0f}}, width);
+    auto road = Geometry::meshFromLine({{0.0f, 2.0f}, {10.0f, 2.0f}}, width);
     auto tri = Triangulate(road.getFootprint()).getData();
     roadNetwork.addRoad(*tri);
   }
@@ -212,12 +240,12 @@ TEST(Test, RoadNetwork) {
     roadNetwork.addRoad(*tri);
   }
   {
-    auto road = Geometry::meshFromLine({{2.0f, 0.0f}, {8.0f, 0.0f}}, width);
+    auto road = Geometry::meshFromLine({{2.0f, 0.0f}, {2.0f, 10.0f}}, width);
     auto tri = Triangulate(road.getFootprint()).getData();
     roadNetwork.addRoad(*tri);
   }
   {
-    auto road = Geometry::meshFromLine({{2.0f, 10.0f}, {8.0f, 8.0f}}, width);
+    auto road = Geometry::meshFromLine({{8.0f, 0.0f}, {8.0f, 10.0f}}, width);
     auto tri = Triangulate(road.getFootprint()).getData();
     roadNetwork.addRoad(*tri);
   }

@@ -61,6 +61,7 @@ public:
 
     // print polygon to svg for debug purposes
     void writeSvg(const std::filesystem::path &file);
+    DataFlat &operator+(const DataFlat &other);
   };
 
   DataFlat &getFootprint() { return mDataFlat; }

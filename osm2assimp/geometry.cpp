@@ -56,7 +56,7 @@ bool lineIntersects2d(const Line &l0, const Line &l1, glm::vec2 *intersection) {
     intersection->x = l0[0].x + (t * s1_x);
     intersection->y = l0[0].y + (t * s1_y);
   }
-  if (s > 0 && s < 1 && t > 0 && t < 1) {
+  if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
     return true;
   }
 
@@ -239,7 +239,6 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
 
     faceIdx++;
   }
-
 
   geometry.mDataFlat.mVertices.insert(geometry.mDataFlat.mVertices.begin(),
                                       side1.begin(), side1.end());
@@ -519,6 +518,22 @@ void Geometry::DataFlat::writeSvg(const std::filesystem::path &filepath) {
   }
 
   file << "</svg>" << std::endl;
+}
+
+Geometry::DataFlat &
+Geometry::DataFlat::operator+(const Geometry::DataFlat &otherData) {
+
+  TVertIdx lastIdx = mVertices.size();
+
+  mVertices.insert(mVertices.begin(), otherData.mVertices.begin(),
+                   otherData.mVertices.end());
+  Face face(otherData.mVertices.size());
+  for (int i = 0; i < otherData.mVertices.size(); i++) {
+    face[i] = lastIdx + i;
+  }
+  mFaces.emplace_back(face);
+
+  return *this;
 }
 
 } // namespace GeoUtils

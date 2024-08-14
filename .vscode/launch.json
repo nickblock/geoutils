@@ -6,7 +6,9 @@
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/testOsm2Assimp.exe",
-      "args": [],
+      "args": [
+        "--gtest_filter=Test.RoadNetwork"
+      ],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],
