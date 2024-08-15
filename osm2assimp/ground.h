@@ -28,8 +28,6 @@ protected:
   static constexpr int Box = 0;
   static constexpr int Poly = 1;
 
-  static constexpr int kHashSize = 1000000;
-
   std::vector<glm::vec2> mExtents;
   std::vector<glm::vec2> mGroundPoints;
   std::vector<Edge> mEdges;
