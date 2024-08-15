@@ -158,6 +158,7 @@ TEST(Test, ReflexPoint) {
     EXPECT_GT(reflex, 0.0f);
   }
 }
+
 TEST(Test, TriangulateConvex) {
 
   std::vector<glm::vec2> convex = {{0.0, 0.0}, {0.0, 1.0}, {0.5, 1.5},
@@ -256,7 +257,8 @@ TEST(Test, RoadNetwork) {
 
   auto internalSpace = roadNetwork.getInternalSpaces();
 
-  SVGWriter().addPolygons(internalSpace).write(testDir() / "RoadNetwork.svg");
+  // SVGWriter().addPolygons(internalSpace).write(testDir() /
+  // "RoadNetwork.svg");
 }
 
 auto main(int argc, char **argv) -> int {

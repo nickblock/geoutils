@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <glm/ext/scalar_constants.hpp>
 #include <glm/glm.hpp>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -80,5 +81,15 @@ bool lineIntersects2d(const Line &l0, const Line &l1,
                       glm::vec2 *intersection = nullptr);
 
 bool pointOnLine(const Line &line, const glm::vec2 &point);
+
+template <typename GLMVEC> bool isSame(const GLMVEC &a, const GLMVEC &b) {
+
+  for (int i = 0; i < a.length(); i++) {
+    if (abs(a[i] - b[i]) > glm::epsilon<float>()) {
+      return false;
+    }
+  }
+  return true;
+}
 
 } // namespace GeoUtils

@@ -54,4 +54,20 @@ SVGWriter &SVGWriter::addLine(const std::vector<glm::vec2> &line,
   mSS << "\" fill=\"none\" stroke=\"" << stroke << "\"  />" << std::endl;
   return *this;
 }
+
+SVGWriter &SVGWriter::addCircles(const std::vector<glm::vec2> &points,
+                                 int radius, std::string stroke) {
+
+  for (auto &p : points) {
+    mBBox.add(glm::vec3{p, 0.0} * mPrecision);
+  }
+  for (auto &p : points) {
+
+    mSS << std::format("<circle r=\"{}\" cx=\"{}\" cy=\"{}\" fill=\"{}\" />",
+                       radius, p.x * mPrecision, p.y * mPrecision, stroke)
+        << std::endl;
+  }
+
+  return *this;
+}
 } // namespace GeoUtils
