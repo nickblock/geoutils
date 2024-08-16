@@ -39,7 +39,7 @@ bool pointOnLine(const Line &line, const glm::vec2 &point) {
          (point.y >= minY && point.y <= maxY);
 }
 
-bool lineIntersects2d(const Line &l0, const Line &l1, glm::vec2 *intersection) {
+std::optional<glm::vec2> lineIntersects2d(const Line &l0, const Line &l1) {
   float s1_x, s1_y, s2_x, s2_y;
   s1_x = l0[1].x - l0[0].x;
   s1_y = l0[1].y - l0[0].y;
@@ -52,15 +52,14 @@ bool lineIntersects2d(const Line &l0, const Line &l1, glm::vec2 *intersection) {
   t = (s2_x * (l0[0].y - l1[0].y) - s2_y * (l0[0].x - l1[0].x)) /
       (-s2_x * s1_y + s1_x * s2_y);
 
-  if (intersection) {
-    intersection->x = l0[0].x + (t * s1_x);
-    intersection->y = l0[0].y + (t * s1_y);
-  }
   if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-    return true;
+    glm::vec2 intersection;
+    intersection.x = l0[0].x + (t * s1_x);
+    intersection.y = l0[0].y + (t * s1_y);
+    return intersection;
   }
 
-  return false; // No collision
+  return {};
 }
 
 glm::vec3 Geometry::upNormal() {
@@ -105,15 +104,15 @@ struct LineSegment {
   std::array<glm::vec2, 2> crossPoints(const LineSegment &other) {
     std::array<glm::vec2, 2> result;
     bool cross = true;
-    cross = cross &&
-            lineIntersects2d({this->mPoints[0], this->mPoints[3]},
-                             {other.mPoints[0], other.mPoints[3]}, &result[0]);
-    cross = cross &&
-            lineIntersects2d({this->mPoints[1], this->mPoints[2]},
-                             {other.mPoints[1], other.mPoints[2]}, &result[1]);
 
-    if (cross) {
-      return result;
+    auto result0 = lineIntersects2d({this->mPoints[0], this->mPoints[3]},
+                                    {other.mPoints[0], other.mPoints[3]});
+
+    auto result1 = lineIntersects2d({this->mPoints[1], this->mPoints[2]},
+                                    {other.mPoints[1], other.mPoints[2]});
+
+    if (result0 && result1) {
+      return {*result0, *result1};
     } else {
       return {this->mPoints[2], this->mPoints[3]};
     }

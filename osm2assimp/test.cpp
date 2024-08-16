@@ -113,10 +113,10 @@ TEST(Test, IntersectLine) {
     auto line1 = Line{glm::vec2{5.0f, 0.0f}, {5.0f, 20.0f}};
     glm::vec2 intersection;
 
-    auto result = lineIntersects2d(line0, line1, &intersection);
+    auto result = lineIntersects2d(line0, line1);
 
     EXPECT_TRUE(result);
-    EXPECT_FLOAT_EQ(intersection.x, 5.0f);
+    EXPECT_FLOAT_EQ((*result).x, 5.0f);
   }
   {
 
@@ -127,9 +127,7 @@ TEST(Test, IntersectLine) {
     line1[0] += lineDir * glm::epsilon<float>();
     line1[1] -= lineDir * glm::epsilon<float>();
 
-    glm::vec2 intersection;
-
-    auto result = lineIntersects2d(line0, line1, &intersection);
+    auto result = lineIntersects2d(line0, line1);
 
     EXPECT_FALSE(result);
   }

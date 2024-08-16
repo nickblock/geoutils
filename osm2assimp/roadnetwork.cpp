@@ -218,17 +218,16 @@ void RoadNetwork::findIntersections() {
           SegmentIndex s1{j, l};
           Line targetLine = mRoadEdges[j].segment(l);
 
-          glm::vec2 intersection;
-          if (lineIntersects2d(testLine, targetLine, &intersection)) {
+          if (auto intersection = lineIntersects2d(testLine, targetLine)) {
 
-            mIntersections.push_back(intersection);
+            mIntersections.push_back(*intersection);
 
-            float reflex = Triangulate::reflexPoint(testLine[0], intersection,
+            float reflex = Triangulate::reflexPoint(testLine[0], *intersection,
                                                     targetLine[1]);
-            reflex > 0.f ? mRoadEdges[i].insertJoin(k, {s1, intersection})
-                         : mRoadEdges[j].insertJoin(l, {s0, intersection});
+            reflex > 0.f ? mRoadEdges[i].insertJoin(k, {s1, *intersection})
+                         : mRoadEdges[j].insertJoin(l, {s0, *intersection});
 
-            joins.push_back(intersection);
+            joins.push_back(*intersection);
           }
         }
       }

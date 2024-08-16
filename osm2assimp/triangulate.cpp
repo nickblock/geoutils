@@ -174,11 +174,9 @@ bool Triangulate::checkEdgeIntersection(const EdgeIdx &edge) {
 
     Line polyEdge = {mVertices[side.p0], mVertices[side.p1]};
 
-    glm::vec2 intersection;
+    auto intersection = lineIntersects2d(testLine, polyEdge);
 
-    auto result = lineIntersects2d(testLine, polyEdge, &intersection);
-
-    if (result)
+    if (intersection)
       return true;
 
     if (side.p0 != edge.p0 && side.p0 != edge.p1) {
