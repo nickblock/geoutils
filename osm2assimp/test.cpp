@@ -51,7 +51,7 @@ TEST(Test, GroundTest) {
 
     auto tri = Triangulate(flat).getData();
 
-    ground.addFootPrint(*tri);
+    ground.addFootPrint(*tri, Ground::Building);
   }
 
   for (auto &p : input) {
@@ -64,7 +64,7 @@ TEST(Test, GroundTest) {
 
     auto tri = Triangulate(flat).getData();
 
-    ground.addFootPrint(*tri);
+    ground.addFootPrint(*tri, Ground::Building);
   }
 
   auto groundMesh = ground.getMesh();
@@ -94,7 +94,7 @@ TEST(Test, GroundDonut) {
 
     auto tri = Triangulate(flat).getData();
 
-    ground.addFootPrint(*tri);
+    ground.addFootPrint(*tri, Ground::Road);
   }
 
   auto groundMesh = ground.getMesh();
@@ -222,6 +222,18 @@ TEST(Test, PointOnLine) {
   }
 }
 
+std::vector<glm::vec2> makePointList(const glm::vec2 &begin,
+                                     const glm::vec2 &end, int num) {
+  std::vector<glm::vec2> result;
+  auto div = (end - begin);
+  div *= 1.f / (num - 1);
+
+  for (int i = 0; i < num; i++) {
+    result.push_back(begin + (div * (float)i));
+  }
+  return result;
+}
+
 TEST(Test, RoadNetwork) {
 
   BBox box;
@@ -229,25 +241,34 @@ TEST(Test, RoadNetwork) {
   box.add({10.0, 10.0, 0.0});
   auto roadNetwork = RoadNetwork(box);
 
-  auto width = 2.0f;
-
+  auto width = 1.0f;
+  int numPoints = 2;
   {
-    auto road = Geometry::meshFromLine({{0.0f, 2.0f}, {10.0f, 2.0f}}, width);
+    auto road = Geometry::meshFromLine(
+        makePointList({0.0f, 2.0f}, {10.0f, 2.0f}, numPoints), width);
     auto tri = Triangulate(road.getFootprint()).getData();
     roadNetwork.addRoad(*tri);
   }
   {
-    auto road = Geometry::meshFromLine({{0.0f, 8.0f}, {10.0f, 8.0f}}, width);
+    auto road = Geometry::meshFromLine(
+        makePointList({0.0f, 8.0f}, {12.0f, 8.0f}, numPoints), width);
     auto tri = Triangulate(road.getFootprint()).getData();
     roadNetwork.addRoad(*tri);
   }
   {
-    auto road = Geometry::meshFromLine({{2.0f, 0.0f}, {2.0f, 10.0f}}, width);
+    auto road = Geometry::meshFromLine(
+        makePointList({2.0f, 0.0f}, {2.0f, 10.0f}, numPoints), width);
     auto tri = Triangulate(road.getFootprint()).getData();
     roadNetwork.addRoad(*tri);
   }
+  // {
+  //   auto road = Geometry::meshFromLine(makePointList({4.0f, 0.0f},
+  //   {10.0f, 10.0f}, numPoints), width); auto tri =
+  //   Triangulate(road.getFootprint()).getData(); roadNetwork.addRoad(*tri);
+  // }
   {
-    auto road = Geometry::meshFromLine({{8.0f, 0.0f}, {8.0f, 10.0f}}, width);
+    auto road = Geometry::meshFromLine(
+        makePointList({8.0f, 0.0f}, {8.0f, 10.0f}, numPoints), width);
     auto tri = Triangulate(road.getFootprint()).getData();
     roadNetwork.addRoad(*tri);
   }

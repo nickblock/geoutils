@@ -35,7 +35,9 @@ public:
 
   // starting from an inputjoin, run along the spline and return all vertices
   // up to the next output join. Return vertices and join.
-  std::tuple<std::vector<glm::vec2>, SplineJoin>
+  using PointsAndNextJoin = std::tuple<std::vector<glm::vec2>, SplineJoin>;
+
+  std::optional<PointsAndNextJoin>
   getSplineToNextJoin(const SplineJoin &inputJoin);
 
   const std::vector<glm::vec2> &vertices() { return mVertices; }
@@ -72,5 +74,7 @@ protected:
   std::vector<Geometry::DataFlat> mSpaces;
 
   std::unordered_set<glm::vec2> mUsedPoints;
+
+  std::vector<glm::vec2> mIntersections;
 };
 } // namespace GeoUtils

@@ -65,8 +65,16 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
 
       // if it's something that wants turning into a polygon spline
       else if (feature.type() & OSMFeature::HIGHWAY) {
+
         geoms.emplace_back(Geometry::meshFromLine(
             feature.coords(), OSMFeature::RoadWidth, featureIdx));
+
+        if (mGround) {
+
+          auto triData =
+              Triangulate(geoms[geoms.size() - 1].getFootprint()).getData();
+          mGround->addFootPrint(*triData, Ground::Road);
+        }
       }
 
       // create mesh from last geometry
@@ -126,12 +134,6 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
   }
 
   if (mGround) {
-
-    for (auto &geom : geoms) {
-
-      auto triData = Triangulate(geom.getFootprint()).getData();
-      mGround->addFootPrint(*triData);
-    }
 
     aiMesh *mesh = mGround->getMesh();
     if (mesh) {

@@ -21,7 +21,8 @@ void Spline::insertJoin(int segmentIdx, const SplineJoin &join) {
   }
 }
 
-std::optional<SplineJoin> Spline::getfirstJoin(const std::unordered_set<glm::vec2> &usedPoints) {
+std::optional<SplineJoin>
+Spline::getfirstJoin(const std::unordered_set<glm::vec2> &usedPoints) {
 
   for (auto &joinList : mJoins) {
     for (auto &join : joinList.second) {
@@ -33,7 +34,7 @@ std::optional<SplineJoin> Spline::getfirstJoin(const std::unordered_set<glm::vec
   return {};
 }
 
-std::tuple<std::vector<glm::vec2>, SplineJoin>
+std::optional<Spline::PointsAndNextJoin>
 Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
   auto segmentIdx = inputJoin.join.segmentIdx;
 
@@ -53,17 +54,15 @@ Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
 
           SplineJoin joinReturn = *join;
 
-          return {points, joinReturn};
+          return PointsAndNextJoin{points, joinReturn};
         }
       }
     }
     points.push_back(mVertices[segmentIdx++]);
   } while (segmentIdx < mVertices.size() - 1);
 
-  // shouldnt reach here, should have found outgoing join before this
-  assert(false);
-
-  return {points, SplineJoin{{-1, -1}, glm::vec2{0.f}}};
+  // this will fail to complete loop for polygon :()
+  return {};
 }
 
 RoadNetwork::RoadNetwork(const BBox &bbox) {
@@ -120,11 +119,14 @@ Geometry::DataFlat RoadNetwork::getInternalSpaces() {
   auto svg = SVGWriter();
   svg.addPolygons(internalSpaces);
 
-  for (auto sp : mRoadEdges) {
+  for (auto &sp : mRoadEdges) {
     svg.addLine(sp.vertices(), "white");
   }
+
+  svg.addCircles(mIntersections, 10);
+
   // svg.addCircles(joins, 4);
-  svg.write(testDir() / std::format("RoadNetwork.svg"));
+  svg.write(testDir() / std::format("RoadNetwork_debug.svg"));
 
   return internalSpaces;
 }
@@ -159,8 +161,19 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
     while (maybeJoin.has_value()) {
       auto join = maybeJoin.value();
 
-      auto splineToNext =
+      auto maybeSplineToNext =
           mRoadEdges[join.join.roadIdx].getSplineToNextJoin(join);
+
+      if (!maybeSplineToNext.has_value()) {
+        // abort
+        maybeJoin = {};
+        newSpace.mVertices.clear();
+        addedSpace = true; // keep trying
+        mUsedPoints.insert(join.intersection);
+        continue;
+      }
+
+      auto splineToNext = maybeSplineToNext.value();
 
       for (auto &p : get<std::vector<glm::vec2>>(splineToNext)) {
         mUsedPoints.insert(p);
@@ -207,6 +220,8 @@ void RoadNetwork::findIntersections() {
 
           glm::vec2 intersection;
           if (lineIntersects2d(testLine, targetLine, &intersection)) {
+
+            mIntersections.push_back(intersection);
 
             float reflex = Triangulate::reflexPoint(testLine[0], intersection,
                                                     targetLine[1]);

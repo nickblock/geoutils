@@ -12,12 +12,15 @@
 class aiMesh;
 
 namespace GeoUtils {
+class RoadNetwork;
 
 class Ground {
 public:
+  enum GroundTypes { Building, Road, Water };
   Ground(const std::vector<glm::vec2> &);
+  virtual ~Ground();
 
-  void addFootPrint(const Triangulate::Data &footprint);
+  void addFootPrint(const Triangulate::Data &footprint, GroundTypes type);
 
   aiMesh *getMesh();
 
@@ -39,5 +42,7 @@ protected:
   int mAdded = 0;
 
   BBox mBBox;
+
+  std::unique_ptr<RoadNetwork> mRoadNetwork;
 };
 } // namespace GeoUtils
