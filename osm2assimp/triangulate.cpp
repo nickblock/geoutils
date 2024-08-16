@@ -104,7 +104,9 @@ void Triangulate::execute() {
 bool Triangulate::checkWindingOrder() {
   int negCount = 0;
   for (int i = 0; i < mInterPointAngles.size(); i++) {
-    mInterPointAngles[i] < 0 ? negCount++ : negCount--;
+    if (mInterPointAngles[i] != 0.0f) {
+      mInterPointAngles[i] > 0 ? negCount-- : negCount++;
+    }
   }
   return negCount > 0;
 }

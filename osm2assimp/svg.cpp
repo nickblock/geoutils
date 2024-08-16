@@ -2,7 +2,6 @@
 #include <fstream>
 
 namespace GeoUtils {
-
 void SVGWriter::write(const std::filesystem::path &path) {
 
   auto f = std::ofstream(path);
@@ -13,8 +12,47 @@ void SVGWriter::write(const std::filesystem::path &path) {
                      "\"http://www.w3.org/2000/svg\">",
                      0, 0, (mBBox.mMax.x - mBBox.mMin.x),
                      (mBBox.mMax.y - mBBox.mMin.y))
+
       << std::endl;
-    f << mSS.str();
+
+    float height = mBBox.mMax.y - mBBox.mMin.y;
+    for (auto &poly : mPolys) {
+
+      for (auto &face : poly.data.mFaces) {
+
+        f << "<polygon points=\"";
+        for (auto &idx : face) {
+          auto &p = poly.data.mVertices[idx];
+          f << std::format("{},{} ", (p.x * mPrecision),
+                           (height - (p.y * mPrecision)))
+            << std::endl;
+        }
+        f << "\" fill=\"" << poly.fill << "\" stroke=\"" << poly.stroke
+          << "\" />" << std::endl;
+      }
+    }
+
+    for (auto &circle : mCircles) {
+
+      for (auto &p : circle.points) {
+
+        f << std::format("<circle r=\"{}\" cx=\"{}\" cy=\"{}\" fill=\"{}\" />",
+                         circle.radius, p.x * mPrecision,
+                         height - (p.y * mPrecision), circle.stroke)
+          << std::endl;
+      }
+    }
+
+    for (auto &line : mLines) {
+
+      f << "<polyline points=\"";
+      for (auto &p : line.lines) {
+        f << std::format("{},{} ", p.x * mPrecision,
+                         height - (p.y * mPrecision));
+      }
+
+      f << "\" fill=\"none\" stroke=\"" << line.stroke << "\"  />" << std::endl;
+    }
 
     f << "</svg>" << std::endl;
   }
@@ -27,17 +65,8 @@ SVGWriter &SVGWriter::addPolygons(const Geometry::DataFlat &data,
     mBBox.add(glm::vec3{p, 0.0} * mPrecision);
   }
 
-  for (auto &face : data.mFaces) {
+  mPolys.push_back({stroke, fill, data});
 
-    mSS << "<polygon points=\"";
-    for (auto &idx : face) {
-      auto &p = data.mVertices[idx];
-      mSS << std::format("{},{} ", (p.x * mPrecision), (p.y * mPrecision))
-          << std::endl;
-    }
-    mSS << "\" fill=\"" << fill << "\" stroke=\"" << stroke << "\" />"
-        << std::endl;
-  }
   return *this;
 }
 SVGWriter &SVGWriter::addLine(const std::vector<glm::vec2> &line,
@@ -46,12 +75,9 @@ SVGWriter &SVGWriter::addLine(const std::vector<glm::vec2> &line,
   for (auto &p : line) {
     mBBox.add(glm::vec3{p, 0.0} * mPrecision);
   }
-  mSS << "<polyline points=\"";
-  for (auto &p : line) {
-    mSS << std::format("{},{} ", p.x * mPrecision, p.y * mPrecision);
-  }
 
-  mSS << "\" fill=\"none\" stroke=\"" << stroke << "\"  />" << std::endl;
+  mLines.push_back({stroke, line});
+
   return *this;
 }
 
@@ -61,12 +87,8 @@ SVGWriter &SVGWriter::addCircles(const std::vector<glm::vec2> &points,
   for (auto &p : points) {
     mBBox.add(glm::vec3{p, 0.0} * mPrecision);
   }
-  for (auto &p : points) {
 
-    mSS << std::format("<circle r=\"{}\" cx=\"{}\" cy=\"{}\" fill=\"{}\" />",
-                       radius, p.x * mPrecision, p.y * mPrecision, stroke)
-        << std::endl;
-  }
+  mCircles.push_back({stroke, radius, points});
 
   return *this;
 }

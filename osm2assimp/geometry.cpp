@@ -481,7 +481,7 @@ Geometry::DataFlat::operator+(const Geometry::DataFlat &otherData) {
 
   TVertIdx lastIdx = mVertices.size();
 
-  mVertices.insert(mVertices.begin(), otherData.mVertices.begin(),
+  mVertices.insert(mVertices.end(), otherData.mVertices.begin(),
                    otherData.mVertices.end());
   Face face(otherData.mVertices.size());
   for (int i = 0; i < otherData.mVertices.size(); i++) {

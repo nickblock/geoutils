@@ -6,7 +6,9 @@
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/testOsm2Assimp.exe",
-      "args": [],
+      "args": [
+        "--gtest_filter=Test.RoadNetwork"
+      ],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],
@@ -70,9 +72,9 @@
       "program": "${workspaceFolder}/build/osm2assimp",
       "args": [
         "-i",
-        "C:/Users/nick/AppData/Local/Temp/geoutils_test/test.osm",
+        "${workspaceFolder}/old_street.osm",
         "-o",
-        "C:/Users/nick/AppData/Local/Temp/geoutils_test/extents.fbx",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/old_street.fbx",
         "-r",
         "-c",
         "2",

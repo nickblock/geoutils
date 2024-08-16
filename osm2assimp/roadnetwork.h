@@ -76,5 +76,7 @@ protected:
   std::unordered_set<glm::vec2> mUsedPoints;
 
   std::vector<glm::vec2> mIntersections;
+
+  BBox mBBox;
 };
 } // namespace GeoUtils

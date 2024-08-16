@@ -126,7 +126,6 @@ TEST(Test, IntersectLine) {
     auto lineDir = glm::normalize(line1[1] - line1[0]);
     line1[0] += lineDir * glm::epsilon<float>();
     line1[1] -= lineDir * glm::epsilon<float>();
-
     auto result = lineIntersects2d(line0, line1);
 
     EXPECT_FALSE(result);
@@ -154,6 +153,26 @@ TEST(Test, ReflexPoint) {
 
     auto reflex = Triangulate::reflexPoint(a, b, c);
     EXPECT_GT(reflex, 0.0f);
+  }
+}
+
+TEST(Test, TriangulateWindingOrder)
+
+{
+  std::vector<glm::vec2> cw = {{0.0, 1.0}, {1.0, 1.0}, {2.0, 1.0},
+                               {2.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
+  {
+
+    auto footprint = Geometry::DataFlat{cw, {}};
+    EXPECT_TRUE(Triangulate(footprint).checkWindingOrder());
+  }
+
+  {
+
+    std::reverse(cw.begin(), cw.end());
+
+    auto footprint = Geometry::DataFlat{cw, {}};
+    EXPECT_TRUE(Triangulate(footprint).checkWindingOrder());
   }
 }
 
@@ -236,40 +255,30 @@ TEST(Test, RoadNetwork) {
 
   BBox box;
   box.add({0.0, 0.0, 0.0});
-  box.add({10.0, 10.0, 0.0});
+  box.add({15.0, 15.0, 0.0});
   auto roadNetwork = RoadNetwork(box);
 
-  auto width = 1.0f;
+  auto width = 2.0f;
   int numPoints = 2;
-  {
-    auto road = Geometry::meshFromLine(
-        makePointList({0.0f, 2.0f}, {10.0f, 2.0f}, numPoints), width);
+
+  auto makeRoad = [numPoints, width, &roadNetwork](const glm::vec2 &a,
+                                                   const glm::vec2 &b) {
+    auto road = Geometry::meshFromLine(makePointList(a, b, numPoints), width);
     auto tri = Triangulate(road.getFootprint()).getData();
     roadNetwork.addRoad(*tri);
-  }
-  {
-    auto road = Geometry::meshFromLine(
-        makePointList({0.0f, 8.0f}, {12.0f, 8.0f}, numPoints), width);
-    auto tri = Triangulate(road.getFootprint()).getData();
-    roadNetwork.addRoad(*tri);
-  }
-  {
-    auto road = Geometry::meshFromLine(
-        makePointList({2.0f, 0.0f}, {2.0f, 10.0f}, numPoints), width);
-    auto tri = Triangulate(road.getFootprint()).getData();
-    roadNetwork.addRoad(*tri);
-  }
-  // {
-  //   auto road = Geometry::meshFromLine(makePointList({4.0f, 0.0f},
-  //   {10.0f, 10.0f}, numPoints), width); auto tri =
-  //   Triangulate(road.getFootprint()).getData(); roadNetwork.addRoad(*tri);
-  // }
-  {
-    auto road = Geometry::meshFromLine(
-        makePointList({8.0f, 0.0f}, {8.0f, 10.0f}, numPoints), width);
-    auto tri = Triangulate(road.getFootprint()).getData();
-    roadNetwork.addRoad(*tri);
-  }
+  };
+
+  // basic grid
+  // makeRoad({0.0f, 2.0f}, {10.0f, 2.0f});
+  // makeRoad({0.0f, 8.0f}, {12.0f, 8.0f});
+  // makeRoad({8.0f, 0.0f}, {8.0f, 10.0f});
+  // makeRoad({2.0f, 0.0f}, {2.0f, 10.0f});
+
+  makeRoad({5.0, 3.0}, {15.0, 3.0});
+  makeRoad({5.0, 0.0}, {5.0, 10.0});
+  makeRoad({10.0, 0.0}, {10.0, 10.0});
+  makeRoad({15.0, 0.0}, {15.0, 10.0});
+  makeRoad({5.0, 10.0}, {15.0, 10.0});
 
   // given a simple grid of four interesecting roads we would like to get the
   // internal rectangle contained
