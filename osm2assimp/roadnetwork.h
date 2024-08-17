@@ -9,6 +9,24 @@
 
 namespace GeoUtils {
 
+struct PointCache {
+
+  using PointIdx = size_t;
+  std::vector<glm::vec2> mPoints;
+  std::vector<bool> mUsed;
+
+  PointIdx append(const glm::vec2 &p) {
+    mPoints.push_back(p);
+    mUsed.push_back(false);
+    return mPoints.size() - 1;
+  }
+  const std::vector<glm::vec2> &points() { return mPoints; }
+
+  const glm::vec2 &operator[](PointIdx idx) const { return mPoints[idx]; }
+  bool used(PointIdx idx) const { return mUsed[idx]; }
+  void setUsed(PointIdx idx, bool used = true) { mUsed[idx] = used; }
+};
+
 struct SegmentIndex {
   int roadIdx;
   int segmentIdx;
@@ -16,13 +34,14 @@ struct SegmentIndex {
 
 struct SplineJoin {
   SegmentIndex join;
-  glm::vec2 intersection;
+  PointCache::PointIdx intersection;
 };
 
 // a sequence of points making up a side of road(s) or outer perimeters of
 // buildings.
 class Spline {
 public:
+  Spline(PointCache &cache);
   void append(const glm::vec2 &p);
   Line segment(int idx = 0);
   int numSegments();
@@ -30,8 +49,7 @@ public:
   void insertJoin(int segmentIdx, const SplineJoin &join);
 
   // return first unused join listed
-  std::optional<SplineJoin>
-  getfirstJoin(const std::unordered_set<glm::vec2> &usedPoints);
+  std::optional<SplineJoin> getfirstJoin();
 
   // starting from an inputjoin, run along the spline and return all vertices
   // up to the next output join. Return vertices and join.
@@ -45,6 +63,7 @@ public:
 protected:
   std::map<int, std::vector<SplineJoin>> mJoins;
   std::vector<glm::vec2> mVertices;
+  PointCache &mCache;
 };
 
 class RoadNetwork {
@@ -58,24 +77,24 @@ public:
   //  space encompassed by the roads
   Geometry::DataFlat getInternalSpaces();
 
+  void writeSvg(const std::filesystem::path &path);
+
 protected:
-  Geometry::DataFlat startWIthIntersections();
   Geometry::DataFlat createSpaceFromJoins();
   void findIntersections();
 
-  using TRoadEdge = std::vector<glm::vec2>;
+  void appendPolygonToData(const std::vector<glm::vec2> &points);
 
   std::vector<Spline> mRoadEdges;
-  std::unordered_set<int> mUsedRoads;
 
   glm::vec2 mCenter;
   size_t mHashSize = 0;
 
   std::vector<Geometry::DataFlat> mSpaces;
 
-  std::unordered_set<glm::vec2> mUsedPoints;
+  PointCache mIntersections;
 
-  std::vector<glm::vec2> mIntersections;
+  Geometry::DataFlat mData;
 
   BBox mBBox;
 };
