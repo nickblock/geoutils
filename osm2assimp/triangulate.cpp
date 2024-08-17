@@ -2,6 +2,7 @@
 #include <format>
 #include <glm/ext/scalar_constants.hpp>
 #include <iostream>
+#include <algorithm>
 
 namespace GeoUtils {
 

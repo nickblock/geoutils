@@ -8,6 +8,7 @@
 #include <iostream>
 #include <span>
 #include <vector>
+#include <optional>
 
 class aiMesh;
 

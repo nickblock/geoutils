@@ -2,7 +2,7 @@
 #include "utils.h"
 
 #include <map>
-#include <unordered_set>
+#include <optional>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"

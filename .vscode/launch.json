@@ -3,17 +3,25 @@
   "configurations": [
     {
       "name": "testOsm2Assimp",
-      "type": "cppvsdbg",
+      "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/testOsm2Assimp.exe",
+      "program": "${workspaceFolder}/build/testOsm2assimp",
       "args": [
         "--gtest_filter=Test.RoadNetwork"
       ],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],
-      "visualizerFile": "C:/Users/nick/glm.natvis",
-      "internalConsoleOptions": "openOnSessionStart"
+      "visualizerFile": "${workspaceFolder}/glm.natvis",
+      "internalConsoleOptions": "openOnSessionStart",
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
     },
     {
       "name": "test.py",

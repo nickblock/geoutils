@@ -1,5 +1,6 @@
 #include "svg.h"
 #include <fstream>
+#include <format>
 
 namespace GeoUtils {
 void SVGWriter::write(const std::filesystem::path &path) {
