@@ -1,7 +1,7 @@
 #include "roadnetwork.h"
 #include "svg.h"
-#include <glm/ext/scalar_constants.hpp>
 #include <format>
+#include <glm/ext/scalar_constants.hpp>
 
 namespace GeoUtils {
 
@@ -272,8 +272,21 @@ void RoadNetwork::findIntersections() {
 
             auto pointIdx = mIntersections.append(*intersection);
 
-            reflex > 0.f ? mRoadEdges[i].insertJoin(k, {s1, pointIdx})
-                         : mRoadEdges[j].insertJoin(l, {s0, pointIdx});
+            if (reflex > 0) {
+              SplineJoin join = {s1, pointIdx};
+#ifdef DEBUG
+              join.point = *intersection;
+#endif
+
+              mRoadEdges[i].insertJoin(k, join);
+            } else {
+              SplineJoin join = {s0, pointIdx};
+#ifdef DEBUG
+              join.point = *intersection;
+#endif
+
+              mRoadEdges[j].insertJoin(l, join);
+            }
           }
         }
       }

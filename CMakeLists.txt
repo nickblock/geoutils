@@ -10,6 +10,8 @@ if(MSVC)
       add_compile_definitions(-DNOMINMAX)
 endif()
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG")
+
 find_package(assimp CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)

@@ -35,6 +35,9 @@ struct SegmentIndex {
 struct SplineJoin {
   SegmentIndex join;
   PointCache::PointIdx intersection;
+#if defined DEBUG || defined _DEBUG
+  glm::vec2 point;
+#endif
 };
 
 // a sequence of points making up a side of road(s) or outer perimeters of
