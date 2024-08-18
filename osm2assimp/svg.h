@@ -12,7 +12,7 @@ public:
                          std::string fill = "white",
                          std::string stroke = "red");
   SVGWriter &addLine(const std::vector<glm::vec2> &line,
-                     std::string stroke = "blue");
+                     std::string stroke = "blue", bool joinEnd = false);
 
   SVGWriter &addCircles(const std::vector<glm::vec2> &points, int radius,
                         std::string stroke = "red");

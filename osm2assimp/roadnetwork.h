@@ -61,6 +61,9 @@ public:
   std::optional<PointsAndNextJoin>
   getSplineToNextJoin(const SplineJoin &inputJoin);
 
+  std::optional<SplineJoin>
+  findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint);
+
   const std::vector<glm::vec2> &vertices() { return mVertices; }
 
 protected:

@@ -7,8 +7,16 @@ namespace GeoUtils {
 
 Spline::Spline(PointCache &cache) : mCache(cache) {};
 void Spline::append(const glm::vec2 &p) { mVertices.push_back(p); }
-Line Spline::segment(int idx) { return {mVertices[idx], mVertices[idx + 1]}; }
-int Spline::numSegments() { return mVertices.size() - 1; }
+Line Spline::segment(int idx) {
+  if (idx < mVertices.size() - 1) {
+    return {mVertices[idx], mVertices[idx + 1]};
+  } else if (idx == mVertices.size() - 1) {
+    return {mVertices[idx], mVertices[0]};
+  } else {
+    assert(false);
+  }
+}
+int Spline::numSegments() { return mVertices.size(); }
 void Spline::insertJoin(int segmentIdx, const SplineJoin &join) {
   auto &joins = mJoins[segmentIdx];
   joins.push_back(join);
@@ -35,33 +43,52 @@ std::optional<SplineJoin> Spline::getfirstJoin() {
   return {};
 }
 
+std::optional<SplineJoin>
+Spline::findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint) {
+  auto it = mJoins.find(segmentIdx);
+  if (it != mJoins.end()) {
+    if (afterPoint) {
+      auto &joins = it->second;
+      float inputDist = glm::distance(mVertices[segmentIdx], *afterPoint);
+      for (auto join = joins.begin(); join < joins.end(); ++join) {
+        float joinDist =
+            glm::distance(mVertices[segmentIdx], mCache[(*join).intersection]);
+        if (joinDist > inputDist) {
+          ;
+          return *join;
+        }
+      }
+    } else {
+      return it->second[0];
+    }
+  }
+  return {};
+}
+
 std::optional<Spline::PointsAndNextJoin>
 Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
-  auto segmentIdx = inputJoin.join.segmentIdx;
+  auto startIdx = inputJoin.join.segmentIdx;
+  auto segmentIdx = startIdx;
 
   std::vector<glm::vec2> points;
   points.push_back(mCache[inputJoin.intersection]);
 
   do {
-    auto joinIt = mJoins.find(segmentIdx);
-    if (joinIt != mJoins.end()) {
-      auto &joins = joinIt->second;
-      float inputDist = glm::distance(mVertices[inputJoin.join.segmentIdx],
-                                      mCache[inputJoin.intersection]);
-      for (auto join = joins.begin(); join < joins.end(); ++join) {
-        float joinDist = glm::distance(mVertices[inputJoin.join.segmentIdx],
-                                       mCache[(*join).intersection]);
-        if (joinDist > inputDist) {
-
-          mCache.setUsed(join->intersection);
-
-          return PointsAndNextJoin{points, *join};
-        }
-      }
+    auto intersection =
+        segmentIdx == startIdx
+            ? std::optional<glm::vec2>(mCache[inputJoin.intersection])
+            : std::optional<glm::vec2>{};
+    auto join = findJoinAtSegment(segmentIdx, intersection);
+    if (join) {
+      return PointsAndNextJoin(points, *join);
     }
+
     points.push_back(mVertices[segmentIdx]);
     segmentIdx++;
-  } while (segmentIdx < mVertices.size() - 1);
+    if (segmentIdx == mVertices.size()) {
+      segmentIdx = 0;
+    }
+  } while (segmentIdx != startIdx);
 
   // this will fail to complete loop for polygon :()
   return {};
@@ -74,24 +101,8 @@ RoadNetwork::RoadNetwork(const BBox &bbox) : mBBox(bbox) {
     Spline edge(mIntersections);
     edge.append(glm::vec2(bbox.mMin.x, bbox.mMin.y));
     edge.append(glm::vec2(bbox.mMax.x, bbox.mMin.y));
-    mRoadEdges.push_back(edge);
-  }
-  {
-    Spline edge(mIntersections);
-    edge.append(glm::vec2(bbox.mMax.x, bbox.mMin.y));
-    edge.append(glm::vec2(bbox.mMax.x, bbox.mMax.y));
-    mRoadEdges.push_back(edge);
-  }
-  {
-    Spline edge(mIntersections);
     edge.append(glm::vec2(bbox.mMax.x, bbox.mMax.y));
     edge.append(glm::vec2(bbox.mMin.x, bbox.mMax.y));
-    mRoadEdges.push_back(edge);
-  }
-  {
-    Spline edge(mIntersections);
-    edge.append(glm::vec2(bbox.mMin.x, bbox.mMax.y));
-    edge.append(glm::vec2(bbox.mMin.x, bbox.mMin.y));
     mRoadEdges.push_back(edge);
   }
 
@@ -103,13 +114,13 @@ RoadNetwork::RoadNetwork(const BBox &bbox) : mBBox(bbox) {
 void RoadNetwork::addRoad(const Triangulate::Data &road) {
 
   Spline roadEdge0(mIntersections);
-  Spline roadEdge1(mIntersections);
-  for (int i = 0; i < road.mVertices.size() / 2; i++) {
+  // Spline roadEdge1(mIntersections);
+  for (int i = 0; i < road.mVertices.size(); i++) {
     roadEdge0.append(road.mVertices[i]);
-    roadEdge1.append(road.mVertices[road.mVertices.size() / 2 + i]);
+    // roadEdge1.append(road.mVertices[road.mVertices.size() / 2 + i]);
   }
   mRoadEdges.push_back(roadEdge0);
-  mRoadEdges.push_back(roadEdge1);
+  // mRoadEdges.push_back(roadEdge1);
 }
 
 void RoadNetwork::writeSvg(const std::filesystem::path &path) {
@@ -117,7 +128,7 @@ void RoadNetwork::writeSvg(const std::filesystem::path &path) {
   auto svg = SVGWriter();
 
   for (auto &sp : mRoadEdges) {
-    svg.addLine(sp.vertices(), "white");
+    svg.addLine(sp.vertices(), "white", true);
   }
 
   svg.addCircles(mIntersections.points(), 10);

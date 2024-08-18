@@ -1,6 +1,6 @@
 #include "svg.h"
-#include <fstream>
 #include <format>
+#include <fstream>
 
 namespace GeoUtils {
 void SVGWriter::write(const std::filesystem::path &path) {
@@ -71,13 +71,17 @@ SVGWriter &SVGWriter::addPolygons(const Geometry::DataFlat &data,
   return *this;
 }
 SVGWriter &SVGWriter::addLine(const std::vector<glm::vec2> &line,
-                              std::string stroke) {
+                              std::string stroke, bool joinEnd) {
 
   for (auto &p : line) {
     mBBox.add(glm::vec3{p, 0.0} * mPrecision);
   }
 
   mLines.push_back({stroke, line});
+  if (joinEnd) {
+    auto &lastLine = mLines[mLines.size() - 1];
+    lastLine.lines.push_back(lastLine.lines[0]);
+  }
 
   return *this;
 }

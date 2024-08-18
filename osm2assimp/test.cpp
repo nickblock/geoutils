@@ -259,7 +259,7 @@ TEST(Test, RoadNetwork) {
   auto roadNetwork = RoadNetwork(box);
 
   auto width = 2.0f;
-  int numPoints = 2;
+  int numPoints = 10;
 
   auto makeRoad = [numPoints, width, &roadNetwork](const glm::vec2 &a,
                                                    const glm::vec2 &b) {
