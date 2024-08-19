@@ -74,6 +74,9 @@ Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
   points.push_back(mCache[inputJoin.intersection]);
 
   do {
+    if (startIdx != segmentIdx) {
+      points.push_back(mVertices[segmentIdx]);
+    }
     auto intersection =
         segmentIdx == startIdx
             ? std::optional<glm::vec2>(mCache[inputJoin.intersection])
@@ -82,8 +85,6 @@ Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
     if (join) {
       return PointsAndNextJoin(points, *join);
     }
-
-    points.push_back(mVertices[segmentIdx]);
     segmentIdx++;
     if (segmentIdx == mVertices.size()) {
       segmentIdx = 0;

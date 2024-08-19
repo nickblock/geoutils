@@ -13,6 +13,7 @@
       "cwd": "${fileDirname}",
       "environment": [],
       "visualizerFile": "${workspaceFolder}/glm.natvis",
+      "showDisplayString": true,
       "internalConsoleOptions": "openOnSessionStart",
       "MIMode": "gdb",
       "setupCommands": [
@@ -75,14 +76,14 @@
     },
     {
       "name": "osm2assimp",
-      "type": "cppvsdbg",
+      "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/osm2assimp",
       "args": [
         "-i",
         "${workspaceFolder}/old_street.osm",
         "-o",
-        "C:/Users/nick/AppData/Local/Temp/geoutils_test/old_street.fbx",
+        "/tmp/geoutils_test/old_street.fbx",
         "-r",
         "-c",
         "2",
