@@ -195,11 +195,12 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
 
     auto maybeJoin = getNextJoin();
     if (maybeJoin) {
-      std::cout << "New Start " << maybeJoin->intersection << std::endl;
+      std::cout << "New Start " << maybeJoin->point.x << " "
+                << maybeJoin->point.y << std::endl;
     }
     while (maybeJoin) {
-      auto join = *maybeJoin;
 
+      auto join = *maybeJoin;
       auto &roadJoined = mRoadEdges[join.join.roadIdx];
 
       auto maybeSplineToNext = roadJoined.getSplineToNextJoin(join);
