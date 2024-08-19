@@ -6,9 +6,9 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <iostream>
+#include <optional>
 #include <span>
 #include <vector>
-#include <optional>
 
 class aiMesh;
 
@@ -85,7 +85,8 @@ bool pointOnLine(const Line &line, const glm::vec2 &point);
 template <typename GLMVEC> bool isSame(const GLMVEC &a, const GLMVEC &b) {
 
   for (int i = 0; i < a.length(); i++) {
-    if (abs(a[i] - b[i]) > glm::epsilon<float>()) {
+    float diff = fabs(a[i] - b[i]);
+    if (diff > glm::epsilon<float>()) {
       return false;
     }
   }
