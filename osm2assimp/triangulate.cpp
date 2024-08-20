@@ -1,8 +1,8 @@
 #include "triangulate.h"
+#include <algorithm>
 #include <format>
 #include <glm/ext/scalar_constants.hpp>
 #include <iostream>
-#include <algorithm>
 
 namespace GeoUtils {
 
@@ -179,7 +179,7 @@ bool Triangulate::checkEdgeIntersection(const EdgeIdx &edge) {
 
     auto intersection = lineIntersects2d(testLine, polyEdge);
 
-    if (intersection)
+    if (std::get<bool>(intersection))
       return true;
 
     if (side.p0 != edge.p0 && side.p0 != edge.p1) {

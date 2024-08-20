@@ -15,7 +15,7 @@ using namespace GeoUtils;
 namespace fs = std::filesystem;
 
 TEST(Test, MeshFromLine) {
-  std::vector<glm::vec2> points = {{0.0, 0.0}, {0.0, 10.0}, {10.0, 20.0}};
+  std::vector<glm::vec2> points = {{0.0, 0.0}, {0.0, 10.0}, {10.0, 10.0}};
 
   try {
     auto geometry = Geometry::meshFromLine(points, 2.0, 0);
@@ -115,8 +115,8 @@ TEST(Test, IntersectLine) {
 
     auto result = lineIntersects2d(line0, line1);
 
-    EXPECT_TRUE(result);
-    EXPECT_FLOAT_EQ((*result).x, 5.0f);
+    EXPECT_TRUE(std::get<bool>(result));
+    EXPECT_FLOAT_EQ(std::get<glm::vec2>(result).x, 5.0f);
   }
   {
 
@@ -128,7 +128,7 @@ TEST(Test, IntersectLine) {
     line1[1] -= lineDir * glm::epsilon<float>();
     auto result = lineIntersects2d(line0, line1);
 
-    EXPECT_FALSE(result);
+    EXPECT_FALSE(std::get<bool>(result));
   }
 }
 
@@ -285,8 +285,7 @@ TEST(Test, RoadNetwork) {
 
   auto internalSpace = roadNetwork.getInternalSpaces();
 
-  // SVGWriter().addPolygons(internalSpace).write(testDir() /
-  // "RoadNetwork.svg");
+  // EXPECT_EQ(internalSpace.mFaces.size() == 5);
 }
 
 auto main(int argc, char **argv) -> int {

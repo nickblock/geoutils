@@ -6,9 +6,6 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/testOsm2assimp",
-      "args": [
-        "--gtest_filter=Test.RoadNetwork"
-      ],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],
@@ -83,7 +80,7 @@
         "-i",
         "${workspaceFolder}/old_street.osm",
         "-o",
-        "/tmp/geoutils_test/old_street.fbx",
+        "/tmp/geoutils_test/old_street_filter.fbx",
         "-r",
         "-c",
         "2",

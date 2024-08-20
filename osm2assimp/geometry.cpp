@@ -39,7 +39,7 @@ bool pointOnLine(const Line &line, const glm::vec2 &point) {
          (point.y >= minY && point.y <= maxY);
 }
 
-std::optional<glm::vec2> lineIntersects2d(const Line &l0, const Line &l1) {
+std::tuple<glm::vec2, bool> lineIntersects2d(const Line &l0, const Line &l1) {
   float s1_x, s1_y, s2_x, s2_y;
   s1_x = l0[1].x - l0[0].x;
   s1_y = l0[1].y - l0[0].y;
@@ -52,14 +52,14 @@ std::optional<glm::vec2> lineIntersects2d(const Line &l0, const Line &l1) {
   t = (s2_x * (l0[0].y - l1[0].y) - s2_y * (l0[0].x - l1[0].x)) /
       (-s2_x * s1_y + s1_x * s2_y);
 
+  glm::vec2 intersection;
+  intersection.y = l0[0].y + (t * s1_y);
+  intersection.x = l0[0].x + (t * s1_x);
   if (s >= 0 && s <= 1 && t >= 0 && t <= 1) {
-    glm::vec2 intersection;
-    intersection.x = l0[0].x + (t * s1_x);
-    intersection.y = l0[0].y + (t * s1_y);
-    return intersection;
+    return {intersection, true};
   }
 
-  return {};
+  return {intersection, false};
 }
 
 glm::vec3 Geometry::upNormal() {
@@ -103,6 +103,11 @@ struct LineSegment {
   }
   std::array<glm::vec2, 2> crossPoints(const LineSegment &other) {
     std::array<glm::vec2, 2> result;
+
+    if (fabs(mArcTan - other.mArcTan) < glm::epsilon<float>()) {
+      // parallel
+      return {this->mPoints[2], this->mPoints[3]};
+    }
     bool cross = true;
 
     auto result0 = lineIntersects2d({this->mPoints[0], this->mPoints[3]},
@@ -111,11 +116,12 @@ struct LineSegment {
     auto result1 = lineIntersects2d({this->mPoints[1], this->mPoints[2]},
                                     {other.mPoints[1], other.mPoints[2]});
 
-    if (result0 && result1) {
-      return {*result0, *result1};
-    } else {
-      return {this->mPoints[2], this->mPoints[3]};
-    }
+    return {std::get<glm::vec2>(result0), std::get<glm::vec2>(result1)};
+    // if (std::get<bool>(result0) && std::get<bool>(result1)) {
+    //   return {std::get<glm::vec2>(result0), std::get<glm::vec2>(result1)};
+    // } else {
+    //   return {this->mPoints[2], this->mPoints[3]};
+    // }
   }
 
   std::array<glm::vec2, 4> mPoints;
@@ -136,7 +142,7 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
                                 int featureId) {
 
   if (line.size() < 2) {
-    throw std::runtime_error("Not enough nodes (<2), to crate line segment");
+    throw std::runtime_error("Not enough nodes (<2), to create line segment");
   }
 
   Geometry geometry;
@@ -156,9 +162,9 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
 
   auto lastSeg = LineSegment(line[0], line[1], width);
 
-  appendVertex(lastSeg.mPoints[1]);
-  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
   appendVertex(lastSeg.mPoints[0]);
+  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
+  appendVertex(lastSeg.mPoints[1]);
   throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
   glm::vec2 uvDistance(0.0f, 0.0f);
@@ -194,9 +200,9 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
     lastSeg = nextSeg;
   }
 
-  appendVertex(lastSeg.mPoints[2]);
-  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
   appendVertex(lastSeg.mPoints[3]);
+  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
+  appendVertex(lastSeg.mPoints[2]);
   throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
   uvDistance += glm::vec2{

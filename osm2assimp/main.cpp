@@ -317,7 +317,10 @@ int main(int argi, char **argc) {
     sceneConstruct.addGround(groundCorners);
   }
 
+  std::clock_t importTime = std::clock();
+
   if (sceneConstruct.wayCount()) {
+
     SceneConstruct::OutputConfig config{exportZUpArg, args::get(uvScaleArg)};
     if (AI_SUCCESS != sceneConstruct.write(outputFile, assimpWriter, config)) {
       cout << "Failed to write out to '" << outputFile << "', "
@@ -328,9 +331,14 @@ int main(int argi, char **argc) {
     cout << "No relevant features found, nothing to write" << endl;
   }
 
-  double elapsed = (std::clock() - start) / (double)CLOCKS_PER_SEC;
+  std::clock_t totalTime = std::clock();
 
-  cout << "Time Taken : " << elapsed << endl;
+  double elapsed = (totalTime - start) / (double)CLOCKS_PER_SEC;
+  double importDuration = (importTime - start) / (double)CLOCKS_PER_SEC;
+  double exportDuration = (totalTime - importTime) / (double)CLOCKS_PER_SEC;
+
+  cout << std::format("Time Taken : {} import {}, export {}", elapsed,
+                      importDuration, exportDuration) << endl;
 
   return 0;
 }

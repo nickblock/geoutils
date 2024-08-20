@@ -71,7 +71,6 @@ Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
   auto segmentIdx = startIdx;
 
   std::vector<glm::vec2> points;
-  points.push_back(mCache[inputJoin.intersection]);
 
   do {
     if (startIdx != segmentIdx) {
@@ -91,7 +90,7 @@ Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
     }
   } while (segmentIdx != startIdx);
 
-  // this will fail to complete loop for polygon :()
+  std::cout << "Failed to find outgoing intersection within poly" << std::endl;
   return {};
 }
 
@@ -115,13 +114,10 @@ RoadNetwork::RoadNetwork(const BBox &bbox) : mBBox(bbox) {
 void RoadNetwork::addRoad(const Triangulate::Data &road) {
 
   Spline roadEdge0(mIntersections);
-  // Spline roadEdge1(mIntersections);
   for (int i = 0; i < road.mVertices.size(); i++) {
     roadEdge0.append(road.mVertices[i]);
-    // roadEdge1.append(road.mVertices[road.mVertices.size() / 2 + i]);
   }
   mRoadEdges.push_back(roadEdge0);
-  // mRoadEdges.push_back(roadEdge1);
 }
 
 void RoadNetwork::writeSvg(const std::filesystem::path &path) {
@@ -206,10 +202,6 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
     std::vector<glm::vec2> newSpace;
 
     auto maybeJoin = getNextJoin();
-    if (maybeJoin) {
-      std::cout << "New Start " << maybeJoin->point.x << " "
-                << maybeJoin->point.y << std::endl;
-    }
     while (maybeJoin) {
 
       auto join = *maybeJoin;
@@ -243,7 +235,6 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
         if (loopIdx > 0) {
           newSpace.erase(newSpace.begin(), newSpace.begin() + loopIdx);
         }
-        std::cout << "Added Polygon" << std::endl;
         appendPolygonToData(newSpace);
 
         newSpace.clear();
@@ -251,12 +242,18 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
         keepGoing = true;
       } else {
 
+        newSpace.push_back(mIntersections[nextIntersect.intersection]);
+        mIntersections.setUsed(nextIntersect.intersection);
+
         maybeJoin = nextIntersect;
       }
     }
   } while (keepGoing);
 
   writeSvg(testDir() / std::format("RoadNetwork_debug.svg"));
+
+  std::cout << std::format("{} internal spaces", mData.mFaces.size())
+            << std::endl;
 
   return mData;
 }
@@ -278,24 +275,26 @@ void RoadNetwork::findIntersections() {
           SegmentIndex s1{j, l};
           Line targetLine = mRoadEdges[j].segment(l);
 
-          if (auto intersection = lineIntersects2d(testLine, targetLine)) {
+          auto intersection = lineIntersects2d(testLine, targetLine);
+          if (std::get<bool>(intersection)) {
 
-            float reflex = Triangulate::reflexPoint(testLine[0], *intersection,
-                                                    targetLine[1]);
+            float reflex = Triangulate::reflexPoint(
+                testLine[0], std::get<glm::vec2>(intersection), targetLine[1]);
 
-            auto pointIdx = mIntersections.append(*intersection);
+            auto pointIdx =
+                mIntersections.append(std::get<glm::vec2>(intersection));
 
             if (reflex > 0) {
               SplineJoin join = {s1, pointIdx};
 #ifdef DEBUG
-              join.point = *intersection;
+              join.point = std::get<glm::vec2>(intersection);
 #endif
 
               mRoadEdges[i].insertJoin(k, join);
             } else {
               SplineJoin join = {s0, pointIdx};
 #ifdef DEBUG
-              join.point = *intersection;
+              join.point = std::get<glm::vec2>(intersection);
 #endif
 
               mRoadEdges[j].insertJoin(l, join);

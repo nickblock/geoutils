@@ -78,7 +78,7 @@ protected:
 
 using Line = std::array<glm::vec2, 2>;
 
-std::optional<glm::vec2> lineIntersects2d(const Line &l0, const Line &l1);
+std::tuple<glm::vec2, bool> lineIntersects2d(const Line &l0, const Line &l1);
 
 bool pointOnLine(const Line &line, const glm::vec2 &point);
 
