@@ -80,7 +80,7 @@
         "-i",
         "${workspaceFolder}/old_street.osm",
         "-o",
-        "/tmp/geoutils_test/old_street_filter.fbx",
+        "/tmp/geoutils_test/old_street.fbx",
         "-r",
         "-c",
         "2",

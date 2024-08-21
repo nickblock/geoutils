@@ -55,41 +55,38 @@ aiMesh *Ground::getMesh() {
 
   aiMesh *mesh = new aiMesh();
 
-  // mesh->mNumVertices = mDataFlat.mVertices.size();
-  // mesh->mVertices = new aiVector3D[mesh->mNumVertices];
-  // mesh->mTextureCoords[0] = new aiVector3D[mesh->mNumVertices];
-  // mesh->mNormals = new aiVector3D[mesh->mNumVertices];
-  // mesh->mNumUVComponents[0] = 2;
+  mesh->mNumVertices = mDataFlat.mVertices.size();
+  mesh->mVertices = new aiVector3D[mesh->mNumVertices];
 
-  // mesh->mNumFaces = mDataFlat.mFaces.size();
-  // mesh->mFaces = new aiFace[mDataFlat.mFaces.size()];
+  mesh->mTextureCoords[0] = new aiVector3D[mesh->mNumVertices];
+  mesh->mNormals = new aiVector3D[mesh->mNumVertices];
+  mesh->mNumUVComponents[0] = 2;
 
-  // auto upNormal = Geometry::upNormal();
-  // for (size_t i = 0; i < mDataFlat.mFaces.size(); i++) {
+  mesh->mNumFaces = mDataFlat.mFaces.size();
+  mesh->mFaces = new aiFace[mDataFlat.mFaces.size()];
 
-  //   auto &face = mesh->mFaces[i];
-  //   auto &dataFace = mDataFlat.mFaces[i];
+  auto upNormal = Geometry::upNormal();
+  for (int i = 0; i < mesh->mNumVertices; i++) {
+    auto vec3 = Geometry::fromGround(mDataFlat.mVertices[i]);
+    mesh->mVertices[i] = {vec3.x, vec3.y, vec3.z};
 
-  //   face.mNumIndices = dataFace.size();
-  //   face.mIndices = new unsigned int[face.mNumIndices];
+    mesh->mNormals[i] = {upNormal.x, upNormal.y, upNormal.z};
+    mesh->mTextureCoords[0][i] = {mDataFlat.mVertices[i].x,
+                                  mDataFlat.mVertices[i].y, 0.0f};
+  }
 
-  //   for (size_t j = 0; j < dataFace.size(); j++) {
+  for (size_t i = 0; i < mDataFlat.mFaces.size(); i++) {
 
-  //     auto cdtIdx = dataFace[j];
-  //     auto &cdtVertex = mDataFlat[cdtIdx];
+    auto &face = mesh->mFaces[i];
+    auto &dataFace = mDataFlat.mFaces[i];
 
-  //     face.mIndices[j] = cdtIdx;
+    face.mNumIndices = dataFace.size();
+    face.mIndices = new unsigned int[face.mNumIndices];
 
-  //     glm::vec2 point = {cdtVertex.x, cdtVertex.y};
-
-  //     glm::vec3 vertex = Geometry::posFromLoc(point.x, point.y, 0.f);
-  //     glm::vec3 uv = mBBox.fraction({point.x, point.y, 0.0});
-
-  //     mesh->mVertices[cdtIdx] = {vertex.x, vertex.y, vertex.z};
-  //     mesh->mNormals[cdtIdx] = {upNormal.x, upNormal.y, upNormal.z};
-  //     mesh->mTextureCoords[0][cdtIdx] = {uv.x, uv.y, uv.z};
-  //   }
-  // }
+    for (size_t j = 0; j < dataFace.size(); j++) {
+      face.mIndices[j] = dataFace[j];
+    }
+  }
 
   return mesh;
 }
