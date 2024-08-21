@@ -51,7 +51,7 @@ TEST(Test, GroundTest) {
 
     auto tri = Triangulate(flat).getData();
 
-    ground.addFootPrint(*tri, Ground::Building);
+    ground.addFootPrint(*tri, OSMFeature::HIGHWAY);
   }
 
   for (auto &p : input) {
@@ -64,7 +64,7 @@ TEST(Test, GroundTest) {
 
     auto tri = Triangulate(flat).getData();
 
-    ground.addFootPrint(*tri, Ground::Building);
+    ground.addFootPrint(*tri, OSMFeature::HIGHWAY);
   }
 
   auto groundMesh = ground.getMesh();
@@ -94,7 +94,7 @@ TEST(Test, GroundDonut) {
 
     auto tri = Triangulate(flat).getData();
 
-    ground.addFootPrint(*tri, Ground::Road);
+    ground.addFootPrint(*tri, OSMFeature::HIGHWAY);
   }
 
   auto groundMesh = ground.getMesh();

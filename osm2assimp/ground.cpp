@@ -23,15 +23,14 @@ Ground::Ground(const std::vector<glm::vec2> &extents) : mExtents(extents) {
 
 Ground::~Ground() = default;
 
-void Ground::addFootPrint(const Triangulate::Data &footprint,
-                          GroundTypes type) {
+void Ground::addFootPrint(const Triangulate::Data &footprint, int type) {
 
   TVertIdx lastIdx = mGroundPoints.size();
 
   mGroundPoints.insert(mGroundPoints.end(), footprint.mVertices.begin(),
                        footprint.mVertices.end());
 
-  if (type == Road) {
+  if (type == OSMFeature::HIGHWAY) {
     if (!mRoadNetwork) {
       mRoadNetwork = std::make_unique<RoadNetwork>(mBBox);
     }

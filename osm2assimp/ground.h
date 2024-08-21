@@ -16,11 +16,10 @@ class RoadNetwork;
 
 class Ground {
 public:
-  enum GroundTypes { Building, Road, Water };
   Ground(const std::vector<glm::vec2> &);
   virtual ~Ground();
 
-  void addFootPrint(const Triangulate::Data &footprint, GroundTypes type);
+  void addFootPrint(const Triangulate::Data &footprint, int type);
 
   aiMesh *getMesh();
 
