@@ -14,6 +14,7 @@ Line Spline::segment(int idx) {
     return {mVertices[idx], mVertices[0]};
   } else {
     assert(false);
+    return {};
   }
 }
 int Spline::numSegments() { return mVertices.size(); }
@@ -195,16 +196,21 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
     return find;
   };
 
-  bool keepGoing = false;
+  bool findNextSpace = false;
   do {
 
-    keepGoing = false;
+    findNextSpace = false;
     std::vector<glm::vec2> newSpace;
 
     auto maybeJoin = getNextJoin();
+
     while (maybeJoin) {
 
       auto join = *maybeJoin;
+
+      newSpace.push_back(mIntersections[join.intersection]);
+      mIntersections.setUsed(join.intersection);
+
       auto &roadJoined = mRoadEdges[join.join.roadIdx];
 
       auto maybeSplineToNext = roadJoined.getSplineToNextJoin(join);
@@ -215,45 +221,39 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
         // abort
         maybeJoin = {};
         newSpace.clear();
-        keepGoing = true; // keep trying
-        mIntersections.setUsed(join.intersection);
+        findNextSpace = true; // keep trying
         continue;
       }
 
-      auto splineToNext = *maybeSplineToNext;
+      auto [points, nextJoin] = maybeSplineToNext.value();
+      maybeJoin = nextJoin;
 
-      for (auto &p : get<std::vector<glm::vec2>>(splineToNext)) {
+      for (auto &p : points) {
         newSpace.push_back(p);
       }
 
-      auto nextIntersect = get<SplineJoin>(splineToNext);
-
-      auto loopIdx =
-          findLoop(newSpace, mIntersections[nextIntersect.intersection]);
-      if (loopIdx != -1) {
+      auto loopIdx = findLoop(newSpace, mIntersections[nextJoin.intersection]);
+      if (loopIdx != -1) { // found start intersection, polygon complete
 
         if (loopIdx > 0) {
           newSpace.erase(newSpace.begin(), newSpace.begin() + loopIdx);
         }
-        appendPolygonToData(newSpace);
+        if (newSpace.size() > 2) {
+
+          appendPolygonToData(newSpace);
+        }
 
         newSpace.clear();
         maybeJoin = {};
-        keepGoing = true;
-      } else {
-
-        newSpace.push_back(mIntersections[nextIntersect.intersection]);
-        mIntersections.setUsed(nextIntersect.intersection);
-
-        maybeJoin = nextIntersect;
+        findNextSpace = true;
+      } else if (mIntersections.used(nextJoin.intersection)) {
+        // intersection already used, abort
+        maybeJoin = {};
+        newSpace.clear();
+        findNextSpace = true; // keep trying
       }
     }
-  } while (keepGoing);
-
-  writeSvg(testDir() / std::format("RoadNetwork_debug.svg"));
-
-  std::cout << std::format("{} internal spaces", mData.mFaces.size())
-            << std::endl;
+  } while (findNextSpace);
 
   return mData;
 }

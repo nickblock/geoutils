@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "testOsm2Assimp",
-      "type": "cppdbg",
+      "type": "cppvsdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/testOsm2assimp",
+      "program": "${workspaceFolder}/build/testOsm2assimp.exe",
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],

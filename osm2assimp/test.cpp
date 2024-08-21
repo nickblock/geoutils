@@ -253,39 +253,66 @@ std::vector<glm::vec2> makePointList(const glm::vec2 &begin,
 
 TEST(Test, RoadNetwork) {
 
-  BBox box;
-  box.add({0.0, 0.0, 0.0});
-  box.add({15.0, 15.0, 0.0});
-  auto roadNetwork = RoadNetwork(box);
-
-  auto width = 2.0f;
-  int numPoints = 2;
-
-  auto makeRoad = [numPoints, width, &roadNetwork](const glm::vec2 &a,
-                                                   const glm::vec2 &b) {
-    auto road = Geometry::meshFromLine(makePointList(a, b, numPoints), width);
+  auto makeRoad = [](const Line &line, int numPoints, float width,
+                     RoadNetwork &roadNetwork) {
+    auto road = Geometry::meshFromLine(
+        makePointList(line[0], line[1], numPoints), width);
     auto tri = Triangulate(road.getFootprint()).getData();
     roadNetwork.addRoad(*tri);
   };
+  {
 
-  // basic grid
-  // makeRoad({0.0f, 2.0f}, {10.0f, 2.0f});
-  // makeRoad({0.0f, 8.0f}, {12.0f, 8.0f});
-  // makeRoad({8.0f, 0.0f}, {8.0f, 10.0f});
-  // makeRoad({2.0f, 0.0f}, {2.0f, 10.0f});
+    BBox box;
+    box.add({0.0, 0.0, 0.0});
+    box.add({10.0, 10.0, 0.0});
+    auto roadNetwork = RoadNetwork(box);
 
-  makeRoad({5.0, 3.0}, {15.0, 3.0});
-  makeRoad({5.0, 0.0}, {5.0, 10.0});
-  makeRoad({10.0, 0.0}, {10.0, 10.0});
-  makeRoad({15.0, 0.0}, {15.0, 10.0});
-  makeRoad({5.0, 10.0}, {15.0, 10.0});
+    auto width = 2.0f;
+    int numPoints = 2;
 
-  // given a simple grid of four interesecting roads we would like to get the
-  // internal rectangle contained
+    // basic grid
+    makeRoad(Line{glm::vec2{0.0f, 2.0f}, glm::vec2{10.0f, 2.0f}}, numPoints,
+             width, roadNetwork);
+    makeRoad(Line{glm::vec2{0.0f, 8.0f}, glm::vec2{12.0f, 8.0f}}, numPoints,
+             width, roadNetwork);
+    makeRoad(Line{glm::vec2{8.0f, 0.0f}, glm::vec2{8.0f, 10.0f}}, numPoints,
+             width, roadNetwork);
+    makeRoad(Line{glm::vec2{2.0f, 0.0f}, glm::vec2{2.0f, 10.0f}}, numPoints,
+             width, roadNetwork);
 
-  auto internalSpace = roadNetwork.getInternalSpaces();
+    auto data = roadNetwork.getInternalSpaces();
 
-  // EXPECT_EQ(internalSpace.mFaces.size() == 5);
+    roadNetwork.writeSvg(testDir() / "road_grid.svg");
+
+    EXPECT_EQ(data.mFaces.size(), 9);
+  }
+  {
+
+    BBox box;
+    box.add({0.0, 0.0, 0.0});
+    box.add({15.0, 15.0, 0.0});
+    auto roadNetwork = RoadNetwork(box);
+
+    auto width = 2.0f;
+    int numPoints = 2;
+
+    makeRoad(Line{glm::vec2{5.0, 3.0}, glm::vec2{15.0, 3.0}}, numPoints, width,
+             roadNetwork);
+    makeRoad(Line{glm::vec2{5.0, 0.0}, glm::vec2{5.0, 10.0}}, numPoints, width,
+             roadNetwork);
+    makeRoad(Line{glm::vec2{10.0, 0.0}, glm::vec2{10.0, 10.0}}, numPoints,
+             width, roadNetwork);
+    makeRoad(Line{glm::vec2{15.0, 0.0}, glm::vec2{15.0, 10.0}}, numPoints,
+             width, roadNetwork);
+    makeRoad(Line{glm::vec2{5.0, 10.0}, glm::vec2{15.0, 10.0}}, numPoints,
+             width, roadNetwork);
+
+    auto data = roadNetwork.getInternalSpaces();
+
+    roadNetwork.writeSvg(testDir() / "road_overlap.svg");
+
+    EXPECT_EQ(data.mFaces.size(), 5);
+  }
 }
 
 auto main(int argc, char **argv) -> int {
