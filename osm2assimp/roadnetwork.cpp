@@ -285,6 +285,11 @@ void RoadNetwork::findIntersections() {
                 mIntersections.append(std::get<glm::vec2>(intersection));
 
             if (reflex > 0) {
+
+              // Joins define which spline and segment they are going to
+              // joins are inserted on to the Splines at the segments they are
+              // found on
+
               SplineJoin join = {s1, pointIdx};
 #ifdef DEBUG
               join.point = std::get<glm::vec2>(intersection);

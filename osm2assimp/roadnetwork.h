@@ -54,19 +54,19 @@ public:
   // return first unused join listed
   std::optional<SplineJoin> getfirstJoin();
 
+  using PointsAndNextJoin = std::tuple<std::vector<glm::vec2>, SplineJoin>;
   // starting from an inputjoin, run along the spline and return all vertices
   // up to the next output join. Return vertices and join.
-  using PointsAndNextJoin = std::tuple<std::vector<glm::vec2>, SplineJoin>;
-
   std::optional<PointsAndNextJoin>
   getSplineToNextJoin(const SplineJoin &inputJoin);
-
-  std::optional<SplineJoin>
-  findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint);
 
   const std::vector<glm::vec2> &vertices() { return mVertices; }
 
 protected:
+  std::optional<SplineJoin>
+  findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint);
+
+  // outgoing joins are listed, mapped to the segment they are found on
   std::map<int, std::vector<SplineJoin>> mJoins;
   std::vector<glm::vec2> mVertices;
   PointCache &mCache;

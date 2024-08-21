@@ -41,11 +41,9 @@ void Ground::addFootPrint(const Triangulate::Data &footprint,
 
 void Ground::writeSvg(const std::filesystem::path &path) {
 
-  auto svg = SVGWriter();
-
-  svg.addPolygons(mDataFlat);
-
-  svg.write(path);
+  if (mRoadNetwork) {
+    mRoadNetwork->writeSvg(path);
+  }
 }
 
 aiMesh *Ground::getMesh() {

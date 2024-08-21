@@ -117,11 +117,6 @@ struct LineSegment {
                                     {other.mPoints[1], other.mPoints[2]});
 
     return {std::get<glm::vec2>(result0), std::get<glm::vec2>(result1)};
-    // if (std::get<bool>(result0) && std::get<bool>(result1)) {
-    //   return {std::get<glm::vec2>(result0), std::get<glm::vec2>(result1)};
-    // } else {
-    //   return {this->mPoints[2], this->mPoints[3]};
-    // }
   }
 
   std::array<glm::vec2, 4> mPoints;
