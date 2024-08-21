@@ -15,7 +15,9 @@ using std::vector;
 namespace GeoUtils {
 struct BBox {
   BBox();
+  BBox(const std::vector<glm::vec3> &v);
   void add(const glm::vec3 &p);
+  void add(const std::vector<glm::vec3> &v);
   void add(const BBox & /*bb*/);
 
   auto transform(const glm::mat4 & /*mat*/) -> BBox;
@@ -28,6 +30,8 @@ struct BBox {
   glm::vec3 fraction(const glm::vec3 &in);
 
   bool overlaps(const BBox &other) const;
+
+  void init();
 };
 
 osmium::Box osmiumBoxFromString(string extentsStr);

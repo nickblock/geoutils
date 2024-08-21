@@ -119,13 +119,26 @@ glm::vec3 max(const glm::vec3 &p1, const glm::vec3 &p2) {
   };
 }
 // bounding box functions
-BBox::BBox() {
+BBox::BBox() { init(); }
+
+BBox::BBox(const std::vector<glm::vec3> &v) {
+  init();
+  add(v);
+}
+
+void BBox::init() {
   mMin.x = std::numeric_limits<float>::max();
   mMin.y = std::numeric_limits<float>::max();
   mMin.z = std::numeric_limits<float>::max();
   mMax.x = std::numeric_limits<float>::min();
   mMax.y = std::numeric_limits<float>::min();
   mMax.z = std::numeric_limits<float>::min();
+}
+
+void BBox::add(const std::vector<glm::vec3> &v) {
+  for (auto &p : v) {
+    add(p);
+  }
 }
 
 void BBox::add(const glm::vec3 &p) {

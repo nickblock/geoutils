@@ -62,6 +62,8 @@ public:
 
   const std::vector<glm::vec2> &vertices() { return mVertices; }
 
+  const BBox &bbox() { return mBBox; }
+
 protected:
   std::optional<SplineJoin>
   findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint);
@@ -70,6 +72,8 @@ protected:
   std::map<int, std::vector<SplineJoin>> mJoins;
   std::vector<glm::vec2> mVertices;
   PointCache &mCache;
+
+  BBox mBBox;
 };
 
 class RoadNetwork {

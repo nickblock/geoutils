@@ -6,7 +6,10 @@
 namespace GeoUtils {
 
 Spline::Spline(PointCache &cache) : mCache(cache) {};
-void Spline::append(const glm::vec2 &p) { mVertices.push_back(p); }
+void Spline::append(const glm::vec2 &p) {
+  mVertices.push_back(p);
+  mBBox.add({p, 0.f});
+}
 Line Spline::segment(int idx) {
   if (idx < mVertices.size() - 1) {
     return {mVertices[idx], mVertices[idx + 1]};
@@ -320,8 +323,11 @@ void RoadNetwork::findIntersections() {
 
       for (int r1 = r0 + 1; r1 < mRoadEdges.size(); r1++) {
 
-        for (int s1 = 0; s1 < mRoadEdges[r1].numSegments(); s1++) {
-          segmentIntersection(r0, s0, r1, s1);
+        if (mRoadEdges[r0].bbox().overlaps(mRoadEdges[r1].bbox())) {
+
+          for (int s1 = 0; s1 < mRoadEdges[r1].numSegments(); s1++) {
+            segmentIntersection(r0, s0, r1, s1);
+          }
         }
       }
     }
