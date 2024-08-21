@@ -152,6 +152,13 @@ void RoadNetwork::writeSvg(const std::filesystem::path &path) {
 }
 
 void RoadNetwork::appendPolygonToData(const std::vector<glm::vec2> &points) {
+
+  if (points.size() < 3) {
+    return;
+  }
+  if (Triangulate(points).checkWindingOrder()) {
+    return;
+  }
   int lastIdx = mData.mVertices.size();
 
   Face face(points.size());
@@ -238,11 +245,7 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
         if (loopIdx > 0) {
           newSpace.erase(newSpace.begin(), newSpace.begin() + loopIdx);
         }
-        if (newSpace.size() > 2) {
-
-          appendPolygonToData(newSpace);
-        }
-
+        appendPolygonToData(newSpace);
         newSpace.clear();
         maybeJoin = {};
         findNextSpace = true;
@@ -259,52 +262,66 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
 }
 void RoadNetwork::findIntersections() {
 
-  Geometry::DataFlat internalSpace;
+  auto segmentIntersection = [this](int roadIdx0, int segmentIdx0, int roadIdx1,
+                                    int segmentIdx1) {
+    SegmentIndex s0{roadIdx0, segmentIdx0};
 
-  for (int i = 0; i < mRoadEdges.size(); i++) {
+    Line testLine = mRoadEdges[roadIdx0].segment(segmentIdx0);
 
-    for (int k = 0; k < mRoadEdges[i].numSegments(); k++) {
+    SegmentIndex s1{roadIdx1, segmentIdx1};
+    Line targetLine = mRoadEdges[roadIdx1].segment(segmentIdx1);
 
-      SegmentIndex s0{i, k};
+    auto intersection = lineIntersects2d(testLine, targetLine);
+    if (std::get<bool>(intersection)) {
 
-      Line testLine = mRoadEdges[i].segment(k);
-      for (int j = i + 1; j < mRoadEdges.size(); j++) {
+      float reflex = Triangulate::reflexPoint(
+          testLine[0], std::get<glm::vec2>(intersection), targetLine[1]);
 
-        for (int l = 0; l < mRoadEdges[j].numSegments(); l++) {
+      auto pointIdx = mIntersections.append(std::get<glm::vec2>(intersection));
 
-          SegmentIndex s1{j, l};
-          Line targetLine = mRoadEdges[j].segment(l);
+      if (reflex > 0) {
 
-          auto intersection = lineIntersects2d(testLine, targetLine);
-          if (std::get<bool>(intersection)) {
+        // Joins define which spline and segment they are going to
+        // joins are inserted on to the spline at the segments they are
+        // coming from
 
-            float reflex = Triangulate::reflexPoint(
-                testLine[0], std::get<glm::vec2>(intersection), targetLine[1]);
+        // which way round this is is ensured by the source polygons all
+        // having a clockwise winding order
 
-            auto pointIdx =
-                mIntersections.append(std::get<glm::vec2>(intersection));
-
-            if (reflex > 0) {
-
-              // Joins define which spline and segment they are going to
-              // joins are inserted on to the Splines at the segments they are
-              // found on
-
-              SplineJoin join = {s1, pointIdx};
+        SplineJoin join = {s1, pointIdx};
 #ifdef DEBUG
-              join.point = std::get<glm::vec2>(intersection);
+        join.point = std::get<glm::vec2>(intersection);
 #endif
 
-              mRoadEdges[i].insertJoin(k, join);
-            } else {
-              SplineJoin join = {s0, pointIdx};
+        mRoadEdges[roadIdx0].insertJoin(segmentIdx0, join);
+      } else {
+        SplineJoin join = {s0, pointIdx};
 #ifdef DEBUG
-              join.point = std::get<glm::vec2>(intersection);
+        join.point = std::get<glm::vec2>(intersection);
 #endif
 
-              mRoadEdges[j].insertJoin(l, join);
-            }
-          }
+        mRoadEdges[roadIdx1].insertJoin(segmentIdx1, join);
+      }
+    }
+  };
+
+  for (int r0 = 0; r0 < mRoadEdges.size(); r0++) {
+
+    for (int s0 = 0; s0 < mRoadEdges[r0].numSegments(); s0++) {
+
+      // // search non adjacent segments of same spline
+      // for (int s1 = s0 + 2; s1 <= mRoadEdges[r0].numSegments(); s1++) {
+      //   int otherSegment = s1;
+      //   if (otherSegment >= mRoadEdges[r0].numSegments()) {
+      //     otherSegment -= mRoadEdges[r0].numSegments();
+      //   }
+      //   segmentIntersection(r0, s0, r0, otherSegment);
+      // }
+
+      for (int r1 = r0 + 1; r1 < mRoadEdges.size(); r1++) {
+
+        for (int s1 = 0; s1 < mRoadEdges[r1].numSegments(); s1++) {
+          segmentIntersection(r0, s0, r1, s1);
         }
       }
     }

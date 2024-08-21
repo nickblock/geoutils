@@ -10,14 +10,26 @@ Triangulate::Triangulate(const Geometry::DataFlat &inputPoly)
     : mData(std::make_unique<Data>(inputPoly)) {
 
   mData->mFaces.clear();
-  mVertices.insert(mVertices.begin(), inputPoly.mVertices.begin(),
-                   inputPoly.mVertices.end());
 
-  mIndices.resize(mVertices.size());
-  for (TVertIdx i = 0; i < mVertices.size(); i++) {
+  mIndices.resize(mData->mVertices.size());
+  for (TVertIdx i = 0; i < mData->mVertices.size(); i++) {
     mIndices[i] = i;
   }
-  execute();
+  findPolyPerimeter(mData->mVertices);
+}
+
+Triangulate::Triangulate(const std::vector<glm::vec2> points)
+    : mData(std::make_unique<Data>()) {
+
+  mData->mVertices.insert(mData->mVertices.begin(), points.begin(),
+                          points.end());
+
+  mIndices.resize(mData->mVertices.size());
+  for (TVertIdx i = 0; i < mData->mVertices.size(); i++) {
+    mIndices[i] = i;
+  }
+
+  findPolyPerimeter(mData->mVertices);
 }
 
 float Triangulate::angleBetweenEdges(const EdgeIdx &edge0,
@@ -37,9 +49,9 @@ float Triangulate::reflexPoint(const glm::vec2 &a, const glm::vec2 &b,
 }
 
 float Triangulate::reflexPoint(const EdgeIdx &edge0, const EdgeIdx &edge1) {
-  auto &a = mVertices[edge0.p0];
-  auto &b = mVertices[edge0.p1];
-  auto &c = mVertices[edge1.p1];
+  auto &a = mData->mVertices[edge0.p0];
+  auto &b = mData->mVertices[edge0.p1];
+  auto &c = mData->mVertices[edge1.p1];
 
   return reflexPoint(a, b, c);
 }
@@ -48,14 +60,14 @@ void Triangulate::clearPolyData() {
   mInterEdges.clear();
   mInterPointAngles.clear();
 }
-void Triangulate::findPolyPerimeter() {
+void Triangulate::findPolyPerimeter(const std::vector<glm::vec2> &vertices) {
 
-  mInterEdges.resize(mVertices.size());
-  mInterPointAngles.resize(mVertices.size());
+  mInterEdges.resize(vertices.size());
+  mInterPointAngles.resize(vertices.size());
 
-  EdgeIdx lastEdge = {(TVertIdx)mVertices.size() - 1, (TVertIdx)0};
+  EdgeIdx lastEdge = {(TVertIdx)vertices.size() - 1, (TVertIdx)0};
 
-  for (TVertIdx i = 0; i < mVertices.size() - 1; i++) {
+  for (TVertIdx i = 0; i < vertices.size() - 1; i++) {
 
     EdgeIdx &curEdge = mInterEdges[i];
 
@@ -68,18 +80,21 @@ void Triangulate::findPolyPerimeter() {
     mInterPointAngles[i] = reflexPoint(lastEdge, curEdge);
     lastEdge = curEdge;
   }
-  mInterEdges[mVertices.size() - 1] = {(TVertIdx)mVertices.size() - 1, 0};
-  mInterPointAngles[mVertices.size() - 1] = reflexPoint(lastEdge, {0, 1});
+  mInterEdges[vertices.size() - 1] = {(TVertIdx)vertices.size() - 1, 0};
+  mInterPointAngles[vertices.size() - 1] = reflexPoint(lastEdge, {0, 1});
 }
-void Triangulate::execute() {
 
-  findPolyPerimeter();
+std::unique_ptr<Triangulate::Data> Triangulate::triangulate() {
 
+  mData->mFaces.clear();
+
+  mVertices.insert(mVertices.begin(), mData->mVertices.begin(),
+                   mData->mVertices.end());
   if (!checkWindingOrder()) {
     clearPolyData();
     std::reverse(mVertices.begin(), mVertices.end());
     std::reverse(mData->mVertices.begin(), mData->mVertices.end());
-    findPolyPerimeter();
+    findPolyPerimeter(mVertices);
   }
 
   // after the first pass we have thee inital outer perimater, edges, angles at
@@ -94,12 +109,13 @@ void Triangulate::execute() {
   while (findAndRemoveTriangle()) {
     if (mVertices.size() >= 4) {
       clearPolyData();
-      findPolyPerimeter();
+      findPolyPerimeter(mVertices);
     } else {
       mData->mFaces.push_back({mIndices[0], mIndices[1], mIndices[2]});
       break;
     }
   }
+  return std::move(mData);
 }
 
 bool Triangulate::checkWindingOrder() {

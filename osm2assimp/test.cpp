@@ -28,7 +28,7 @@ TEST(Test, MeshFromLine) {
     EXPECT_EQ(footprint.mFaces.size(), 1);
     EXPECT_EQ(footprint.mFaces[0].size(), 6);
 
-    auto tri = Triangulate(footprint).getData();
+    auto tri = Triangulate(footprint).triangulate();
 
     SVGWriter().addPolygons(*tri).write(testDir() / "MeshFromLineTri.svg");
 
@@ -49,7 +49,7 @@ TEST(Test, GroundTest) {
   {
     auto flat = Geometry::DataFlat{input, {}};
 
-    auto tri = Triangulate(flat).getData();
+    auto tri = Triangulate(flat).triangulate();
 
     ground.addFootPrint(*tri, OSMFeature::HIGHWAY);
   }
@@ -62,7 +62,7 @@ TEST(Test, GroundTest) {
   {
     auto flat = Geometry::DataFlat{input, {}};
 
-    auto tri = Triangulate(flat).getData();
+    auto tri = Triangulate(flat).triangulate();
 
     ground.addFootPrint(*tri, OSMFeature::HIGHWAY);
   }
@@ -92,7 +92,7 @@ TEST(Test, GroundDonut) {
 
     auto flat = Geometry::DataFlat(verts, {});
 
-    auto tri = Triangulate(flat).getData();
+    auto tri = Triangulate(flat).triangulate();
 
     ground.addFootPrint(*tri, OSMFeature::HIGHWAY);
   }
@@ -172,7 +172,7 @@ TEST(Test, TriangulateWindingOrder)
     std::reverse(cw.begin(), cw.end());
 
     auto footprint = Geometry::DataFlat{cw, {}};
-    EXPECT_TRUE(Triangulate(footprint).checkWindingOrder());
+    EXPECT_FALSE(Triangulate(footprint).checkWindingOrder());
   }
 }
 
@@ -185,7 +185,7 @@ TEST(Test, TriangulateConvex) {
   std::reverse(convex.begin(), convex.end());
 
   auto footprint = Geometry::DataFlat{convex, {}};
-  auto tri = Triangulate(footprint).getData();
+  auto tri = Triangulate(footprint).triangulate();
 
   SVGWriter().addPolygons(*tri).write(testDir() / "TriangulateConvex.svg");
 
@@ -198,7 +198,7 @@ TEST(Test, TriangulateL) {
                               {2.0, 1.0}, {1.0, 1.0}, {1.0, 0.0}};
 
   auto footprint = Geometry::DataFlat{L, {}};
-  auto tri = Triangulate(footprint).getData();
+  auto tri = Triangulate(footprint).triangulate();
 
   SVGWriter().addPolygons(*tri).write(testDir() / "TriangulateL.svg");
 }
@@ -210,7 +210,7 @@ TEST(Test, TriangulateDonut) {
       {1.0, 1.5}, {1.0, 1.0}, {1.5, 1.0}, {1.5, 0.0}};
 
   auto footprint = Geometry::DataFlat{awkward, {}};
-  auto tri = Triangulate(footprint).getData();
+  auto tri = Triangulate(footprint).triangulate();
 
   SVGWriter().addPolygons(*tri).write(testDir() / "TriangulateAwkward.svg");
 }
@@ -257,7 +257,7 @@ TEST(Test, RoadNetwork) {
                      RoadNetwork &roadNetwork) {
     auto road = Geometry::meshFromLine(
         makePointList(line[0], line[1], numPoints), width);
-    auto tri = Triangulate(road.getFootprint()).getData();
+    auto tri = Triangulate(road.getFootprint()).triangulate();
     roadNetwork.addRoad(*tri);
   };
   {
@@ -312,6 +312,30 @@ TEST(Test, RoadNetwork) {
     roadNetwork.writeSvg(testDir() / "road_overlap.svg");
 
     EXPECT_EQ(data.mFaces.size(), 5);
+  }
+
+  {
+
+    BBox box;
+    box.add({0.0, 0.0, 0.0});
+    box.add({15.0, 15.0, 0.0});
+    auto roadNetwork = RoadNetwork(box);
+
+    auto width = 2.0f;
+    int numPoints = 2;
+
+    std::vector<glm::vec2> points = {
+        {5.f, 5.f}, {5.f, 10.f}, {10.f, 10.f}, {10.f, 5.f}, {5.f, 5.f}};
+
+    auto road = Geometry::meshFromLine(points, width);
+    auto tri = Triangulate(road.getFootprint()).triangulate();
+    roadNetwork.addRoad(*tri);
+
+    auto data = roadNetwork.getInternalSpaces();
+
+    roadNetwork.writeSvg(testDir() / "road_loop.svg");
+
+    EXPECT_EQ(data.mFaces.size(), 1);
   }
 }
 

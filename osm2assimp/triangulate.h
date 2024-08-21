@@ -21,18 +21,17 @@ public:
 
   std::unique_ptr<Data> mData;
 
+  Triangulate(const std::vector<glm::vec2> points);
   Triangulate(const Geometry::DataFlat &inputPoly);
-
-  std::unique_ptr<Triangulate::Data> getData() { return std::move(mData); }
 
   static float reflexPoint(const glm::vec2 &a, const glm::vec2 &b,
                            const glm::vec2 &c);
 
   bool checkWindingOrder();
 
-private:
-  void execute();
+  std::unique_ptr<Triangulate::Data> triangulate();
 
+private:
   std::vector<glm::vec2> mVertices;
   std::vector<TVertIdx> mIndices;
   std::vector<float> mInterPointAngles;
@@ -42,7 +41,7 @@ private:
   float reflexPoint(const EdgeIdx &edge0, const EdgeIdx &edge1);
   bool findAndRemoveTriangle();
   void clipTriangle(const EdgeIdx &edge0, const EdgeIdx &edge1);
-  void findPolyPerimeter();
+  void findPolyPerimeter(const std::vector<glm::vec2>& vertices);
   void clearPolyData();
 
   // returns true if edge intersects with other edges of polygon

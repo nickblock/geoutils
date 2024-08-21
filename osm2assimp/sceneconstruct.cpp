@@ -72,7 +72,7 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
         if (mGround) {
 
           auto triData =
-              Triangulate(geoms[geoms.size() - 1].getFootprint()).getData();
+              Triangulate(geoms[geoms.size() - 1].getFootprint()).triangulate();
           mGround->addFootPrint(*triData, OSMFeature::HIGHWAY);
         }
       }

@@ -73,14 +73,14 @@
     },
     {
       "name": "osm2assimp",
-      "type": "cppdbg",
+      "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/osm2assimp",
       "args": [
         "-i",
         "${workspaceFolder}/old_street.osm",
         "-o",
-        "/tmp/geoutils_test/old_street.fbx",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/old_street.fbx",
         "-r",
         "-c",
         "2",

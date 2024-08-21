@@ -109,7 +109,7 @@ OSMFeature::OSMFeature(const osmium::Way &way, bool getNameFromOSM)
     mName += std::to_string(way.id());
   }
 
-  // if (mName.find("191190882") == std::string::npos) {
+  // if (mName.find("400912815") == std::string::npos) {
   //   mValid = false;
   //   return;
   // }
