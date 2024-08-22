@@ -48,6 +48,7 @@ public:
   void append(const glm::vec2 &p);
   Line segment(int idx = 0);
   int numSegments();
+  bool isLoop();
 
   void insertJoin(int segmentIdx, const SplineJoin &join);
 
@@ -94,6 +95,8 @@ protected:
   void findIntersections();
 
   void appendPolygonToData(const std::vector<glm::vec2> &points);
+
+  void addLoopingSegments(int splineIdx);
 
   std::vector<Spline> mRoadEdges;
 

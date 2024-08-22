@@ -239,6 +239,29 @@ TEST(Test, PointOnLine) {
   }
 }
 
+TEST(Test, SplineNumSegments) {
+
+  PointCache cache;
+  Spline spline(cache);
+
+  spline.append({0.0, 0.0});
+  spline.append({0.0, 1.0});
+  spline.append({1.0, 1.0});
+  spline.append({1.0, 0.0});
+
+  auto line0 = spline.segment(3);
+  EXPECT_EQ(line0[0], spline.vertices()[3]);
+  EXPECT_EQ(line0[1], spline.vertices()[0]);
+
+  auto line1 = spline.segment(4);
+  EXPECT_EQ(line1[0], spline.vertices()[0]);
+  EXPECT_EQ(line1[1], spline.vertices()[1]);
+
+  auto line2 = spline.segment(7);
+  EXPECT_EQ(line2[0], spline.vertices()[3]);
+  EXPECT_EQ(line2[1], spline.vertices()[0]);
+}
+
 std::vector<glm::vec2> makePointList(const glm::vec2 &begin,
                                      const glm::vec2 &end, int num) {
   std::vector<glm::vec2> result;
@@ -251,92 +274,90 @@ std::vector<glm::vec2> makePointList(const glm::vec2 &begin,
   return result;
 }
 
-TEST(Test, RoadNetwork) {
+auto makeRoad = [](const Line &line, int numPoints, float width,
+                   RoadNetwork &roadNetwork) {
+  auto road =
+      Geometry::meshFromLine(makePointList(line[0], line[1], numPoints), width);
+  auto tri = Triangulate(road.getFootprint()).triangulate();
+  roadNetwork.addRoad(*tri);
+};
+TEST(Test, RoadNetworkGrid) {
 
-  auto makeRoad = [](const Line &line, int numPoints, float width,
-                     RoadNetwork &roadNetwork) {
-    auto road = Geometry::meshFromLine(
-        makePointList(line[0], line[1], numPoints), width);
-    auto tri = Triangulate(road.getFootprint()).triangulate();
-    roadNetwork.addRoad(*tri);
-  };
-  {
+  BBox box;
+  box.add({0.0, 0.0, 0.0});
+  box.add({10.0, 10.0, 0.0});
+  auto roadNetwork = RoadNetwork(box);
 
-    BBox box;
-    box.add({0.0, 0.0, 0.0});
-    box.add({10.0, 10.0, 0.0});
-    auto roadNetwork = RoadNetwork(box);
+  auto width = 2.0f;
+  int numPoints = 2;
 
-    auto width = 2.0f;
-    int numPoints = 2;
+  // basic grid
+  makeRoad(Line{glm::vec2{0.0f, 2.0f}, glm::vec2{10.0f, 2.0f}}, numPoints,
+           width, roadNetwork);
+  makeRoad(Line{glm::vec2{0.0f, 8.0f}, glm::vec2{12.0f, 8.0f}}, numPoints,
+           width, roadNetwork);
+  makeRoad(Line{glm::vec2{8.0f, 0.0f}, glm::vec2{8.0f, 10.0f}}, numPoints,
+           width, roadNetwork);
+  makeRoad(Line{glm::vec2{2.0f, 0.0f}, glm::vec2{2.0f, 10.0f}}, numPoints,
+           width, roadNetwork);
 
-    // basic grid
-    makeRoad(Line{glm::vec2{0.0f, 2.0f}, glm::vec2{10.0f, 2.0f}}, numPoints,
-             width, roadNetwork);
-    makeRoad(Line{glm::vec2{0.0f, 8.0f}, glm::vec2{12.0f, 8.0f}}, numPoints,
-             width, roadNetwork);
-    makeRoad(Line{glm::vec2{8.0f, 0.0f}, glm::vec2{8.0f, 10.0f}}, numPoints,
-             width, roadNetwork);
-    makeRoad(Line{glm::vec2{2.0f, 0.0f}, glm::vec2{2.0f, 10.0f}}, numPoints,
-             width, roadNetwork);
+  auto data = roadNetwork.getInternalSpaces();
 
-    auto data = roadNetwork.getInternalSpaces();
+  roadNetwork.writeSvg(testDir() / "road_grid.svg");
 
-    roadNetwork.writeSvg(testDir() / "road_grid.svg");
+  EXPECT_EQ(data.mFaces.size(), 9);
+}
 
-    EXPECT_EQ(data.mFaces.size(), 9);
-  }
-  {
+TEST(Test, RoadNetworkOverlap) {
 
-    BBox box;
-    box.add({0.0, 0.0, 0.0});
-    box.add({15.0, 15.0, 0.0});
-    auto roadNetwork = RoadNetwork(box);
+  BBox box;
+  box.add({0.0, 0.0, 0.0});
+  box.add({15.0, 15.0, 0.0});
+  auto roadNetwork = RoadNetwork(box);
 
-    auto width = 2.0f;
-    int numPoints = 2;
+  auto width = 2.0f;
+  int numPoints = 2;
 
-    makeRoad(Line{glm::vec2{5.0, 3.0}, glm::vec2{15.0, 3.0}}, numPoints, width,
-             roadNetwork);
-    makeRoad(Line{glm::vec2{5.0, 0.0}, glm::vec2{5.0, 10.0}}, numPoints, width,
-             roadNetwork);
-    makeRoad(Line{glm::vec2{10.0, 0.0}, glm::vec2{10.0, 10.0}}, numPoints,
-             width, roadNetwork);
-    makeRoad(Line{glm::vec2{15.0, 0.0}, glm::vec2{15.0, 10.0}}, numPoints,
-             width, roadNetwork);
-    makeRoad(Line{glm::vec2{5.0, 10.0}, glm::vec2{15.0, 10.0}}, numPoints,
-             width, roadNetwork);
+  makeRoad(Line{glm::vec2{5.0, 3.0}, glm::vec2{15.0, 3.0}}, numPoints, width,
+           roadNetwork);
+  makeRoad(Line{glm::vec2{5.0, 0.0}, glm::vec2{5.0, 10.0}}, numPoints, width,
+           roadNetwork);
+  makeRoad(Line{glm::vec2{10.0, 0.0}, glm::vec2{10.0, 10.0}}, numPoints, width,
+           roadNetwork);
+  makeRoad(Line{glm::vec2{15.0, 0.0}, glm::vec2{15.0, 10.0}}, numPoints, width,
+           roadNetwork);
+  makeRoad(Line{glm::vec2{5.0, 10.0}, glm::vec2{15.0, 10.0}}, numPoints, width,
+           roadNetwork);
 
-    auto data = roadNetwork.getInternalSpaces();
+  auto data = roadNetwork.getInternalSpaces();
 
-    roadNetwork.writeSvg(testDir() / "road_overlap.svg");
+  roadNetwork.writeSvg(testDir() / "road_overlap.svg");
 
-    EXPECT_EQ(data.mFaces.size(), 5);
-  }
+  EXPECT_EQ(data.mFaces.size(), 5);
+}
 
-  {
+TEST(Test, RoadNetworkLoop) {
 
-    BBox box;
-    box.add({0.0, 0.0, 0.0});
-    box.add({15.0, 15.0, 0.0});
-    auto roadNetwork = RoadNetwork(box);
+  BBox box;
+  box.add({0.0, 0.0, 0.0});
+  box.add({15.0, 15.0, 0.0});
+  auto roadNetwork = RoadNetwork(box);
 
-    auto width = 2.0f;
-    int numPoints = 2;
+  auto width = 2.0f;
+  int numPoints = 2;
 
-    std::vector<glm::vec2> points = {
-        {5.f, 5.f}, {5.f, 10.f}, {10.f, 10.f}, {10.f, 5.f}, {5.f, 5.f}};
+  std::vector<glm::vec2> points = {
+      {5.f, 5.f}, {5.f, 10.f}, {10.f, 10.f}, {10.f, 5.f}, {5.f, 5.f}};
 
-    auto road = Geometry::meshFromLine(points, width);
-    auto tri = Triangulate(road.getFootprint()).triangulate();
-    roadNetwork.addRoad(*tri);
+  auto road = Geometry::meshFromLine(points, width);
+  auto tri = Triangulate(road.getFootprint()).triangulate();
+  roadNetwork.addRoad(*tri);
 
-    auto data = roadNetwork.getInternalSpaces();
+  auto data = roadNetwork.getInternalSpaces();
 
-    roadNetwork.writeSvg(testDir() / "road_loop.svg");
+  roadNetwork.writeSvg(testDir() / "road_loop.svg");
 
-    EXPECT_EQ(data.mFaces.size(), 1);
-  }
+  EXPECT_EQ(data.mFaces.size(), 1);
 }
 
 auto main(int argc, char **argv) -> int {

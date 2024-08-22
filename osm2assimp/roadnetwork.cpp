@@ -16,11 +16,19 @@ Line Spline::segment(int idx) {
   } else if (idx == mVertices.size() - 1) {
     return {mVertices[idx], mVertices[0]};
   } else {
-    assert(false);
-    return {};
+    idx = idx % mVertices.size();
+    int idx1 = idx + 1;
+    if (idx == mVertices.size() - 1) {
+      idx1 = 0;
+    }
+    return {mVertices[idx], mVertices[idx1]};
   }
 }
 int Spline::numSegments() { return mVertices.size(); }
+bool Spline::isLoop() {
+  return isSame(mVertices[mVertices.size() - 1],
+                mVertices[mVertices.size() / 2]);
+}
 void Spline::insertJoin(int segmentIdx, const SplineJoin &join) {
   auto &joins = mJoins[segmentIdx];
   joins.push_back(join);
@@ -152,6 +160,25 @@ void RoadNetwork::writeSvg(const std::filesystem::path &path) {
 
   // svg.addCircles(joins, 4);
   svg.write(path);
+}
+
+void RoadNetwork::addLoopingSegments(int splineIdx) {
+
+  if (mRoadEdges[splineIdx].isLoop()) {
+
+    auto loopPoint = mRoadEdges[splineIdx]
+                         .vertices()[mRoadEdges[splineIdx].numSegments() / 2];
+    auto pointIdx = mIntersections.append(loopPoint);
+
+    auto segmentJoinIdx = mRoadEdges[splineIdx].numSegments() / 2;
+    auto endJoinIdx = mRoadEdges[splineIdx].numSegments() - 1;
+
+    SegmentIndex si0{splineIdx, segmentJoinIdx};
+    SegmentIndex si1{splineIdx, endJoinIdx};
+
+    mRoadEdges[splineIdx].insertJoin(segmentJoinIdx, {si0, pointIdx});
+    mRoadEdges[splineIdx].insertJoin(endJoinIdx, {si1, pointIdx});
+  }
 }
 
 void RoadNetwork::appendPolygonToData(const std::vector<glm::vec2> &points) {
@@ -309,17 +336,18 @@ void RoadNetwork::findIntersections() {
   };
 
   for (int r0 = 0; r0 < mRoadEdges.size(); r0++) {
+    // addLoopingSegments(r0);
 
     for (int s0 = 0; s0 < mRoadEdges[r0].numSegments(); s0++) {
 
-      // // search non adjacent segments of same spline
-      // for (int s1 = s0 + 2; s1 <= mRoadEdges[r0].numSegments(); s1++) {
-      //   int otherSegment = s1;
-      //   if (otherSegment >= mRoadEdges[r0].numSegments()) {
-      //     otherSegment -= mRoadEdges[r0].numSegments();
-      //   }
-      //   segmentIntersection(r0, s0, r0, otherSegment);
-      // }
+      for (int s1 = s0; s1 < mRoadEdges[r0].numSegments() - 2; s1++) {
+        // search non adjacent segments of same spline
+        int otherSeg = s1 + 2;
+        if (s0 == 0 && otherSeg == mRoadEdges[r0].numSegments() - 1) {
+          continue;
+        }
+        segmentIntersection(r0, s0, r0, otherSeg);
+      }
 
       for (int r1 = r0 + 1; r1 < mRoadEdges.size(); r1++) {
 

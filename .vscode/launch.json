@@ -9,6 +9,9 @@
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
       "environment": [],
+      "args": [
+        "--gtest_filter=Test.RoadNetworkLoop"
+      ],
       "visualizerFile": "${workspaceFolder}/glm.natvis",
       "showDisplayString": true,
       "internalConsoleOptions": "openOnSessionStart",

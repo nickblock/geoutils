@@ -148,6 +148,8 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
   auto appendVertex = [&geometry, &side0, &side1](const glm::vec2 &point) {
     geometry.mData.mVertices.push_back(fromGround(point));
 
+    throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
+
     static bool appendSide0 = true;
     appendSide0 ? side0.push_back(point) : side1.push_back(point);
     appendSide0 = !appendSide0;
@@ -158,9 +160,7 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
   auto lastSeg = LineSegment(line[0], line[1], width);
 
   appendVertex(lastSeg.mPoints[0]);
-  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
   appendVertex(lastSeg.mPoints[1]);
-  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
   glm::vec2 uvDistance(0.0f, 0.0f);
   geometry.mData.mTexCoords.push_back(
@@ -174,9 +174,7 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
     auto crossPoints = lastSeg.crossPoints(nextSeg);
 
     appendVertex(crossPoints[0]);
-    throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
     appendVertex(crossPoints[1]);
-    throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
     uvDistance += glm::vec2{
         glm::distance(geometry.mData.mVertices[i * 2 + 0],
@@ -195,10 +193,24 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
     lastSeg = nextSeg;
   }
 
+  // if (isSame(line[0], line[line.size() - 1])) {
+
+  //   auto crossPoints =
+  //       lastSeg.crossPoints(LineSegment(line[0], line[1], width));
+
+  //   appendVertex(crossPoints[0]);
+  //   appendVertex(crossPoints[1]);
+  //   geometry.mData.mVertices[0] =
+  //       geometry.mData.mVertices[geometry.mData.mVertices.size() - 2];
+  //   geometry.mData.mVertices[1] =
+  //       geometry.mData.mVertices[geometry.mData.mVertices.size() - 1];
+
+  //   side0[0] = crossPoints[0];
+  //   side1[0] = crossPoints[1];
+  // } else {
   appendVertex(lastSeg.mPoints[3]);
-  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
   appendVertex(lastSeg.mPoints[2]);
-  throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
+  // }
 
   uvDistance += glm::vec2{
       glm::distance(
