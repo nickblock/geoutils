@@ -65,6 +65,9 @@ public:
 
   const BBox &bbox() { return mBBox; }
 
+  void setName(const std::string &name) { mName = name; }
+  const std::string &name() { return mName; }
+
 protected:
   std::optional<SplineJoin>
   findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint);
@@ -74,6 +77,7 @@ protected:
   std::vector<glm::vec2> mVertices;
   PointCache &mCache;
 
+  std::string mName;
   BBox mBBox;
 };
 
@@ -82,7 +86,7 @@ class RoadNetwork {
 public:
   RoadNetwork(const BBox &bbox);
 
-  void addRoad(const Triangulate::Data &road);
+  void addRoad(const Triangulate::Data &road, const std::string &name = "");
 
   // given the current list of roads obtain a list polygons representing the
   //  space encompassed by the roads
@@ -110,5 +114,7 @@ protected:
   Geometry::DataFlat mData;
 
   BBox mBBox;
+
+  std::vector<glm::vec2> mPointsOfInterest;
 };
 } // namespace GeoUtils

@@ -19,7 +19,8 @@ public:
   Ground(const std::vector<glm::vec2> &);
   virtual ~Ground();
 
-  void addFootPrint(const Triangulate::Data &footprint, int type);
+  void addFootPrint(const Triangulate::Data &footprint, int type,
+                    const std::string &name = "");
 
   aiMesh *getMesh();
 

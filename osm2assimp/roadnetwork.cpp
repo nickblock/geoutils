@@ -123,12 +123,14 @@ RoadNetwork::RoadNetwork(const BBox &bbox) : mBBox(bbox) {
 
   mHashSize += 4;
 }
-void RoadNetwork::addRoad(const Triangulate::Data &road) {
+void RoadNetwork::addRoad(const Triangulate::Data &road,
+                          const std::string &name) {
 
   Spline roadEdge0(mIntersections);
   for (int i = 0; i < road.mVertices.size(); i++) {
     roadEdge0.append(road.mVertices[i]);
   }
+  roadEdge0.setName(name);
   mRoadEdges.push_back(roadEdge0);
 }
 
@@ -141,6 +143,8 @@ void RoadNetwork::writeSvg(const std::filesystem::path &path) {
   }
 
   svg.addCircles(mIntersections.points(), 10);
+
+  svg.addCircles(mPointsOfInterest, 10, "blue");
   svg.addPolygons(mData);
 
   std::vector<glm::vec2> grid;
@@ -186,9 +190,9 @@ void RoadNetwork::appendPolygonToData(const std::vector<glm::vec2> &points) {
   if (points.size() < 3) {
     return;
   }
-  if (Triangulate(points).checkWindingOrder()) {
-    return;
-  }
+  // if (Triangulate(points).checkWindingOrder()) {
+  //   return;
+  // }
   int lastIdx = mData.mVertices.size();
 
   Face face(points.size());
@@ -244,6 +248,10 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
     while (maybeJoin) {
 
       auto join = *maybeJoin;
+
+      if (join.intersection == 119) {
+        mPointsOfInterest.push_back(join.point);
+      }
 
       newSpace.push_back(mIntersections[join.intersection]);
       mIntersections.setUsed(join.intersection);
@@ -303,11 +311,23 @@ void RoadNetwork::findIntersections() {
 
     auto intersection = lineIntersects2d(testLine, targetLine);
     if (std::get<bool>(intersection)) {
-
       float reflex = Triangulate::reflexPoint(
           testLine[0], std::get<glm::vec2>(intersection), targetLine[1]);
 
       auto pointIdx = mIntersections.append(std::get<glm::vec2>(intersection));
+
+      if (mRoadEdges[roadIdx0].name() == "Highway_227388271" ||
+          mRoadEdges[roadIdx1].name() == "Highway_227388271") {
+
+        auto otherRoad = mRoadEdges[roadIdx0].name() == "Highway_227388271"
+                             ? mRoadEdges[roadIdx1]
+                             : mRoadEdges[roadIdx0];
+        std::cout << std::format("Point = {}, rdName {} p = {},{}", pointIdx,
+                                 otherRoad.name(),
+                                 std::get<glm::vec2>(intersection).x,
+                                 std::get<glm::vec2>(intersection).y)
+                  << std::endl;
+      }
 
       if (reflex > 0) {
 

@@ -23,7 +23,8 @@ Ground::Ground(const std::vector<glm::vec2> &extents) : mExtents(extents) {
 
 Ground::~Ground() = default;
 
-void Ground::addFootPrint(const Triangulate::Data &footprint, int type) {
+void Ground::addFootPrint(const Triangulate::Data &footprint, int type,
+                          const std::string &name) {
 
   TVertIdx lastIdx = mGroundPoints.size();
 
@@ -34,7 +35,7 @@ void Ground::addFootPrint(const Triangulate::Data &footprint, int type) {
     if (!mRoadNetwork) {
       mRoadNetwork = std::make_unique<RoadNetwork>(mBBox);
     }
-    mRoadNetwork->addRoad(footprint);
+    mRoadNetwork->addRoad(footprint, name);
   }
 }
 
