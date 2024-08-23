@@ -106,7 +106,7 @@ struct LineSegment {
 
     if (fabs(mArcTan - other.mArcTan) < glm::epsilon<float>()) {
       // parallel
-      return {this->mPoints[2], this->mPoints[3]};
+      return {this->mPoints[3], this->mPoints[2]};
     }
     bool cross = true;
 

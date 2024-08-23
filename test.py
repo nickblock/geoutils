@@ -37,7 +37,7 @@ class GeoUtilsProcesses(unittest.TestCase):
   
   @staticmethod
   def getTestCoords():
-    return [-0.085415,51.522852,-0.076432,51.528441]
+    return [51.522852,-0.085415,51.528441,-0.076432]
 
   @classmethod
   def setUpClass(self):

@@ -150,18 +150,18 @@ def execute(extents: list[float], space: float, height: float, outputPath: str):
     highway_nodes = []
 
     while True:
-        if yidx * space * 2 > extents[3] - extents[1]:
+        if yidx * space * 2 > extents[2] - extents[0]:
             break
 
         xidx = 0
         while True:
 
-            if xidx * space * 2 > extents[2] - extents[0]:
+            if xidx * space * 2 > extents[3] - extents[1]:
                 break
 
             sw_corner = {
-                "lat": extents[1] + space * yidx * 2,
-                "lon": extents[2] + space * xidx * 2
+                "lat": extents[0] + space * yidx * 2,
+                "lon": extents[1] + space * xidx * 2
             }
 
             ne_corner = {

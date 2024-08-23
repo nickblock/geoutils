@@ -75,7 +75,7 @@
       "internalConsoleOptions": "openOnSessionStart"
     },
     {
-      "name": "osm2assimp",
+      "name": "osm2assimp_old_street",
       "type": "cppvsdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/osm2assimp",
@@ -87,6 +87,32 @@
         "-r",
         "-c",
         "2",
+        "-g",
+        "-e",
+        "51.526495,-0.084530,51.526919,-0.083535"
+      ],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "visualizerFile": "C:/Users/nick/glm.natvis",
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "name": "osm2assimp_test",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/osm2assimp",
+      "args": [
+        "-i",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/test.osm",
+        "-o",
+        "C:/Users/nick/AppData/Local/Temp/geoutils_test/extents.fbx",
+        "-z",
+        "-u",
+        "3.5",
+        "-c",
+        "2",
+        "-r",
         "-g"
       ],
       "stopAtEntry": false,

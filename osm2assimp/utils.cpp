@@ -23,18 +23,18 @@ osmium::Box osmiumBoxFromString(string extentsStr) {
   osmium::Location locMin, locMax;
 
   int commaPos = extentsStr.find_first_of(",");
-  locMin.set_lon(std::stod(extentsStr.substr(0, commaPos)));
-  extentsStr = extentsStr.substr(commaPos + 1, extentsStr.size());
-
-  commaPos = extentsStr.find_first_of(",");
   locMin.set_lat(std::stod(extentsStr.substr(0, commaPos)));
   extentsStr = extentsStr.substr(commaPos + 1, extentsStr.size());
 
   commaPos = extentsStr.find_first_of(",");
-  locMax.set_lon(std::stod(extentsStr.substr(0, commaPos)));
+  locMin.set_lon(std::stod(extentsStr.substr(0, commaPos)));
   extentsStr = extentsStr.substr(commaPos + 1, extentsStr.size());
 
-  locMax.set_lat(std::stod(extentsStr));
+  commaPos = extentsStr.find_first_of(",");
+  locMax.set_lat(std::stod(extentsStr.substr(0, commaPos)));
+  extentsStr = extentsStr.substr(commaPos + 1, extentsStr.size());
+
+  locMax.set_lon(std::stod(extentsStr));
 
   box.extend(locMin);
   box.extend(locMax);
