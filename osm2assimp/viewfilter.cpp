@@ -42,4 +42,26 @@ bool S2CellFilter::include(const osmium::Way &way) const {
   return false;
 }
 
+WayIDFilter::WayIDFilter(const std::string &idList) {
+
+  int commaPos = idList.find_first_of(',');
+  int begin = 0;
+  while (commaPos != std::string::npos) {
+    auto subStr = idList.substr(begin, commaPos - begin);
+    mIds.insert(std::stol(subStr));
+
+    begin = commaPos + 1;
+    commaPos = idList.find_first_of(',', begin);
+  }
+  auto subStr = idList.substr(begin);
+  mIds.insert(std::stol(subStr));
+}
+
+bool WayIDFilter::include(const osmium::Way &way) const {
+  if (mIds.find(way.id()) != mIds.end()) {
+    return true;
+  } else {
+    return false;
+  }
+}
 } // namespace GeoUtils

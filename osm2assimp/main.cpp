@@ -36,25 +36,10 @@ using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
 using std::cout;
 using std::endl;
-using std::make_shared;
+using std::make_unique;
 using std::vector;
 
-using GeoUtils::AssimpWriter;
-using GeoUtils::BoundFilter;
-using GeoUtils::ConvertLatLngToCoords;
-using GeoUtils::cornersFromBox;
-using GeoUtils::Geometry;
-using GeoUtils::getFileExt;
-using GeoUtils::getInputFiles;
-using GeoUtils::OSMDataImport;
-using GeoUtils::OSMFeature;
-using GeoUtils::osmiumBoxFromString;
-using GeoUtils::refPointFromArg;
-using GeoUtils::S2CellFilter;
-using GeoUtils::S2Util;
-using GeoUtils::SceneConstruct;
-using GeoUtils::TypeFilter;
-using GeoUtils::ViewFilterList;
+using namespace GeoUtils;
 
 int main(int argi, char **argc) {
 
@@ -112,6 +97,10 @@ int main(int argi, char **argc) {
       "Scale UV set. UV set rounds to nearest 1.0 for quad nearest to given "
       "scale. Default parameter of zero omits UV set altogether.",
       {'u', "uv"});
+
+  args::ValueFlag<string> idFIlterArg(
+      parser, "Id Filter",
+      "a comma separated list of id to be exclusively included", {'d', "ids"});
 
   try {
     parser.ParseCLI(argi, argc);
@@ -182,7 +171,7 @@ int main(int argi, char **argc) {
       originLocation = box.bottom_left();
       ConvertLatLngToCoords::setRefPoint(originLocation);
 
-      viewFilters.push_back(make_shared<BoundFilter>(box));
+      viewFilters.push_back(make_unique<BoundFilter>(box));
 
       if (groundArg) {
         groundCorners = cornersFromBox(box);
@@ -218,7 +207,7 @@ int main(int argi, char **argc) {
 
       uint64_t s2cellId = S2Util::getS2IdFromString(s2CellStr);
 
-      viewFilters.push_back(make_shared<S2CellFilter>(s2cellId));
+      viewFilters.push_back(make_unique<S2CellFilter>(s2cellId));
 
       S2Util::LatLng latLng = S2Util::getS2Center(s2cellId);
       originLocation = {std::get<1>(latLng), std::get<0>(latLng)};
@@ -246,6 +235,17 @@ int main(int argi, char **argc) {
     Geometry::texCoordScale = args::get(uvScaleArg);
   }
 
+  if (idFIlterArg) {
+    try {
+
+      viewFilters.push_back(make_unique<WayIDFilter>(args::get(idFIlterArg)));
+    } catch (const std::invalid_argument &ex) {
+      cout << std::format("Failed to parse way id filter list, {}", ex.what())
+           << std::endl;
+      std::exit(1);
+    }
+  }
+
   vector<string> inputFiles = getInputFiles(args::get(inputFileArg));
 
   osmium::Box filesBox;
@@ -255,7 +255,7 @@ int main(int argi, char **argc) {
     filter |= OSMFeature::HIGHWAY;
   }
 
-  viewFilters.push_back(make_shared<TypeFilter>(filter));
+  viewFilters.push_back(make_unique<TypeFilter>(filter));
 
   SceneConstruct sceneConstruct(viewFilters);
 
@@ -338,7 +338,8 @@ int main(int argi, char **argc) {
   double exportDuration = (totalTime - importTime) / (double)CLOCKS_PER_SEC;
 
   cout << std::format("Time Taken : {} import {}, export {}", elapsed,
-                      importDuration, exportDuration) << endl;
+                      importDuration, exportDuration)
+       << endl;
 
   return 0;
 }

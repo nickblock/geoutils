@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <osmium/osm/way.hpp>
+#include <set>
 #include <vector>
 
 class S2Cell;
@@ -16,7 +17,7 @@ class ViewFilter;
 /// etc. In order for an osmium::way to be included in the view it must pass all
 /// filters
 /// </summary
-using ViewFilterList = std::vector<std::shared_ptr<ViewFilter>>;
+using ViewFilterList = std::vector<std::unique_ptr<ViewFilter>>;
 
 /// A class which decides whehter a given osmium::way should be included in our
 /// view
@@ -56,4 +57,13 @@ private:
   std::unique_ptr<S2Cell> mS2Cell;
 };
 
+class WayIDFilter : public ViewFilter {
+public:
+  WayIDFilter(const std::string &idList);
+
+  virtual bool include(const osmium::Way &way) const;
+
+private:
+  std::set<osmium::object_id_type> mIds;
+};
 } // namespace GeoUtils
