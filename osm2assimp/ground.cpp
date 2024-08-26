@@ -1,5 +1,4 @@
 #include "ground.h"
-#include "CDT.h"
 #include "assimp/mesh.h"
 #include "delaunator.hpp"
 #include "geometry.h"
