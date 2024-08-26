@@ -25,7 +25,6 @@ find_path(PNGPP_INCLUDE_DIRS "png++/color.hpp")
 find_package(BZip2 REQUIRED)
 find_package(EXPAT REQUIRED)
 find_package(ZLIB REQUIRED)
-find_package(CDT REQUIRED)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
       set(MACOSX TRUE)
@@ -126,7 +125,6 @@ if(BUILD_OSM2ASSIMP)
             EXPAT::EXPAT
             BZip2::BZip2
             ZLIB::ZLIB
-            CDT::CDT
       )
 
       add_executable(osm2assimp
