@@ -30,6 +30,15 @@ bool Spline::isLoop() {
                 mVertices[mVertices.size() / 2]);
 }
 void Spline::insertJoin(int segmentIdx, const SplineJoin &join) {
+
+  // if the join lands on the segment start, move to previous segment
+  if (isSame(mCache[join.intersection], mVertices[segmentIdx])) {
+    if (segmentIdx == numSegments() - 1) {
+      segmentIdx = 0;
+    } else {
+      segmentIdx++;
+    }
+  }
   auto &joins = mJoins[segmentIdx];
   joins.push_back(join);
 
@@ -66,7 +75,6 @@ Spline::findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint) {
         float joinDist =
             glm::distance(mVertices[segmentIdx], mCache[(*join).intersection]);
         if (joinDist > inputDist) {
-          ;
           return *join;
         }
       }
@@ -94,6 +102,10 @@ Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
             : std::optional<glm::vec2>{};
     auto join = findJoinAtSegment(segmentIdx, intersection);
     if (join) {
+      if (points.size() &&
+          isSame(points[points.size() - 1], mCache[join->intersection])) {
+        points.erase(points.begin() + points.size() - 1);
+      }
       return PointsAndNextJoin(points, *join);
     }
     segmentIdx++;
@@ -144,7 +156,6 @@ void RoadNetwork::writeSvg(const std::filesystem::path &path) {
 
   svg.addCircles(mIntersections.points(), 10);
 
-  svg.addCircles(mPointsOfInterest, 10, "blue");
   svg.addPolygons(mData);
 
   std::vector<glm::vec2> grid;
@@ -238,6 +249,7 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
   };
 
   bool findNextSpace = false;
+
   do {
 
     findNextSpace = false;
@@ -245,13 +257,15 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
 
     auto maybeJoin = getNextJoin();
 
+    auto resetSearch = [&findNextSpace, &newSpace, &maybeJoin] {
+      findNextSpace = true;
+      newSpace.clear();
+      maybeJoin = {};
+    };
+
     while (maybeJoin) {
 
       auto join = *maybeJoin;
-
-      if (join.intersection == 119) {
-        mPointsOfInterest.push_back(join.point);
-      }
 
       newSpace.push_back(mIntersections[join.intersection]);
       mIntersections.setUsed(join.intersection);
@@ -264,9 +278,7 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
 
         std::cout << "Abort no ongoing join" << std::endl;
         // abort
-        maybeJoin = {};
-        newSpace.clear();
-        findNextSpace = true; // keep trying
+        resetSearch();
         continue;
       }
 
@@ -284,14 +296,10 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
           newSpace.erase(newSpace.begin(), newSpace.begin() + loopIdx);
         }
         appendPolygonToData(newSpace);
-        newSpace.clear();
-        maybeJoin = {};
-        findNextSpace = true;
+        resetSearch();
       } else if (mIntersections.used(nextJoin.intersection)) {
         // intersection already used, abort
-        maybeJoin = {};
-        newSpace.clear();
-        findNextSpace = true; // keep trying
+        resetSearch();
       }
     }
   } while (findNextSpace);
@@ -316,20 +324,7 @@ void RoadNetwork::findIntersections() {
 
       auto pointIdx = mIntersections.append(std::get<glm::vec2>(intersection));
 
-      if (mRoadEdges[roadIdx0].name() == "Highway_227388271" ||
-          mRoadEdges[roadIdx1].name() == "Highway_227388271") {
-
-        auto otherRoad = mRoadEdges[roadIdx0].name() == "Highway_227388271"
-                             ? mRoadEdges[roadIdx1]
-                             : mRoadEdges[roadIdx0];
-        std::cout << std::format("Point = {}, rdName {} p = {},{}", pointIdx,
-                                 otherRoad.name(),
-                                 std::get<glm::vec2>(intersection).x,
-                                 std::get<glm::vec2>(intersection).y)
-                  << std::endl;
-      }
-
-      if (reflex > 0) {
+      if (reflex >= 0) {
 
         // Joins define which spline and segment they are going to
         // joins are inserted on to the spline at the segments they are

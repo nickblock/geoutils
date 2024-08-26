@@ -114,7 +114,5 @@ protected:
   Geometry::DataFlat mData;
 
   BBox mBBox;
-
-  std::vector<glm::vec2> mPointsOfInterest;
 };
 } // namespace GeoUtils
