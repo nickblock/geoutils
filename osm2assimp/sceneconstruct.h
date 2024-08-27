@@ -8,9 +8,11 @@
 namespace GeoUtils {
 
 class Ground;
+class RoadGraph;
 class SceneConstruct : public osmium::handler::Handler {
 public:
   SceneConstruct(const ViewFilterList &filters);
+  virtual ~SceneConstruct();
 
   // osmium::handler::Handler
   void way(const osmium::Way &way);
@@ -35,6 +37,7 @@ protected:
   std::vector<OSMFeature> mFeatures;
 
   std::unique_ptr<Ground> mGround;
+  std::unique_ptr<RoadGraph> mRoadGraph;
 };
 
 } // namespace GeoUtils

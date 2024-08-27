@@ -2,8 +2,10 @@
 #include "assimp/mesh.h"
 #include "assimpwriter.h"
 #include "common.h"
+#include "convertlatlng.h"
 #include "geometry.h"
 #include "ground.h"
+#include "roadgraph.h"
 #include <iostream>
 
 using std::cout;
@@ -35,9 +37,18 @@ void SceneConstruct::way(const osmium::Way &way) {
   OSMFeature feature(way);
 
   if (feature.isValid()) {
-    mFeatures.push_back(feature);
+    if (feature.type() == OSMFeature::HIGHWAY) {
+      if (!mRoadGraph) {
+        mRoadGraph = std::make_unique<RoadGraph>();
+      }
+      mRoadGraph->addRoad(way);
+    } else {
+      mFeatures.push_back(feature);
+    }
   }
 }
+
+SceneConstruct::~SceneConstruct() = default;
 
 void SceneConstruct::node(const osmium::Node &node) {}
 void SceneConstruct::addGround(const std::vector<glm::vec2> &groundCorners) {
@@ -51,6 +62,25 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
   int retVal = 0;
 
   int featureIdx = 0;
+
+  if (mRoadGraph) {
+    mRoadGraph->graph();
+
+    for (int i = 0; i < mRoadGraph->numRoads(); i++) {
+      auto roadPtr = mRoadGraph->getRoad(i);
+      if (roadPtr) {
+        std::vector<glm::vec2> points(roadPtr->size());
+        for (int i = 0; i < roadPtr->size(); i++) {
+          auto coord =
+              ConvertLatLngToCoords::to_coords((*roadPtr)[i].location());
+          points[i] = {coord.x, coord.y};
+        }
+        auto feature = OSMFeature(points, 0.f, OSMFeature::HIGHWAY,
+                                  std::format("Highway_{}", i));
+        mFeatures.emplace_back(std::move(feature));
+      }
+    }
+  }
 
   std::vector<Geometry> geoms;
   for (auto &feature : mFeatures) {

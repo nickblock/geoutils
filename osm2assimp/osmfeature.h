@@ -1,90 +1,85 @@
 #pragma once
 
 #include "utils.h"
-#include <vector>
 #include <string>
+#include <vector>
 
 #include <osmium/geom/coordinates.hpp>
-#include <osmium/osm/way.hpp>
 #include <osmium/osm/node.hpp>
+#include <osmium/osm/way.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/vec3.hpp>
 
-namespace GeoUtils
-{
+namespace GeoUtils {
 
-  using WorldCoord = osmium::geom::Coordinates;
+using WorldCoord = osmium::geom::Coordinates;
+
+// <summary>
+// A class to hold the the 2d coordinates of a single OSM feature,
+// typically a building or road.
+// This struct contains all the information needed to be converted into a mesh
+// for Assimp later.
+// </summary>
+class OSMFeature {
+
+public:
+  static const int UNDEFINED = 0;
+
+  // the closed type refers to a collection of nodes that make up an area where
+  // the first and last nodes are the same. As opposed to a sequence of points
+  // making a path or road, a spline.
+
+  static const int CLOSED = 1;
+  static const int BUILDING = 2;
+  static const int WATER = 4;
+  static const int HIGHWAY = 8;
+  static const int LOCATION = 16;
+
+  static int determineTypeFromWay(const osmium::Way &way);
 
   // <summary>
-  // A class to hold the the 2d points of a single OSM feature,
-  // typically a building or road.
-  // This struct contains all the information needed to be converted into a mesh for Assimp later.
-  // </summary>
-  class OSMFeature
-  {
+  // Construct an OSMFeature created from an osmium way; a collection of nodes,
+  // eg road or building <summary>
+  OSMFeature(const osmium::Way &way, bool getNameFromOSM = false);
 
-  public:
-    static const int UNDEFINED = 0;
+  // <summary>
+  // Construct an OSMFeature created from a single node; eg a location or
+  // landmark <summary>
+  OSMFeature(const osmium::Node &node, bool getNameFromOSM = false);
 
-    // the closed type refers to a collection of nodes that make up an area where the first and last nodes are the same.
-    // As opposed to a sequence of points making a path or road, a spline.
+  // <summary>
+  // Construct an OSMFeature manually from points, for debugging
+  // <summary>
+  OSMFeature(const std::vector<glm::vec2> &points, float height, int type,
+             const std::string &name);
 
-    static const int CLOSED = 1;
-    static const int BUILDING = 2;
-    static const int WATER = 4;
-    static const int HIGHWAY = 8;
-    static const int LOCATION = 16;
+  int type() const { return mType; }
 
-    static int determineTypeFromWay(const osmium::Way &way);
+  bool isValid() const { return mValid; }
 
-    // <summary>
-    // Construct an OSMFeature created from an osmium way; a collection of nodes, eg road or building
-    // <summary>
-    OSMFeature(const osmium::Way &way, bool getNameFromOSM = false);
+  float height() const { return mHeight; }
 
-    // <summary>
-    // Construct an OSMFeature created from a single node; eg a location or landmark
-    // <summary>
-    OSMFeature(const osmium::Node &node, bool getNameFromOSM = false);
+  std::string name() const { return mName; }
 
-    // <summary>
-    // Construct an OSMFeature manually from points, for debugging
-    // <summary>
-    OSMFeature(const std::vector<glm::vec2> &points, float height, int type, const std::string &name);
+  const std::vector<glm::vec2> &coords() const { return mWorldCoords; }
 
-    int type() const { return mType; }
+  const BBox &getBBox() const { return mBBox; }
 
-    bool isValid() const { return mValid; }
+  static int DefaultNumberOfFloors;
+  static float BuildingFloorHeight;
+  static float RoadWidth;
 
-    float height() const { return mHeight; }
+private:
+  float determineHeightFromWay(const osmium::Way &way);
+  std::string getNameFromWay(const osmium::Way &way);
 
-    std::string name() const { return mName; }
-
-    const std::vector<glm::vec2> &coords() const
-    {
-      return mWorldCoords;
-    }
-
-    const BBox &getBBox() const
-    {
-      return mBBox;
-    }
-
-    static int DefaultNumberOfFloors;
-    static float BuildingFloorHeight;
-    static float RoadWidth;
-
-  private:
-    float determineHeightFromWay(const osmium::Way &way);
-    std::string getNameFromWay(const osmium::Way &way);
-
-    int mType;
-    float mHeight;
-    std::string mName;
-    std::vector<glm::vec2> mWorldCoords;
-    BBox mBBox;
-    bool mValid;
-  };
+  int mType;
+  float mHeight;
+  std::string mName;
+  std::vector<glm::vec2> mWorldCoords;
+  BBox mBBox;
+  bool mValid;
+};
 
 } // namespace GeoUtils
