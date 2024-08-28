@@ -38,6 +38,8 @@ public:
   static Geometry meshFromLine(const std::vector<glm::vec2> &line, float width,
                                int featureId = 0);
 
+  static Geometry meshFromJunction(const glm::vec2& center, const std::vector<glm::vec2> &offroads, float width);
+
   /// <summary>
   /// A boolean deciding the up axis as z
   /// </summary>

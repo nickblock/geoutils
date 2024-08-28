@@ -38,6 +38,18 @@ TEST(Test, MeshFromLine) {
   }
 }
 
+TEST(Test, JunctionGeometry) {
+  auto center = glm::vec2(10.f, 10.f);
+
+  auto spokes = std::vector<glm::vec2>{
+      {0.f, 10.f}, {10.f, 20.f}, {20.f, 10.f}, {10.f, 0.f}};
+
+  auto geometry = Geometry::meshFromJunction(center, spokes, 2.0f);
+
+  auto footprint = geometry.getFootprint();
+  SVGWriter().addPolygons(footprint).write(testDir() / "Junction.svg");
+}
+
 TEST(Test, GroundTest) {
   std::vector<glm::vec2> corners = {
       {0.0f, 0.0f}, {0.0f, 10.0f}, {10.0f, 10.0f}, {10.0f, 0.0f}};

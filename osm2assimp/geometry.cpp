@@ -456,6 +456,69 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
 
   return geometry;
 }
+Geometry Geometry::meshFromJunction(const glm::vec2 &center,
+                                    const std::vector<glm::vec2> &offroads,
+                                    float width) {
+  Geometry geometry;
+
+  geometry.mDataFlat.mVertices.resize(offroads.size() * 3);
+  geometry.mDataFlat.mFaces.resize(1);
+  geometry.mDataFlat.mFaces[0].resize(geometry.mDataFlat.mVertices.size());
+
+  struct Spoke {
+    std::array<glm::vec2, 2> bar;
+    glm::vec2 dir;
+
+    Line rightArmBack() { return {bar[1], bar[1] + dir}; }
+    Line leftArmBack() { return {bar[0], bar[0] + dir}; }
+  };
+
+  std::vector<Spoke> spokes(offroads.size());
+
+  for (int i = 0; i < offroads.size(); i++) {
+    auto &spoke = spokes[i];
+    spoke.dir = center - offroads[i];
+    auto dirN = glm::normalize(spoke.dir);
+
+    auto cross = glm::vec2(-dirN[1], dirN[0]);
+    auto crossBar = cross * width * 0.5f;
+
+    spoke.bar = {offroads[i] - crossBar, offroads[i] + crossBar};
+  }
+
+  std::vector<glm::vec2> inBetweenSpokes(offroads.size());
+
+  for (int i = 0; i < offroads.size(); i++) {
+    auto j = i + 1;
+    if (j == offroads.size()) {
+      j = 0;
+    }
+    auto &spoke0 = spokes[i];
+    auto &spoke1 = spokes[j];
+
+    auto intersectionResult =
+        lineIntersects2d(spoke0.rightArmBack(), spoke1.leftArmBack());
+
+    inBetweenSpokes[i] = std::get<glm::vec2>(intersectionResult);
+
+    // check spoke
+    auto r = Triangulate::reflexPoint(inBetweenSpokes[i], spoke0.bar[1],
+                                      spoke0.bar[0]);
+    assert(r > 0);
+
+    auto vertIdx = i * 3;
+
+    geometry.mDataFlat.mVertices[vertIdx + 0] = spoke0.bar[0];
+    geometry.mDataFlat.mVertices[vertIdx + 1] = spoke0.bar[1];
+    geometry.mDataFlat.mVertices[vertIdx + 2] = inBetweenSpokes[i];
+
+    geometry.mDataFlat.mFaces[0][vertIdx + 0] = vertIdx + 0;
+    geometry.mDataFlat.mFaces[0][vertIdx + 1] = vertIdx + 1;
+    geometry.mDataFlat.mFaces[0][vertIdx + 2] = vertIdx + 2;
+  }
+
+  return geometry;
+}
 
 aiMesh *Geometry::Data3D::toMesh() const {
   aiMesh *newMesh = new aiMesh;

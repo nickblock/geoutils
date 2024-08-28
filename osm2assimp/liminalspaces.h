@@ -4,9 +4,6 @@
 #include <map>
 #include <optional>
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/hash.hpp"
-
 namespace GeoUtils {
 
 struct PointCache {
