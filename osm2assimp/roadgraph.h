@@ -39,7 +39,7 @@ public:
     joinRoads();
 
     std::cout << std::format("Num Roads after {}", numRoads()) << std::endl;
-    // makeJunctions();
+    makeJunctions();
 
     std::cout << std::format("Num Junctions {}", mJunctions.size())
               << std::endl;
@@ -68,6 +68,10 @@ public:
     }
     return nullptr;
   }
+
+  size_t numJunctions() { return mJunctions.size(); }
+
+  const Junction *getJunctions(size_t idx) { return &mJunctions[idx]; }
 
 protected:
   std::vector<Road> mRoads;

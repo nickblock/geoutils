@@ -366,14 +366,22 @@ TEST(Test, RoadGraph) {
   auto roadGraph = RoadGraph<size_t>();
 
   std::vector<size_t> road0 = {0, 1, 2, 3, 4, 5};
-  std::vector<size_t> road1 = {6, 7, 3};
+
+  std::vector<size_t> road1 = {5, 6, 7};
+  std::vector<size_t> road2 = {3, 8, 9};
 
   roadGraph.addRoad(road0);
   roadGraph.addRoad(road1);
+  roadGraph.addRoad(road2);
 
   roadGraph.graph();
 
   EXPECT_EQ(roadGraph.numRoads(), 3);
+  EXPECT_EQ(roadGraph.numJunctions(), 1);
+
+  auto junction = roadGraph.getJunctions(0);
+
+  EXPECT_EQ(junction->center, 3);
 }
 
 auto main(int argc, char **argv) -> int {
