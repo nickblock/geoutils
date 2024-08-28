@@ -42,9 +42,39 @@ void RoadGraph::setNodeRefToRoad(const osmium::NodeRef &node, size_t roadIdx,
   set.insert(roadIdx);
 }
 
+RoadGraph::Road RoadGraph::splitRoad(size_t roadIdx,
+                                     const osmium::NodeRef &node) {
+  auto &road = mRoads[roadIdx];
+
+  size_t splitPoint = road.size();
+  for (int i = 0; i < road.size(); i++) {
+    if (road[i] == node) {
+      splitPoint = i;
+      break;
+    }
+  }
+
+  assert(splitPoint != road.size());
+
+  Road newRoad;
+  newRoad.insert(newRoad.begin(), road.begin() + splitPoint, road.end());
+  road.erase(road.begin() + splitPoint + 1, road.end());
+
+  auto newRoadIdx = mRoads.size();
+
+  for (auto it = newRoad.begin() + 1; it != newRoad.end(); ++it) {
+    setNodeRefToRoad(*it, newRoadIdx, roadIdx);
+  }
+  mNodeToWay[node].insert(newRoadIdx);
+  mRoads.emplace_back(std::move(newRoad));
+
+  return newRoad;
+}
+
 void RoadGraph::joinRoadsAtNode(const osmium::NodeRef &node) {
 
-  auto setIt = mNodeToWay[node].begin();
+  auto &set = mNodeToWay[node];
+  auto setIt = set.begin();
 
   auto roadIdx0 = *setIt;
   auto roadIdx1 = *(++setIt);
@@ -58,7 +88,7 @@ void RoadGraph::joinRoadsAtNode(const osmium::NodeRef &node) {
   if (pos0 == End && pos1 == Begin) {
     road0.insert(road0.end(), road1.begin() + 1, road1.end());
     for (auto &node : road1) {
-      setNodeRefToRoad(node, roadIdx1, roadIdx0);
+      setNodeRefToRoad(node, roadIdx0, roadIdx1);
     }
     road1.clear();
 
@@ -66,23 +96,32 @@ void RoadGraph::joinRoadsAtNode(const osmium::NodeRef &node) {
     std::reverse(road1.begin(), road1.end());
     road0.insert(road0.end(), road1.begin() + 1, road1.end());
     for (auto &node : road1) {
-      setNodeRefToRoad(node, roadIdx1, roadIdx0);
+      setNodeRefToRoad(node, roadIdx0, roadIdx1);
     }
     road1.clear();
   } else if (pos0 == Begin && pos1 == Begin) {
     std::reverse(road0.begin(), road0.end());
     road0.insert(road0.end(), road1.begin() + 1, road1.end());
     for (auto &node : road1) {
-      setNodeRefToRoad(node, roadIdx1, roadIdx0);
+      setNodeRefToRoad(node, roadIdx0, roadIdx1);
     }
     road1.clear();
   } else if (pos0 == Begin && pos1 == End) {
 
     road1.insert(road1.end(), road0.begin() + 1, road0.end());
     for (auto &node : road0) {
-      setNodeRefToRoad(node, roadIdx0, roadIdx1);
+      setNodeRefToRoad(node, roadIdx1, roadIdx0);
     }
     road0.clear();
+  } else if (pos1 == Middle || pos0 == Middle) {
+    if (pos0 == Middle) {
+      splitRoad(roadIdx0, node);
+    }
+    if (pos1 == Middle) {
+      splitRoad(roadIdx1, node);
+    }
+  } else {
+    assert(false);
   }
 }
 
@@ -110,21 +149,63 @@ const RoadGraph::Road *RoadGraph::getRoad(size_t idx) const {
   }
   return nullptr;
 }
-void RoadGraph::graph() {
 
-  std::cout << std::format("Num Roads begin {}", numRoads()) << std::endl;
+void RoadGraph::joinRoads() {
   for (auto &nodeRoad : mNodeToWay) {
     if (nodeRoad.second.size() == 2) {
       // join roads
       auto node = nodeRoad.first;
 
       joinRoadsAtNode(node);
-
-    } else if (nodeRoad.second.size() > 2) {
-      // junction
     }
   }
+}
+void RoadGraph::makeJunctions() {
+
+  for (auto &nodeRoad : mNodeToWay) {
+    assert(nodeRoad.second.size() != 2);
+
+    if (nodeRoad.second.size() > 2) {
+      // junction
+
+      // check if the junction is found in middle of a road,
+      // in which case split it.
+      for (auto &roadIdx : nodeRoad.second) {
+        auto &road = mRoads[roadIdx];
+        auto pos = getPosition(road, nodeRoad.first);
+        if (pos == Middle) {
+          splitRoad(roadIdx, nodeRoad.first);
+        }
+      }
+
+      Junction junction;
+      junction.center = nodeRoad.first;
+
+      for (auto &roadIdx : nodeRoad.second) {
+        auto &road = mRoads[roadIdx];
+        auto jPos = getPosition(road, junction.center);
+
+        if (jPos == Begin) {
+          junction.offRoads.push_back(road[1]);
+        } else if (jPos == End) {
+          junction.offRoads.push_back(road[road.size() - 2]);
+        } else {
+          assert(false);
+        }
+      }
+      mJunctions.emplace_back(std::move(junction));
+    }
+  }
+}
+void RoadGraph::graph() {
+
+  std::cout << std::format("Num Roads begin {}", numRoads()) << std::endl;
+  joinRoads();
 
   std::cout << std::format("Num Roads after {}", numRoads()) << std::endl;
+  // makeJunctions();
+
+  std::cout << std::format("Num Junctions {}", mJunctions.size()) << std::endl;
 }
+
 } // namespace GeoUtils
