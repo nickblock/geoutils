@@ -4,8 +4,8 @@
 #include "geometry.h"
 #include "glm/glm.hpp"
 #include "ground.h"
+#include "liminalspaces.h"
 #include "roadgraph.h"
-#include "roadnetwork.h"
 #include "svg.h"
 #include "utils.h"
 #include <filesystem>
@@ -276,73 +276,73 @@ std::vector<glm::vec2> makePointList(const glm::vec2 &begin,
 }
 
 auto makeRoad = [](const Line &line, int numPoints, float width,
-                   RoadNetwork &roadNetwork) {
+                   LiminalSpaces &liminalSpaces) {
   auto road =
       Geometry::meshFromLine(makePointList(line[0], line[1], numPoints), width);
   auto tri = Triangulate(road.getFootprint()).triangulate();
-  roadNetwork.addRoad(*tri);
+  liminalSpaces.addRoad(*tri);
 };
-TEST(Test, RoadNetworkGrid) {
+TEST(Test, LiminalSpacesGrid) {
 
   BBox box;
   box.add({0.0, 0.0, 0.0});
   box.add({10.0, 10.0, 0.0});
-  auto roadNetwork = RoadNetwork(box);
+  auto liminalSpaces = LiminalSpaces(box);
 
   auto width = 2.0f;
   int numPoints = 2;
 
   // basic grid
   makeRoad(Line{glm::vec2{0.0f, 2.0f}, glm::vec2{10.0f, 2.0f}}, numPoints,
-           width, roadNetwork);
+           width, liminalSpaces);
   makeRoad(Line{glm::vec2{0.0f, 8.0f}, glm::vec2{12.0f, 8.0f}}, numPoints,
-           width, roadNetwork);
+           width, liminalSpaces);
   makeRoad(Line{glm::vec2{8.0f, 0.0f}, glm::vec2{8.0f, 10.0f}}, numPoints,
-           width, roadNetwork);
+           width, liminalSpaces);
   makeRoad(Line{glm::vec2{2.0f, 0.0f}, glm::vec2{2.0f, 10.0f}}, numPoints,
-           width, roadNetwork);
+           width, liminalSpaces);
 
-  auto data = roadNetwork.getInternalSpaces();
+  auto data = liminalSpaces.getInternalSpaces();
 
-  roadNetwork.writeSvg(testDir() / "road_grid.svg");
+  liminalSpaces.writeSvg(testDir() / "road_grid.svg");
 
   EXPECT_EQ(data.mFaces.size(), 9);
 }
 
-TEST(Test, RoadNetworkOverlap) {
+TEST(Test, LiminalSpacesOverlap) {
 
   BBox box;
   box.add({0.0, 0.0, 0.0});
   box.add({15.0, 15.0, 0.0});
-  auto roadNetwork = RoadNetwork(box);
+  auto liminalSpaces = LiminalSpaces(box);
 
   auto width = 2.0f;
   int numPoints = 2;
 
   makeRoad(Line{glm::vec2{5.0, 3.0}, glm::vec2{15.0, 3.0}}, numPoints, width,
-           roadNetwork);
+           liminalSpaces);
   makeRoad(Line{glm::vec2{5.0, 0.0}, glm::vec2{5.0, 10.0}}, numPoints, width,
-           roadNetwork);
+           liminalSpaces);
   makeRoad(Line{glm::vec2{10.0, 0.0}, glm::vec2{10.0, 10.0}}, numPoints, width,
-           roadNetwork);
+           liminalSpaces);
   makeRoad(Line{glm::vec2{15.0, 0.0}, glm::vec2{15.0, 10.0}}, numPoints, width,
-           roadNetwork);
+           liminalSpaces);
   makeRoad(Line{glm::vec2{5.0, 10.0}, glm::vec2{15.0, 10.0}}, numPoints, width,
-           roadNetwork);
+           liminalSpaces);
 
-  auto data = roadNetwork.getInternalSpaces();
+  auto data = liminalSpaces.getInternalSpaces();
 
-  roadNetwork.writeSvg(testDir() / "road_overlap.svg");
+  liminalSpaces.writeSvg(testDir() / "road_overlap.svg");
 
   EXPECT_EQ(data.mFaces.size(), 5);
 }
 
-TEST(Test, RoadNetworkLoop) {
+TEST(Test, LiminalSpacesLoop) {
 
   BBox box;
   box.add({0.0, 0.0, 0.0});
   box.add({15.0, 15.0, 0.0});
-  auto roadNetwork = RoadNetwork(box);
+  auto liminalSpaces = LiminalSpaces(box);
 
   auto width = 2.0f;
   int numPoints = 2;
@@ -352,11 +352,11 @@ TEST(Test, RoadNetworkLoop) {
 
   auto road = Geometry::meshFromLine(points, width);
   auto tri = Triangulate(road.getFootprint()).triangulate();
-  roadNetwork.addRoad(*tri);
+  liminalSpaces.addRoad(*tri);
 
-  auto data = roadNetwork.getInternalSpaces();
+  auto data = liminalSpaces.getInternalSpaces();
 
-  roadNetwork.writeSvg(testDir() / "road_loop.svg");
+  liminalSpaces.writeSvg(testDir() / "road_loop.svg");
 
   EXPECT_EQ(data.mFaces.size(), 1);
 }

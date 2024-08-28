@@ -100,7 +100,7 @@ if(BUILD_OSM2ASSIMP)
             osm2assimp/osmfeature.cpp
             osm2assimp/ground.cpp
             osm2assimp/geometry.cpp
-            osm2assimp/roadnetwork.cpp
+            osm2assimp/liminalspaces.cpp
             osm2assimp/svg.cpp
             osm2assimp/triangulate.cpp
             osm2assimp/viewfilter.cpp

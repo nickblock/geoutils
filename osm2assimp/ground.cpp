@@ -2,7 +2,7 @@
 #include "assimp/mesh.h"
 #include "delaunator.hpp"
 #include "geometry.h"
-#include "roadnetwork.h"
+#include "liminalspaces.h"
 #include "svg.h"
 #include <fstream>
 #include <iostream>
@@ -31,25 +31,25 @@ void Ground::addFootPrint(const Triangulate::Data &footprint, int type,
                        footprint.mVertices.end());
 
   if (type == OSMFeature::HIGHWAY) {
-    if (!mRoadNetwork) {
-      mRoadNetwork = std::make_unique<RoadNetwork>(mBBox);
+    if (!mLiminalSpaces) {
+      mLiminalSpaces = std::make_unique<LiminalSpaces>(mBBox);
     }
-    mRoadNetwork->addRoad(footprint, name);
+    mLiminalSpaces->addRoad(footprint, name);
   }
 }
 
 void Ground::writeSvg(const std::filesystem::path &path) {
 
-  if (mRoadNetwork) {
-    mRoadNetwork->writeSvg(path);
+  if (mLiminalSpaces) {
+    mLiminalSpaces->writeSvg(path);
   }
 }
 
 aiMesh *Ground::getMesh() {
 
-  if (mRoadNetwork) {
+  if (mLiminalSpaces) {
 
-    mDataFlat = mRoadNetwork->getInternalSpaces();
+    mDataFlat = mLiminalSpaces->getInternalSpaces();
   }
 
   aiMesh *mesh = new aiMesh();

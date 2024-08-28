@@ -12,7 +12,7 @@
 class aiMesh;
 
 namespace GeoUtils {
-class RoadNetwork;
+class LiminalSpaces;
 
 class Ground {
 public:
@@ -43,6 +43,6 @@ protected:
 
   BBox mBBox;
 
-  std::unique_ptr<RoadNetwork> mRoadNetwork;
+  std::unique_ptr<LiminalSpaces> mLiminalSpaces;
 };
 } // namespace GeoUtils

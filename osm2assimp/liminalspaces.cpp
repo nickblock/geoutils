@@ -1,4 +1,4 @@
-#include "roadnetwork.h"
+#include "liminalspaces.h"
 #include "svg.h"
 #include <format>
 #include <glm/ext/scalar_constants.hpp>
@@ -114,7 +114,7 @@ Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
   return {};
 }
 
-RoadNetwork::RoadNetwork(const BBox &bbox) : mBBox(bbox) {
+LiminalSpaces::LiminalSpaces(const BBox &bbox) : mBBox(bbox) {
 
   // outer perimeter goes anti clockwise
   {
@@ -131,8 +131,8 @@ RoadNetwork::RoadNetwork(const BBox &bbox) : mBBox(bbox) {
 
   mHashSize += 4;
 }
-void RoadNetwork::addRoad(const Triangulate::Data &road,
-                          const std::string &name) {
+void LiminalSpaces::addRoad(const Triangulate::Data &road,
+                            const std::string &name) {
 
   Spline roadEdge0(mIntersections);
   for (int i = 0; i < road.mVertices.size(); i++) {
@@ -142,7 +142,7 @@ void RoadNetwork::addRoad(const Triangulate::Data &road,
   mRoadEdges.push_back(roadEdge0);
 }
 
-void RoadNetwork::writeSvg(const std::filesystem::path &path) {
+void LiminalSpaces::writeSvg(const std::filesystem::path &path) {
 
   auto svg = SVGWriter();
 
@@ -173,7 +173,7 @@ void RoadNetwork::writeSvg(const std::filesystem::path &path) {
   svg.write(path);
 }
 
-void RoadNetwork::addLoopingSegments(int splineIdx) {
+void LiminalSpaces::addLoopingSegments(int splineIdx) {
 
   if (mRoadEdges[splineIdx].isLoop()) {
 
@@ -192,7 +192,7 @@ void RoadNetwork::addLoopingSegments(int splineIdx) {
   }
 }
 
-void RoadNetwork::appendPolygonToData(const std::vector<glm::vec2> &points) {
+void LiminalSpaces::appendPolygonToData(const std::vector<glm::vec2> &points) {
 
   if (points.size() < 3) {
     return;
@@ -210,16 +210,16 @@ void RoadNetwork::appendPolygonToData(const std::vector<glm::vec2> &points) {
   mData.mFaces.emplace_back(std::move(face));
 }
 
-Geometry::DataFlat RoadNetwork::getInternalSpaces() {
+Geometry::DataFlat LiminalSpaces::getInternalSpaces() {
 
   return createSpaceFromJoins();
 }
 
-Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
+Geometry::DataFlat LiminalSpaces::createSpaceFromJoins() {
 
   findIntersections();
 
-  writeSvg(testDir() / std::format("RoadNetwork_start.svg"));
+  writeSvg(testDir() / std::format("LiminalSpaces_start.svg"));
 
   auto getNextJoin = [this]() -> std::optional<SplineJoin> {
     for (int i = 0; i < mRoadEdges.size(); i++) {
@@ -302,7 +302,7 @@ Geometry::DataFlat RoadNetwork::createSpaceFromJoins() {
 
   return mData;
 }
-void RoadNetwork::findIntersections() {
+void LiminalSpaces::findIntersections() {
 
   auto segmentIntersection = [this](int roadIdx0, int segmentIdx0, int roadIdx1,
                                     int segmentIdx1) {

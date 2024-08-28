@@ -81,10 +81,10 @@ protected:
   BBox mBBox;
 };
 
-class RoadNetwork {
+class LiminalSpaces {
 
 public:
-  RoadNetwork(const BBox &bbox);
+  LiminalSpaces(const BBox &bbox);
 
   void addRoad(const Triangulate::Data &road, const std::string &name = "");
 
