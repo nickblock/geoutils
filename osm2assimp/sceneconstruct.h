@@ -1,6 +1,7 @@
 #include "assimpwriter.h"
 #include "ground.h"
 #include "osmfeature.h"
+#include "roadgraph.h"
 #include "viewfilter.h"
 #include <map>
 #include <osmium/handler.hpp>
@@ -8,7 +9,6 @@
 namespace GeoUtils {
 
 class Ground;
-class RoadGraph;
 class SceneConstruct : public osmium::handler::Handler {
 public:
   SceneConstruct(const ViewFilterList &filters);
@@ -37,7 +37,7 @@ protected:
   std::vector<OSMFeature> mFeatures;
 
   std::unique_ptr<Ground> mGround;
-  std::unique_ptr<RoadGraph> mRoadGraph;
+  std::unique_ptr<RoadGraph<osmium::NodeRef>> mRoadGraph;
 };
 
 } // namespace GeoUtils

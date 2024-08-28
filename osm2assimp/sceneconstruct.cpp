@@ -5,8 +5,6 @@
 #include "convertlatlng.h"
 #include "geometry.h"
 #include "ground.h"
-#include "roadgraph.h"
-#include <iostream>
 
 using std::cout;
 using std::endl;
@@ -39,9 +37,14 @@ void SceneConstruct::way(const osmium::Way &way) {
   if (feature.isValid()) {
     if (feature.type() == OSMFeature::HIGHWAY) {
       if (!mRoadGraph) {
-        mRoadGraph = std::make_unique<RoadGraph>();
+        mRoadGraph = std::make_unique<RoadGraph<osmium::NodeRef>>();
       }
-      mRoadGraph->addRoad(way);
+      std::vector<osmium::NodeRef> nodes(way.nodes().size());
+      for (int i = 0; i < nodes.size(); i++) {
+        nodes[i] = way.nodes()[i];
+      }
+
+      mRoadGraph->addRoad(nodes);
     } else {
       mFeatures.push_back(feature);
     }
