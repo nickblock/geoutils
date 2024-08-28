@@ -72,10 +72,10 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
     for (int i = 0; i < mRoadGraph->numRoads(); i++) {
       auto roadPtr = mRoadGraph->getRoad(i);
       if (roadPtr) {
-        std::vector<glm::vec2> points(roadPtr->size());
-        for (int i = 0; i < roadPtr->size(); i++) {
+        std::vector<glm::vec2> points(roadPtr->nodes.size());
+        for (int i = 0; i < roadPtr->nodes.size(); i++) {
           auto coord =
-              ConvertLatLngToCoords::to_coords((*roadPtr)[i].location());
+              ConvertLatLngToCoords::to_coords((*roadPtr).nodes[i].location());
           points[i] = {coord.x, coord.y};
         }
         auto feature = OSMFeature(points, 0.f, OSMFeature::HIGHWAY,

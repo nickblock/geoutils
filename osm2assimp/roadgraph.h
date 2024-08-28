@@ -10,12 +10,19 @@
 
 namespace GeoUtils {
 
+constexpr size_t kInvalidIdx = (size_t)-1;
+
 template <typename NodeType> class RoadGraph {
 
 public:
   ~RoadGraph() = default;
 
-  using Road = std::vector<NodeType>;
+  struct Road {
+    Road() = default;
+    Road(size_t size) : nodes(size) {}
+    std::vector<NodeType> nodes;
+    std::array<size_t, 2> junctions = {kInvalidIdx, kInvalidIdx};
+  };
 
   struct Junction {
     NodeType center;
@@ -28,8 +35,8 @@ public:
     size_t roadIdx = mRoads.size();
     Road road(way.size());
     for (int i = 0; i < way.size(); i++) {
-      road[i] = way[i];
-      mNodeToWay[road[i]].insert(roadIdx);
+      road.nodes[i] = way[i];
+      mNodeToWay[road.nodes[i]].insert(roadIdx);
     }
     mRoads.push_back(road);
   }
@@ -47,7 +54,7 @@ public:
   size_t numRoads() const {
     size_t num = 0;
     for (auto &road : mRoads) {
-      if (road.size()) {
+      if (road.nodes.size()) {
         num++;
       }
     }
@@ -57,7 +64,7 @@ public:
     size_t search = 0;
     size_t actual = 0;
     while (actual <= idx) {
-      while (mRoads[search].size() == 0) {
+      while (mRoads[search].nodes.size() == 0) {
         search++;
       }
       if (actual == idx) {
@@ -83,11 +90,11 @@ protected:
   enum NodePosition { Begin, Middle, End, None };
 
   NodePosition getPosition(const RoadGraph::Road &road, const NodeType &node) {
-    for (int i = 0; i < road.size(); i++) {
-      if (road[i] == node) {
+    for (int i = 0; i < road.nodes.size(); i++) {
+      if (road.nodes[i] == node) {
         if (i == 0) {
           return Begin;
-        } else if (i == road.size() - 1) {
+        } else if (i == road.nodes.size() - 1) {
           return End;
         } else {
           return Middle;
@@ -106,23 +113,24 @@ protected:
   Road splitRoad(size_t roadIdx, const NodeType &node) {
     auto &road = mRoads[roadIdx];
 
-    size_t splitPoint = road.size();
-    for (int i = 0; i < road.size(); i++) {
-      if (road[i] == node) {
+    size_t splitPoint = road.nodes.size();
+    for (int i = 0; i < road.nodes.size(); i++) {
+      if (road.nodes[i] == node) {
         splitPoint = i;
         break;
       }
     }
 
-    assert(splitPoint != road.size());
+    assert(splitPoint != road.nodes.size());
 
     Road newRoad;
-    newRoad.insert(newRoad.begin(), road.begin() + splitPoint, road.end());
-    road.erase(road.begin() + splitPoint + 1, road.end());
+    newRoad.nodes.insert(newRoad.nodes.begin(), road.nodes.begin() + splitPoint,
+                         road.nodes.end());
+    road.nodes.erase(road.nodes.begin() + splitPoint + 1, road.nodes.end());
 
     auto newRoadIdx = mRoads.size();
 
-    for (auto it = newRoad.begin() + 1; it != newRoad.end(); ++it) {
+    for (auto it = newRoad.nodes.begin() + 1; it != newRoad.nodes.end(); ++it) {
       setNodeRefToRoad(*it, newRoadIdx, roadIdx);
     }
     mNodeToWay[node].insert(newRoadIdx);
@@ -146,33 +154,37 @@ protected:
     int pos1 = getPosition(road1, node);
 
     if (pos0 == End && pos1 == Begin) {
-      road0.insert(road0.end(), road1.begin() + 1, road1.end());
-      for (auto &node : road1) {
+      road0.nodes.insert(road0.nodes.end(), road1.nodes.begin() + 1,
+                         road1.nodes.end());
+      for (auto &node : road1.nodes) {
         setNodeRefToRoad(node, roadIdx0, roadIdx1);
       }
-      road1.clear();
+      road1.nodes.clear();
 
     } else if (pos0 == End && pos1 == End) {
-      std::reverse(road1.begin(), road1.end());
-      road0.insert(road0.end(), road1.begin() + 1, road1.end());
-      for (auto &node : road1) {
+      std::reverse(road1.nodes.begin(), road1.nodes.end());
+      road0.nodes.insert(road0.nodes.end(), road1.nodes.begin() + 1,
+                         road1.nodes.end());
+      for (auto &node : road1.nodes) {
         setNodeRefToRoad(node, roadIdx0, roadIdx1);
       }
-      road1.clear();
+      road1.nodes.clear();
     } else if (pos0 == Begin && pos1 == Begin) {
-      std::reverse(road0.begin(), road0.end());
-      road0.insert(road0.end(), road1.begin() + 1, road1.end());
-      for (auto &node : road1) {
+      std::reverse(road0.nodes.begin(), road0.nodes.end());
+      road0.nodes.insert(road0.nodes.end(), road1.nodes.begin() + 1,
+                         road1.nodes.end());
+      for (auto &node : road1.nodes) {
         setNodeRefToRoad(node, roadIdx0, roadIdx1);
       }
-      road1.clear();
+      road1.nodes.clear();
     } else if (pos0 == Begin && pos1 == End) {
 
-      road1.insert(road1.end(), road0.begin() + 1, road0.end());
-      for (auto &node : road0) {
+      road1.nodes.insert(road1.nodes.end(), road0.nodes.begin() + 1,
+                         road0.nodes.end());
+      for (auto &node : road0.nodes) {
         setNodeRefToRoad(node, roadIdx1, roadIdx0);
       }
-      road0.clear();
+      road0.nodes.clear();
     } else if (pos1 == Middle || pos0 == Middle) {
       if (pos0 == Middle) {
         splitRoad(roadIdx0, node);
@@ -216,14 +228,21 @@ protected:
         Junction junction;
         junction.center = nodeRoad.first;
 
+        auto junctionIdx = mJunctions.size();
+
         for (auto &roadIdx : nodeRoad.second) {
           auto &road = mRoads[roadIdx];
           auto jPos = getPosition(road, junction.center);
 
           if (jPos == Begin) {
-            junction.offRoads.push_back(road[1]);
+            junction.offRoads.push_back(road.nodes[1]);
+
+            assert(road.junctions[0] == kInvalidIdx);
+            road.junctions[0] = junctionIdx;
           } else if (jPos == End) {
-            junction.offRoads.push_back(road[road.size() - 2]);
+            junction.offRoads.push_back(road.nodes[road.nodes.size() - 2]);
+            assert(road.junctions[1] == kInvalidIdx);
+            road.junctions[1] = junctionIdx;
           } else {
             assert(false);
           }
