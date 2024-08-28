@@ -102,10 +102,6 @@ Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
             : std::optional<glm::vec2>{};
     auto join = findJoinAtSegment(segmentIdx, intersection);
     if (join) {
-      if (points.size() &&
-          isSame(points[points.size() - 1], mCache[join->intersection])) {
-        points.erase(points.begin() + points.size() - 1);
-      }
       return PointsAndNextJoin(points, *join);
     }
     segmentIdx++;
@@ -201,9 +197,9 @@ void RoadNetwork::appendPolygonToData(const std::vector<glm::vec2> &points) {
   if (points.size() < 3) {
     return;
   }
-  // if (Triangulate(points).checkWindingOrder()) {
-  //   return;
-  // }
+  if (Triangulate(points).checkWindingOrder()) {
+    return;
+  }
   int lastIdx = mData.mVertices.size();
 
   Face face(points.size());
@@ -324,7 +320,7 @@ void RoadNetwork::findIntersections() {
 
       auto pointIdx = mIntersections.append(std::get<glm::vec2>(intersection));
 
-      if (reflex >= 0) {
+      if (reflex > 0) {
 
         // Joins define which spline and segment they are going to
         // joins are inserted on to the spline at the segments they are
