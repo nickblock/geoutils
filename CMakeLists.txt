@@ -92,8 +92,6 @@ endif()
 option(BUILD_OSM2ASSIMP "Build osm2assimp" ON)
 
 if(BUILD_OSM2ASSIMP)
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPACKAGE_VERSION=\"1\" -fcommon")
-
       add_library(osm2assimpLib STATIC
             osm2assimp/sceneconstruct.cpp
             osm2assimp/convertlatlng.cpp
