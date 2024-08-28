@@ -23,7 +23,7 @@ public:
         offRoads; // the next nodeRef of each road out from the junction
   };
 
-  void addRoad(const std::span<osmium::NodeRef> &way) {
+  void addRoad(const std::span<NodeType> &way) {
 
     size_t roadIdx = mRoads.size();
     Road road(way.size());

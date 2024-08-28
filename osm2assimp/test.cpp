@@ -4,6 +4,7 @@
 #include "geometry.h"
 #include "glm/glm.hpp"
 #include "ground.h"
+#include "roadgraph.h"
 #include "roadnetwork.h"
 #include "svg.h"
 #include "utils.h"
@@ -358,6 +359,21 @@ TEST(Test, RoadNetworkLoop) {
   roadNetwork.writeSvg(testDir() / "road_loop.svg");
 
   EXPECT_EQ(data.mFaces.size(), 1);
+}
+
+TEST(Test, RoadGraph) {
+
+  auto roadGraph = RoadGraph<size_t>();
+
+  std::vector<size_t> road0 = {0, 1, 2, 3, 4, 5};
+  std::vector<size_t> road1 = {6, 7, 3};
+
+  roadGraph.addRoad(road0);
+  roadGraph.addRoad(road1);
+
+  roadGraph.graph();
+
+  EXPECT_EQ(roadGraph.numRoads(), 3);
 }
 
 auto main(int argc, char **argv) -> int {
