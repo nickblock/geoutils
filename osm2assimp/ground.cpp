@@ -34,7 +34,7 @@ void Ground::addFootPrint(const Triangulate::Data &footprint, int type,
     if (!mLiminalSpaces) {
       mLiminalSpaces = std::make_unique<LiminalSpaces>(mBBox);
     }
-    mLiminalSpaces->addRoad(footprint, name);
+    mLiminalSpaces->addIslands(footprint, name);
   }
 }
 

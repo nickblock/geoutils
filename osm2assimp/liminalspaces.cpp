@@ -5,12 +5,12 @@
 
 namespace GeoUtils {
 
-Spline::Spline(PointCache &cache) : mCache(cache) {};
-void Spline::append(const glm::vec2 &p) {
+Space::Space(PointCache &cache) : mCache(cache) {};
+void Space::append(const glm::vec2 &p) {
   mVertices.push_back(p);
   mBBox.add({p, 0.f});
 }
-Line Spline::segment(int idx) {
+Line Space::segment(int idx) {
   if (idx < mVertices.size() - 1) {
     return {mVertices[idx], mVertices[idx + 1]};
   } else if (idx == mVertices.size() - 1) {
@@ -24,12 +24,12 @@ Line Spline::segment(int idx) {
     return {mVertices[idx], mVertices[idx1]};
   }
 }
-int Spline::numSegments() { return mVertices.size(); }
-bool Spline::isLoop() {
+int Space::numSegments() { return mVertices.size(); }
+bool Space::isLoop() {
   return isSame(mVertices[mVertices.size() - 1],
                 mVertices[mVertices.size() / 2]);
 }
-void Spline::insertJoin(int segmentIdx, const SplineJoin &join) {
+void Space::insertJoin(int segmentIdx, const SpaceJoin &join) {
 
   // if the join lands on the segment start, move to previous segment
   if (isSame(mCache[join.intersection], mVertices[segmentIdx])) {
@@ -52,7 +52,7 @@ void Spline::insertJoin(int segmentIdx, const SplineJoin &join) {
   }
 }
 
-std::optional<SplineJoin> Spline::getfirstJoin() {
+std::optional<SpaceJoin> Space::getfirstJoin() {
 
   for (auto &joinList : mJoins) {
     for (auto &join : joinList.second) {
@@ -64,8 +64,8 @@ std::optional<SplineJoin> Spline::getfirstJoin() {
   return {};
 }
 
-std::optional<SplineJoin>
-Spline::findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint) {
+std::optional<SpaceJoin>
+Space::findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint) {
   auto it = mJoins.find(segmentIdx);
   if (it != mJoins.end()) {
     if (afterPoint) {
@@ -85,8 +85,8 @@ Spline::findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint) {
   return {};
 }
 
-std::optional<Spline::PointsAndNextJoin>
-Spline::getSplineToNextJoin(const SplineJoin &inputJoin) {
+std::optional<Space::PointsAndNextJoin>
+Space::getSpaceToNextJoin(const SpaceJoin &inputJoin) {
   auto startIdx = inputJoin.join.segmentIdx;
   auto segmentIdx = startIdx;
 
@@ -118,12 +118,12 @@ LiminalSpaces::LiminalSpaces(const BBox &bbox) : mBBox(bbox) {
 
   // outer perimeter goes anti clockwise
   {
-    Spline edge(mIntersections);
+    Space edge(mIntersections);
     edge.append(glm::vec2(bbox.mMin.x, bbox.mMin.y));
     edge.append(glm::vec2(bbox.mMax.x, bbox.mMin.y));
     edge.append(glm::vec2(bbox.mMax.x, bbox.mMax.y));
     edge.append(glm::vec2(bbox.mMin.x, bbox.mMax.y));
-    mRoadEdges.push_back(edge);
+    mIslands.push_back(edge);
   }
 
   mCenter.x = (bbox.mMin.x + bbox.mMax.x) / 2.f;
@@ -131,22 +131,22 @@ LiminalSpaces::LiminalSpaces(const BBox &bbox) : mBBox(bbox) {
 
   mHashSize += 4;
 }
-void LiminalSpaces::addRoad(const Triangulate::Data &road,
-                            const std::string &name) {
+void LiminalSpaces::addIslands(const Triangulate::Data &island,
+                               const std::string &name) {
 
-  Spline roadEdge0(mIntersections);
-  for (int i = 0; i < road.mVertices.size(); i++) {
-    roadEdge0.append(road.mVertices[i]);
+  Space roadEdge0(mIntersections);
+  for (int i = 0; i < island.mVertices.size(); i++) {
+    roadEdge0.append(island.mVertices[i]);
   }
   roadEdge0.setName(name);
-  mRoadEdges.push_back(roadEdge0);
+  mIslands.push_back(roadEdge0);
 }
 
 void LiminalSpaces::writeSvg(const std::filesystem::path &path) {
 
   auto svg = SVGWriter();
 
-  for (auto &sp : mRoadEdges) {
+  for (auto &sp : mIslands) {
     svg.addLine(sp.vertices(), "white", true);
   }
 
@@ -175,20 +175,20 @@ void LiminalSpaces::writeSvg(const std::filesystem::path &path) {
 
 void LiminalSpaces::addLoopingSegments(int splineIdx) {
 
-  if (mRoadEdges[splineIdx].isLoop()) {
+  if (mIslands[splineIdx].isLoop()) {
 
-    auto loopPoint = mRoadEdges[splineIdx]
-                         .vertices()[mRoadEdges[splineIdx].numSegments() / 2];
+    auto loopPoint =
+        mIslands[splineIdx].vertices()[mIslands[splineIdx].numSegments() / 2];
     auto pointIdx = mIntersections.append(loopPoint);
 
-    auto segmentJoinIdx = mRoadEdges[splineIdx].numSegments() / 2;
-    auto endJoinIdx = mRoadEdges[splineIdx].numSegments() - 1;
+    auto segmentJoinIdx = mIslands[splineIdx].numSegments() / 2;
+    auto endJoinIdx = mIslands[splineIdx].numSegments() - 1;
 
     SegmentIndex si0{splineIdx, segmentJoinIdx};
     SegmentIndex si1{splineIdx, endJoinIdx};
 
-    mRoadEdges[splineIdx].insertJoin(segmentJoinIdx, {si0, pointIdx});
-    mRoadEdges[splineIdx].insertJoin(endJoinIdx, {si1, pointIdx});
+    mIslands[splineIdx].insertJoin(segmentJoinIdx, {si0, pointIdx});
+    mIslands[splineIdx].insertJoin(endJoinIdx, {si1, pointIdx});
   }
 }
 
@@ -221,9 +221,9 @@ Geometry::DataFlat LiminalSpaces::createSpaceFromJoins() {
 
   writeSvg(testDir() / std::format("LiminalSpaces_start.svg"));
 
-  auto getNextJoin = [this]() -> std::optional<SplineJoin> {
-    for (int i = 0; i < mRoadEdges.size(); i++) {
-      auto join = mRoadEdges[i].getfirstJoin();
+  auto getNextJoin = [this]() -> std::optional<SpaceJoin> {
+    for (int i = 0; i < mIslands.size(); i++) {
+      auto join = mIslands[i].getfirstJoin();
       if (join.has_value()) {
         mIntersections.setUsed(join->intersection);
         return join.value();
@@ -266,11 +266,11 @@ Geometry::DataFlat LiminalSpaces::createSpaceFromJoins() {
       newSpace.push_back(mIntersections[join.intersection]);
       mIntersections.setUsed(join.intersection);
 
-      auto &roadJoined = mRoadEdges[join.join.roadIdx];
+      auto &roadJoined = mIslands[join.join.roadIdx];
 
-      auto maybeSplineToNext = roadJoined.getSplineToNextJoin(join);
+      auto maybeSpaceToNext = roadJoined.getSpaceToNextJoin(join);
 
-      if (!maybeSplineToNext) {
+      if (!maybeSpaceToNext) {
 
         std::cout << "Abort no ongoing join" << std::endl;
         // abort
@@ -278,7 +278,7 @@ Geometry::DataFlat LiminalSpaces::createSpaceFromJoins() {
         continue;
       }
 
-      auto [points, nextJoin] = maybeSplineToNext.value();
+      auto [points, nextJoin] = maybeSpaceToNext.value();
       maybeJoin = nextJoin;
 
       for (auto &p : points) {
@@ -308,10 +308,10 @@ void LiminalSpaces::findIntersections() {
                                     int segmentIdx1) {
     SegmentIndex s0{roadIdx0, segmentIdx0};
 
-    Line testLine = mRoadEdges[roadIdx0].segment(segmentIdx0);
+    Line testLine = mIslands[roadIdx0].segment(segmentIdx0);
 
     SegmentIndex s1{roadIdx1, segmentIdx1};
-    Line targetLine = mRoadEdges[roadIdx1].segment(segmentIdx1);
+    Line targetLine = mIslands[roadIdx1].segment(segmentIdx1);
 
     auto intersection = lineIntersects2d(testLine, targetLine);
     if (std::get<bool>(intersection)) {
@@ -329,42 +329,42 @@ void LiminalSpaces::findIntersections() {
         // which way round this is is ensured by the source polygons all
         // having a clockwise winding order
 
-        SplineJoin join = {s1, pointIdx};
+        SpaceJoin join = {s1, pointIdx};
 #ifdef DEBUG
         join.point = std::get<glm::vec2>(intersection);
 #endif
 
-        mRoadEdges[roadIdx0].insertJoin(segmentIdx0, join);
+        mIslands[roadIdx0].insertJoin(segmentIdx0, join);
       } else {
-        SplineJoin join = {s0, pointIdx};
+        SpaceJoin join = {s0, pointIdx};
 #ifdef DEBUG
         join.point = std::get<glm::vec2>(intersection);
 #endif
 
-        mRoadEdges[roadIdx1].insertJoin(segmentIdx1, join);
+        mIslands[roadIdx1].insertJoin(segmentIdx1, join);
       }
     }
   };
 
-  for (int r0 = 0; r0 < mRoadEdges.size(); r0++) {
+  for (int r0 = 0; r0 < mIslands.size(); r0++) {
     // addLoopingSegments(r0);
 
-    for (int s0 = 0; s0 < mRoadEdges[r0].numSegments(); s0++) {
+    for (int s0 = 0; s0 < mIslands[r0].numSegments(); s0++) {
 
-      for (int s1 = s0; s1 < mRoadEdges[r0].numSegments() - 2; s1++) {
+      for (int s1 = s0; s1 < mIslands[r0].numSegments() - 2; s1++) {
         // search non adjacent segments of same spline
         int otherSeg = s1 + 2;
-        if (s0 == 0 && otherSeg == mRoadEdges[r0].numSegments() - 1) {
+        if (s0 == 0 && otherSeg == mIslands[r0].numSegments() - 1) {
           continue;
         }
         segmentIntersection(r0, s0, r0, otherSeg);
       }
 
-      for (int r1 = r0 + 1; r1 < mRoadEdges.size(); r1++) {
+      for (int r1 = r0 + 1; r1 < mIslands.size(); r1++) {
 
-        if (mRoadEdges[r0].bbox().overlaps(mRoadEdges[r1].bbox())) {
+        if (mIslands[r0].bbox().overlaps(mIslands[r1].bbox())) {
 
-          for (int s1 = 0; s1 < mRoadEdges[r1].numSegments(); s1++) {
+          for (int s1 = 0; s1 < mIslands[r1].numSegments(); s1++) {
             segmentIntersection(r0, s0, r1, s1);
           }
         }

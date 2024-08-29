@@ -29,7 +29,7 @@ struct SegmentIndex {
   int segmentIdx;
 };
 
-struct SplineJoin {
+struct SpaceJoin {
   SegmentIndex join;
   PointCache::PointIdx intersection;
 #if defined DEBUG || defined _DEBUG
@@ -39,24 +39,24 @@ struct SplineJoin {
 
 // a sequence of points making up a side of road(s) or outer perimeters of
 // buildings.
-class Spline {
+class Space {
 public:
-  Spline(PointCache &cache);
+  Space(PointCache &cache);
   void append(const glm::vec2 &p);
   Line segment(int idx = 0);
   int numSegments();
   bool isLoop();
 
-  void insertJoin(int segmentIdx, const SplineJoin &join);
+  void insertJoin(int segmentIdx, const SpaceJoin &join);
 
   // return first unused join listed
-  std::optional<SplineJoin> getfirstJoin();
+  std::optional<SpaceJoin> getfirstJoin();
 
-  using PointsAndNextJoin = std::tuple<std::vector<glm::vec2>, SplineJoin>;
+  using PointsAndNextJoin = std::tuple<std::vector<glm::vec2>, SpaceJoin>;
   // starting from an inputjoin, run along the spline and return all vertices
   // up to the next output join. Return vertices and join.
   std::optional<PointsAndNextJoin>
-  getSplineToNextJoin(const SplineJoin &inputJoin);
+  getSpaceToNextJoin(const SpaceJoin &inputJoin);
 
   const std::vector<glm::vec2> &vertices() { return mVertices; }
 
@@ -66,11 +66,11 @@ public:
   const std::string &name() { return mName; }
 
 protected:
-  std::optional<SplineJoin>
+  std::optional<SpaceJoin>
   findJoinAtSegment(int segmentIdx, std::optional<glm::vec2> afterPoint);
 
   // outgoing joins are listed, mapped to the segment they are found on
-  std::map<int, std::vector<SplineJoin>> mJoins;
+  std::map<int, std::vector<SpaceJoin>> mJoins;
   std::vector<glm::vec2> mVertices;
   PointCache &mCache;
 
@@ -83,7 +83,8 @@ class LiminalSpaces {
 public:
   LiminalSpaces(const BBox &bbox);
 
-  void addRoad(const Triangulate::Data &road, const std::string &name = "");
+  void addIslands(const Triangulate::Data &island,
+                  const std::string &name = "");
 
   // given the current list of roads obtain a list polygons representing the
   //  space encompassed by the roads
@@ -99,7 +100,7 @@ protected:
 
   void addLoopingSegments(int splineIdx);
 
-  std::vector<Spline> mRoadEdges;
+  std::vector<Space> mIslands;
 
   glm::vec2 mCenter;
   size_t mHashSize = 0;

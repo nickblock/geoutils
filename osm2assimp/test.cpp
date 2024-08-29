@@ -252,10 +252,10 @@ TEST(Test, PointOnLine) {
   }
 }
 
-TEST(Test, SplineNumSegments) {
+TEST(Test, SpaceNumSegments) {
 
   PointCache cache;
-  Spline spline(cache);
+  Space spline(cache);
 
   spline.append({0.0, 0.0});
   spline.append({0.0, 1.0});
@@ -292,7 +292,7 @@ auto makeRoad = [](const Line &line, int numPoints, float width,
   auto road =
       Geometry::meshFromLine(makePointList(line[0], line[1], numPoints), width);
   auto tri = Triangulate(road.getFootprint()).triangulate();
-  liminalSpaces.addRoad(*tri);
+  liminalSpaces.addIslands(*tri);
 };
 TEST(Test, LiminalSpacesGrid) {
 
@@ -364,7 +364,7 @@ TEST(Test, LiminalSpacesLoop) {
 
   auto road = Geometry::meshFromLine(points, width);
   auto tri = Triangulate(road.getFootprint()).triangulate();
-  liminalSpaces.addRoad(*tri);
+  liminalSpaces.addIslands(*tri);
 
   auto data = liminalSpaces.getInternalSpaces();
 
