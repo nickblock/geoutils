@@ -139,6 +139,20 @@ protected:
     return newRoad;
   }
 
+  // addition gets added to end of source nodeways are
+  // updated to point to source
+  // addition is cleared
+  void appendRoad(size_t sourceIdx, size_t addIdx) {
+    auto &source = mRoads[sourceIdx];
+    auto &addition = mRoads[addIdx];
+    source.nodes.insert(source.nodes.end(), addition.nodes.begin() + 1,
+                        addition.nodes.end());
+    for (auto &node : addition.nodes) {
+      setNodeRefToRoad(node, sourceIdx, addIdx);
+    }
+    addition.nodes.clear();
+  }
+
   void joinRoadsAtNode(const NodeType &node) {
 
     auto &set = mNodeToWay[node];
@@ -154,37 +168,15 @@ protected:
     int pos1 = getPosition(road1, node);
 
     if (pos0 == End && pos1 == Begin) {
-      road0.nodes.insert(road0.nodes.end(), road1.nodes.begin() + 1,
-                         road1.nodes.end());
-      for (auto &node : road1.nodes) {
-        setNodeRefToRoad(node, roadIdx0, roadIdx1);
-      }
-      road1.nodes.clear();
-
+      appendRoad(roadIdx0, roadIdx1);
     } else if (pos0 == End && pos1 == End) {
       std::reverse(road1.nodes.begin(), road1.nodes.end());
-      road0.nodes.insert(road0.nodes.end(), road1.nodes.begin() + 1,
-                         road1.nodes.end());
-      for (auto &node : road1.nodes) {
-        setNodeRefToRoad(node, roadIdx0, roadIdx1);
-      }
-      road1.nodes.clear();
+      appendRoad(roadIdx0, roadIdx1);
     } else if (pos0 == Begin && pos1 == Begin) {
       std::reverse(road0.nodes.begin(), road0.nodes.end());
-      road0.nodes.insert(road0.nodes.end(), road1.nodes.begin() + 1,
-                         road1.nodes.end());
-      for (auto &node : road1.nodes) {
-        setNodeRefToRoad(node, roadIdx0, roadIdx1);
-      }
-      road1.nodes.clear();
+      appendRoad(roadIdx0, roadIdx1);
     } else if (pos0 == Begin && pos1 == End) {
-
-      road1.nodes.insert(road1.nodes.end(), road0.nodes.begin() + 1,
-                         road0.nodes.end());
-      for (auto &node : road0.nodes) {
-        setNodeRefToRoad(node, roadIdx1, roadIdx0);
-      }
-      road0.nodes.clear();
+      appendRoad(roadIdx1, roadIdx0);
     } else if (pos1 == Middle || pos0 == Middle) {
       if (pos0 == Middle) {
         splitRoad(roadIdx0, node);
