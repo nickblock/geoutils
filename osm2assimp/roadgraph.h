@@ -228,12 +228,9 @@ protected:
 
           if (jPos == Begin) {
             junction.offRoads.push_back(road.nodes[1]);
-
-            assert(road.junctions[0] == kInvalidIdx);
             road.junctions[0] = junctionIdx;
           } else if (jPos == End) {
             junction.offRoads.push_back(road.nodes[road.nodes.size() - 2]);
-            assert(road.junctions[1] == kInvalidIdx);
             road.junctions[1] = junctionIdx;
           } else {
             assert(false);

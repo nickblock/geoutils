@@ -21,6 +21,10 @@ using Edge = std::array<TVertIdx, 2>;
 
 // Geomtry class handles creation of 3d objects from osm data
 
+// factory methods take 2d points as input and produce various types of 3d
+// objects. Geometry always has 2d data, but may need extrudeToMesh to be called
+// to create 3d counterpart
+
 class Geometry {
 
 public:
@@ -38,7 +42,9 @@ public:
   static Geometry meshFromLine(const std::vector<glm::vec2> &line, float width,
                                int featureId = 0);
 
-  static Geometry meshFromJunction(const glm::vec2& center, const std::vector<glm::vec2> &offroads, float width);
+  static Geometry meshFromJunction(const glm::vec2 &center,
+                                   const std::vector<glm::vec2> &offroads,
+                                   float width);
 
   /// <summary>
   /// A boolean deciding the up axis as z
@@ -64,11 +70,26 @@ public:
     FaceList mFaces;
 
     DataFlat &operator+(const DataFlat &other);
+    Data3D extrude3DFromFlat(float height, int featureId = 0);
   };
+
+  //extrude3DFromFlat produces a 3d object of height, with the footprint of 
+  // the 2d flat poly.
+  // Calling extrude3DFromFlat with zero height, prodices a flat polygon in 3d space
+  Data3D &extrude3DFromFlat(float height, int featureId = 0) {
+    mData = mDataFlat.extrude3DFromFlat(height, featureId);
+    return mData;
+  }
 
   DataFlat &getFootprint() { return mDataFlat; }
 
-  aiMesh *simpleMesh() const { return mData.toMesh(); }
+  aiMesh *toMesh() const {
+    if (mData.mVertices.size() == 0) {
+      std::cout << "NO 3d data, perhaps call extrude first?" << std::endl;
+      return nullptr;
+    }
+    return mData.toMesh();
+  }
 
 protected:
   Geometry() = default;
@@ -76,6 +97,8 @@ protected:
   Data3D mData;
 
   DataFlat mDataFlat;
+
+  int mFeatureId = 0;
 };
 
 using Line = std::array<glm::vec2, 2>;

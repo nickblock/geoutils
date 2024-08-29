@@ -34,6 +34,9 @@ public:
 protected:
   const ViewFilterList &mFilters;
   std::map<std::string, glm::vec3> mMatColors;
+
+  // all OSM features are extracted into this list, before then being converted
+  // to geometry and saved out
   std::vector<OSMFeature> mFeatures;
 
   std::unique_ptr<Ground> mGround;

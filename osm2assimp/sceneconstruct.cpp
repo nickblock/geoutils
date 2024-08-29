@@ -111,7 +111,7 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
       }
 
       // create mesh from last geometry
-      aiMesh *mesh = geoms[geoms.size() - 1].simpleMesh();
+      aiMesh *mesh = geoms[geoms.size() - 1].toMesh();
 
       // if we made either kind of mesh successfully
       if (mesh) {

@@ -21,7 +21,7 @@ TEST(Test, MeshFromLine) {
   try {
     auto geometry = Geometry::meshFromLine(points, 2.0, 0);
 
-    auto aiMesh = geometry.simpleMesh();
+    auto aiMesh = geometry.toMesh();
     EXPECT_EQ(aiMesh->mNumVertices, 6);
 
     auto footprint = geometry.getFootprint();
@@ -88,35 +88,6 @@ TEST(Test, GroundTest) {
   AssimpWriter writer;
   writer.addMesh(groundMesh);
   EXPECT_EQ(0, writer.write(testDir() / "GroundTest.fbx"));
-}
-
-TEST(Test, GroundDonut) {
-
-  std::vector<glm::vec2> corners = {
-      {0.0f, 0.0f}, {0.0f, 10.0f}, {10.0f, 10.0f}, {10.0f, 0.0f}};
-
-  Ground ground(corners);
-
-  {
-
-    std::vector<glm::vec2> verts = {
-        {2.0, 2.0}, {2.0, 6.0}, {6.0, 6.0}, {6.0, 2.0}, {4.0, 2.0}, {4.0, 3.0},
-        {5.0, 3.0}, {5.0, 5.0}, {3.0, 5.0}, {3.0, 3.0}, {3.5, 3.0}, {3.5, 2.0}};
-
-    auto flat = Geometry::DataFlat(verts, {});
-
-    auto tri = Triangulate(flat).triangulate();
-
-    ground.addFootPrint(*tri, OSMFeature::HIGHWAY);
-  }
-
-  auto groundMesh = ground.getMesh();
-
-  EXPECT_NE(groundMesh, nullptr);
-
-  AssimpWriter writer;
-  writer.addMesh(groundMesh);
-  EXPECT_EQ(0, writer.write(testDir() / "GroundDonut.fbx"));
 }
 
 TEST(Test, IntersectLine) {

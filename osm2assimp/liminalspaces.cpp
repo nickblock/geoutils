@@ -315,19 +315,19 @@ void LiminalSpaces::findIntersections() {
 
     auto intersection = lineIntersects2d(testLine, targetLine);
     if (std::get<bool>(intersection)) {
+
       float reflex = Triangulate::reflexPoint(
           testLine[0], std::get<glm::vec2>(intersection), targetLine[1]);
 
       auto pointIdx = mIntersections.append(std::get<glm::vec2>(intersection));
 
+      // Joins define which space and segment they are going to
+      // joins are inserted on to the space at the segments they are
+      // coming from
+
+      // the direction this takes is consistent due to the source spaces all
+      // having a clockwise winding order
       if (reflex > 0) {
-
-        // Joins define which spline and segment they are going to
-        // joins are inserted on to the spline at the segments they are
-        // coming from
-
-        // which way round this is is ensured by the source polygons all
-        // having a clockwise winding order
 
         SpaceJoin join = {s1, pointIdx};
 #ifdef DEBUG

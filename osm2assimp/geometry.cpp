@@ -272,23 +272,33 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
                                  float height, int featureId) {
   Geometry geometry;
 
-  using Edge = std::pair<glm::vec2, glm::vec2>;
-  using EdgeList = std::vector<Edge>;
-
-  bool begin_eq_end = in_vertices[0] == in_vertices[in_vertices.size() - 1];
-
   geometry.mDataFlat.mVertices.insert(geometry.mDataFlat.mVertices.begin(),
                                       in_vertices.begin(), in_vertices.end());
 
+  geometry.mFeatureId = featureId;
+  geometry.mData = geometry.mDataFlat.extrude3DFromFlat(height, featureId);
+
+  return geometry;
+}
+Geometry::Data3D Geometry::DataFlat::extrude3DFromFlat(float height,
+                                                       int featureId) {
+
+  using Edge = std::pair<glm::vec2, glm::vec2>;
+  using EdgeList = std::vector<Edge>;
+
+  Data3D data3d;
+
+  bool begin_eq_end = mVertices[0] == mVertices[mVertices.size() - 1];
+
   if (begin_eq_end) {
-    geometry.mDataFlat.mVertices.pop_back();
+    mVertices.pop_back();
   }
 
-  if (geometry.mDataFlat.mVertices.size() < 3) {
+  if (mVertices.size() < 3) {
     throw std::runtime_error("Not enough vertices (<3), to create a mesh");
   }
 
-  size_t numBaseVertices = geometry.mDataFlat.mVertices.size();
+  size_t numBaseVertices = mVertices.size();
 
   EdgeList edges;
 
@@ -299,11 +309,10 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
 
   for (size_t i = 0; i < numBaseVertices; i++) {
 
-    auto &v1 = geometry.mDataFlat.mVertices[i];
+    auto &v1 = mVertices[i];
 
     bool lastV = i + 1 == numBaseVertices;
-    auto &v2 = lastV ? geometry.mDataFlat.mVertices[0]
-                     : geometry.mDataFlat.mVertices[i + 1];
+    auto &v2 = lastV ? mVertices[0] : mVertices[i + 1];
 
     center += v1;
 
@@ -346,59 +355,55 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
   if (accumEdge > 0.0) {
 
     for (size_t i = 0; i < numBaseVertices / 2; i++) {
-      auto tmp = geometry.mDataFlat.mVertices[i];
-      geometry.mDataFlat.mVertices[i] =
-          geometry.mDataFlat.mVertices[numBaseVertices - i - 1];
-      geometry.mDataFlat.mVertices[numBaseVertices - i - 1] = tmp;
+      auto tmp = mVertices[i];
+      mVertices[i] = mVertices[numBaseVertices - i - 1];
+      mVertices[numBaseVertices - i - 1] = tmp;
     }
   }
 
   bool doExtrude = height != 0.f;
 
-  geometry.mData.mVertices.resize(doExtrude ? numBaseVertices * 6
-                                            : numBaseVertices);
-  geometry.mData.mNormals.resize(geometry.mData.mVertices.size());
-  geometry.mData.mTexCoords.resize(
-      texCoordScale != 0.0f ? geometry.mData.mVertices.size() : 0);
-  geometry.mDataFlat.mVertices.resize(numBaseVertices);
+  data3d.mVertices.resize(doExtrude ? numBaseVertices * 6 : numBaseVertices);
+  data3d.mNormals.resize(data3d.mVertices.size());
+  data3d.mTexCoords.resize(texCoordScale != 0.0f ? data3d.mVertices.size() : 0);
+  mVertices.resize(numBaseVertices);
 
   BBox bbox;
 
   for (size_t v = 0; v < numBaseVertices; v++) {
-    const glm::vec2 &nv = geometry.mDataFlat.mVertices[v];
+    const glm::vec2 &nv = mVertices[v];
 
-    // geometry.mDataFlat.mVertices[v] =
+    // mVertices[v] =
 
-    geometry.mData.mVertices[v] = posFromLoc(nv.x, nv.y, 0.0);
-    geometry.mData.mNormals[v] = -upNormal();
+    data3d.mVertices[v] = posFromLoc(nv.x, nv.y, 0.0);
+    data3d.mNormals[v] = -upNormal();
 
-    bbox.add(geometry.mData.mVertices[v]);
+    bbox.add(data3d.mVertices[v]);
 
     if (height > 0.f) {
-      geometry.mData.mVertices[v + numBaseVertices] =
-          posFromLoc(nv.x, nv.y, height);
-      bbox.add(geometry.mData.mVertices[v + numBaseVertices]);
-      geometry.mData.mNormals[v + numBaseVertices] = upNormal();
+      data3d.mVertices[v + numBaseVertices] = posFromLoc(nv.x, nv.y, height);
+      bbox.add(data3d.mVertices[v + numBaseVertices]);
+      data3d.mNormals[v + numBaseVertices] = upNormal();
     }
   }
 
-  geometry.mData.mFaces.resize(height > 0.f ? 2 + numBaseVertices : 1);
-  geometry.mData.mFaces[0].resize(numBaseVertices);
+  data3d.mFaces.resize(height > 0.f ? 2 + numBaseVertices : 1);
+  data3d.mFaces[0].resize(numBaseVertices);
 
-  geometry.mDataFlat.mFaces.resize(1);
-  geometry.mDataFlat.mFaces[0].resize(numBaseVertices);
+  mFaces.resize(1);
+  mFaces[0].resize(numBaseVertices);
 
   for (size_t i = 0; i < numBaseVertices; i++) {
-    geometry.mData.mFaces[0][i] = numBaseVertices - i - 1;
-    geometry.mDataFlat.mFaces[0][i] = numBaseVertices - i - 1;
+    data3d.mFaces[0][i] = numBaseVertices - i - 1;
+    mFaces[0][i] = numBaseVertices - i - 1;
   }
 
   if (doExtrude) {
 
-    geometry.mData.mFaces[1].resize(numBaseVertices);
+    data3d.mFaces[1].resize(numBaseVertices);
 
     for (size_t i = 0; i < numBaseVertices; i++) {
-      geometry.mData.mFaces[1][i] = numBaseVertices + i;
+      data3d.mFaces[1][i] = numBaseVertices + i;
     }
 
     for (int f = 0; f < numBaseVertices; f++) {
@@ -408,12 +413,12 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
         fn = -1;
 
       int index = numBaseVertices * 2 + 4 * f;
-      glm::vec3 *corners = &geometry.mData.mVertices[index];
+      glm::vec3 *corners = &data3d.mVertices[index];
 
-      corners[3] = geometry.mData.mVertices[fn + 1];
-      corners[2] = geometry.mData.mVertices[f + 0];
-      corners[1] = geometry.mData.mVertices[f + numBaseVertices + 0];
-      corners[0] = geometry.mData.mVertices[fn + numBaseVertices + 1];
+      corners[3] = data3d.mVertices[fn + 1];
+      corners[2] = data3d.mVertices[f + 0];
+      corners[1] = data3d.mVertices[f + numBaseVertices + 0];
+      corners[0] = data3d.mVertices[fn + numBaseVertices + 1];
       glm::vec3 v1 = corners[1] - corners[0];
       glm::vec3 v2 = corners[2] - corners[0];
       glm::vec3 n = glm::normalize(glm::cross(v1, v2));
@@ -426,14 +431,14 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
         throw std::runtime_error("Normal calc failed!");
       }
 
-      glm::vec3 *vNormals = &geometry.mData.mNormals[index];
+      glm::vec3 *vNormals = &data3d.mNormals[index];
       vNormals[0] = n;
       vNormals[1] = n;
       vNormals[2] = n;
       vNormals[3] = n;
 
-      if (geometry.mData.mTexCoords.size()) {
-        glm::vec3 *texCoord = &geometry.mData.mTexCoords[index];
+      if (data3d.mTexCoords.size()) {
+        glm::vec3 *texCoord = &data3d.mTexCoords[index];
         float width = glm::distance(corners[0], corners[1]);
         float texCoordU = std::round(width / texCoordScale);
         float texCoordV = std::round(height / texCoordScale);
@@ -444,7 +449,7 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
         texCoord[3] = {texCoordU, 0.f, static_cast<float>(featureId)};
       }
 
-      Face &face = geometry.mData.mFaces[2 + f];
+      Face &face = data3d.mFaces[2 + f];
       face.resize(4);
 
       face[0] = index + 0;
@@ -453,8 +458,7 @@ Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
       face[3] = index + 3;
     }
   }
-
-  return geometry;
+  return data3d;
 }
 Geometry Geometry::meshFromJunction(const glm::vec2 &center,
                                     const std::vector<glm::vec2> &offroads,
