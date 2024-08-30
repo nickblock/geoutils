@@ -51,7 +51,7 @@ aiMesh *Ground::getMesh() {
 
     mDataFlat = mLiminalSpaces->getInternalSpaces();
 
-    auto geom3d = Geometry::extrude2dMesh(mDataFlat.mVertices, 0.f);
+    auto geom3d = Geometry::extrude2dMesh(mDataFlat.mVertices, 0.f, 0.f);
 
     return geom3d.toMesh();
   }

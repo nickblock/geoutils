@@ -77,11 +77,11 @@ glm::vec3 Geometry::posFromLoc(double lon, double lat, double height) {
   }
 }
 
-glm::vec3 Geometry::fromGround(const glm::vec2 &groundCoords) {
+glm::vec3 Geometry::fromGround(const glm::vec2 &groundCoords, float height) {
   if (zUp) {
-    return glm::vec3(groundCoords, 0.0f);
+    return glm::vec3(groundCoords, height);
   } else {
-    return {-groundCoords.x, 0.0f, groundCoords.y};
+    return {-groundCoords.x, height, groundCoords.y};
   }
 }
 
@@ -134,7 +134,7 @@ void throw_if_nan(const glm::vec3 &v) {
 }
 
 Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
-                                int featureId) {
+                                float depth, int featureId) {
 
   if (line.size() < 2) {
     throw std::runtime_error("Not enough nodes (<2), to create line segment");
@@ -145,8 +145,9 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
   std::vector<glm::vec2> side0;
   std::vector<glm::vec2> side1;
 
-  auto appendVertex = [&geometry, &side0, &side1](const glm::vec2 &point) {
-    geometry.mData.mVertices.push_back(fromGround(point));
+  auto appendVertex = [&geometry, &side0, &side1,
+                       depth](const glm::vec2 &point) {
+    geometry.mData.mVertices.push_back(fromGround(point, depth));
 
     throw_if_nan(geometry.mData.mVertices[geometry.mData.mVertices.size() - 1]);
 
@@ -269,200 +270,165 @@ Geometry Geometry::meshFromLine(const std::vector<glm::vec2> &line, float width,
 }
 
 Geometry Geometry::extrude2dMesh(const vector<glm::vec2> &in_vertices,
-                                 float height, int featureId) {
+                                 float height, float depth, int featureId) {
   Geometry geometry;
 
   geometry.mDataFlat.mVertices.insert(geometry.mDataFlat.mVertices.begin(),
                                       in_vertices.begin(), in_vertices.end());
 
+  bool begin_eq_end =
+      geometry.mDataFlat.mVertices[0] ==
+      geometry.mDataFlat.mVertices[geometry.mDataFlat.mVertices.size() - 1];
+
+  if (begin_eq_end) {
+    geometry.mDataFlat.mVertices.pop_back();
+  }
+
+  if (geometry.mDataFlat.mVertices.size() < 3) {
+    throw std::runtime_error("Not enough vertices (<3), to create a mesh");
+  }
+
+  if (!Triangulate(geometry.mDataFlat).checkWindingOrder()) {
+    std::reverse(geometry.mDataFlat.mVertices.begin(),
+                 geometry.mDataFlat.mVertices.end());
+  }
+
+  geometry.mDataFlat.mFaces.resize(1);
+  geometry.mDataFlat.mFaces[0].resize(geometry.mDataFlat.mVertices.size());
+  for (int i = 0; i < geometry.mDataFlat.mVertices.size(); i++) {
+    geometry.mDataFlat.mFaces[0][i] =
+        geometry.mDataFlat.mVertices.size() - i - 1;
+  }
+
   geometry.mFeatureId = featureId;
-  geometry.mData = geometry.mDataFlat.extrude3DFromFlat(height, featureId);
+  geometry.mData =
+      geometry.mDataFlat.extrude3DFromFlat(height, depth, featureId);
 
   return geometry;
 }
 Geometry::Data3D Geometry::DataFlat::extrude3DFromFlat(float height,
+                                                       float depth,
                                                        int featureId) {
-
-  using Edge = std::pair<glm::vec2, glm::vec2>;
-  using EdgeList = std::vector<Edge>;
-
   Data3D data3d;
 
-  bool begin_eq_end = mVertices[0] == mVertices[mVertices.size() - 1];
-
-  if (begin_eq_end) {
-    mVertices.pop_back();
-  }
-
-  if (mVertices.size() < 3) {
-    throw std::runtime_error("Not enough vertices (<3), to create a mesh");
-  }
-
   size_t numBaseVertices = mVertices.size();
-
-  EdgeList edges;
-
-  float lastEdgeAngle = 0;
-  float accumEdge = 0;
-
-  glm::vec2 center(0);
-
-  for (size_t i = 0; i < numBaseVertices; i++) {
-
-    auto &v1 = mVertices[i];
-
-    bool lastV = i + 1 == numBaseVertices;
-    auto &v2 = lastV ? mVertices[0] : mVertices[i + 1];
-
-    center += v1;
-
-    Edge newEdge(v1, v2);
-
-    float edgeAngle = atan2(v2.x - v1.x, v2.y - v1.y);
-
-    if (i != 0) {
-      float edgeDiff = edgeAngle - lastEdgeAngle;
-      if (edgeDiff > glm::pi<double>()) {
-        edgeDiff -= glm::pi<double>();
-      }
-      if (edgeDiff < -glm::pi<double>()) {
-        edgeDiff += glm::pi<double>();
-      }
-      accumEdge += edgeDiff;
-    }
-    lastEdgeAngle = edgeAngle;
-
-    // int edgeNum = edges.size();
-
-    // for(int e=0; e<edgeNum-1; e++) {
-
-    //   if(lastV && e == 0) continue;
-
-    //   Edge other = edges[e];
-    //   glm::vec3 intersect;
-    //   if(lineIntersects2d(other.first.x, other.first.y, other.second.x,
-    //   other.second.y,
-    //     newEdge.first.x, newEdge.first.y, newEdge.second.x,
-    //     newEdge.second.y, &intersect)) {
-
-    //     return nullptr;
-    //   }
-    // }
-
-    edges.push_back(Edge(v1, v2));
-  }
-
-  if (accumEdge > 0.0) {
-
-    for (size_t i = 0; i < numBaseVertices / 2; i++) {
-      auto tmp = mVertices[i];
-      mVertices[i] = mVertices[numBaseVertices - i - 1];
-      mVertices[numBaseVertices - i - 1] = tmp;
-    }
-  }
 
   bool doExtrude = height != 0.f;
 
   data3d.mVertices.resize(doExtrude ? numBaseVertices * 6 : numBaseVertices);
   data3d.mNormals.resize(data3d.mVertices.size());
   data3d.mTexCoords.resize(texCoordScale != 0.0f ? data3d.mVertices.size() : 0);
-  mVertices.resize(numBaseVertices);
 
   BBox bbox;
 
   for (size_t v = 0; v < numBaseVertices; v++) {
     const glm::vec2 &nv = mVertices[v];
 
-    // mVertices[v] =
-
-    data3d.mVertices[v] = posFromLoc(nv.x, nv.y, 0.0);
+    data3d.mVertices[v] = posFromLoc(nv.x, nv.y, depth);
     data3d.mNormals[v] = -upNormal();
 
     bbox.add(data3d.mVertices[v]);
 
-    if (height > 0.f) {
-      data3d.mVertices[v + numBaseVertices] = posFromLoc(nv.x, nv.y, height);
+    if (doExtrude) {
+      data3d.mVertices[v + numBaseVertices] =
+          posFromLoc(nv.x, nv.y, height + depth);
       bbox.add(data3d.mVertices[v + numBaseVertices]);
       data3d.mNormals[v + numBaseVertices] = upNormal();
     }
   }
 
-  data3d.mFaces.resize(height > 0.f ? 2 + numBaseVertices : 1);
-  data3d.mFaces[0].resize(numBaseVertices);
-
-  mFaces.resize(1);
-  mFaces[0].resize(numBaseVertices);
-
-  for (size_t i = 0; i < numBaseVertices; i++) {
-    data3d.mFaces[0][i] = numBaseVertices - i - 1;
-    mFaces[0][i] = numBaseVertices - i - 1;
+  if (doExtrude) {
+    int totalFaces = 0;
+    for (int i = 0; i < mFaces.size(); i++) {
+      totalFaces += mFaces[i].size() + 2;
+    }
+    data3d.mFaces.resize(totalFaces);
+  } else {
+    data3d.mFaces = mFaces;
   }
 
   if (doExtrude) {
 
-    data3d.mFaces[1].resize(numBaseVertices);
+    int newFaceIdx = 0;
 
-    for (size_t i = 0; i < numBaseVertices; i++) {
-      data3d.mFaces[1][i] = numBaseVertices + i;
-    }
+    int vertIdx = numBaseVertices * 2;
 
-    for (int f = 0; f < numBaseVertices; f++) {
+    // for each flatFace we add a face for the bottom, a copy at height for the
+    // top,and a vetical quad on each side
+    for (int faceIdx = 0; faceIdx < mFaces.size(); faceIdx++) {
 
-      int fn = f;
-      if (f + 1 == numBaseVertices)
-        fn = -1;
+      auto &flatFace = mFaces[faceIdx];
 
-      int index = numBaseVertices * 2 + 4 * f;
-      glm::vec3 *corners = &data3d.mVertices[index];
+      auto &bottomFace = data3d.mFaces[newFaceIdx];
+      auto &topFace = data3d.mFaces[newFaceIdx + 1];
 
-      corners[3] = data3d.mVertices[fn + 1];
-      corners[2] = data3d.mVertices[f + 0];
-      corners[1] = data3d.mVertices[f + numBaseVertices + 0];
-      corners[0] = data3d.mVertices[fn + numBaseVertices + 1];
-      glm::vec3 v1 = corners[1] - corners[0];
-      glm::vec3 v2 = corners[2] - corners[0];
-      glm::vec3 n = glm::normalize(glm::cross(v1, v2));
+      bottomFace = flatFace;
 
-      if (!zUp) {
-        n = -n;
+      topFace.resize(flatFace.size());
+      for (size_t i = 0; i < flatFace.size(); i++) {
+        topFace[i] = numBaseVertices + bottomFace[i];
       }
+      std::reverse(bottomFace.begin(), bottomFace.end());
 
-      if (isnan(n)) {
-        throw std::runtime_error("Normal calc failed!");
+      // add vertical quad for each side
+      for (int f = 0; f < flatFace.size(); f++) {
+
+        int idx0 = flatFace[f];
+        int idx1 = f == flatFace.size() - 1 ? flatFace[0] : flatFace[f + 1];
+
+        glm::vec3 *corners = &data3d.mVertices[vertIdx];
+
+        corners[0] = data3d.mVertices[idx0];
+        corners[1] = data3d.mVertices[idx1];
+        corners[2] = data3d.mVertices[idx1 + numBaseVertices];
+        corners[3] = data3d.mVertices[idx0 + numBaseVertices];
+        glm::vec3 v1 = corners[1] - corners[0];
+        glm::vec3 v2 = corners[2] - corners[0];
+        glm::vec3 n = glm::normalize(glm::cross(v1, v2));
+
+        if (!zUp) {
+          n = -n;
+        }
+
+        // if (isnan(n)) {
+        //   throw std::runtime_error("Normal calc failed!");
+        // }
+
+        glm::vec3 *vNormals = &data3d.mNormals[vertIdx];
+        vNormals[0] = n;
+        vNormals[1] = n;
+        vNormals[2] = n;
+        vNormals[3] = n;
+
+        if (data3d.mTexCoords.size()) {
+          glm::vec3 *texCoord = &data3d.mTexCoords[vertIdx];
+          float width = glm::distance(corners[0], corners[1]);
+          float texCoordU = std::round(width / texCoordScale);
+          float texCoordV = std::round(height / texCoordScale);
+
+          texCoord[0] = {texCoordU, texCoordV, static_cast<float>(featureId)};
+          texCoord[1] = {0.f, texCoordV, static_cast<float>(featureId)};
+          texCoord[2] = {0.f, 0.f, static_cast<float>(featureId)};
+          texCoord[3] = {texCoordU, 0.f, static_cast<float>(featureId)};
+        }
+
+        Face &face = data3d.mFaces[newFaceIdx + 2 + f];
+        face.resize(4);
+
+        face[0] = vertIdx + 0;
+        face[1] = vertIdx + 1;
+        face[2] = vertIdx + 2;
+        face[3] = vertIdx + 3;
+        vertIdx += 4;
       }
-
-      glm::vec3 *vNormals = &data3d.mNormals[index];
-      vNormals[0] = n;
-      vNormals[1] = n;
-      vNormals[2] = n;
-      vNormals[3] = n;
-
-      if (data3d.mTexCoords.size()) {
-        glm::vec3 *texCoord = &data3d.mTexCoords[index];
-        float width = glm::distance(corners[0], corners[1]);
-        float texCoordU = std::round(width / texCoordScale);
-        float texCoordV = std::round(height / texCoordScale);
-
-        texCoord[0] = {texCoordU, texCoordV, static_cast<float>(featureId)};
-        texCoord[1] = {0.f, texCoordV, static_cast<float>(featureId)};
-        texCoord[2] = {0.f, 0.f, static_cast<float>(featureId)};
-        texCoord[3] = {texCoordU, 0.f, static_cast<float>(featureId)};
-      }
-
-      Face &face = data3d.mFaces[2 + f];
-      face.resize(4);
-
-      face[0] = index + 0;
-      face[1] = index + 1;
-      face[2] = index + 2;
-      face[3] = index + 3;
+      newFaceIdx += flatFace.size() + 2;
     }
   }
   return data3d;
 }
 Geometry Geometry::meshFromJunction(const glm::vec2 &center,
                                     const std::vector<glm::vec2> &offroads,
-                                    float width) {
+                                    float width, float depth) {
   Geometry geometry;
 
   geometry.mDataFlat.mVertices.resize(offroads.size() * 3);

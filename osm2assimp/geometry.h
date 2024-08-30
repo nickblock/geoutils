@@ -31,20 +31,20 @@ public:
   /// <summary>
   /// Given an enclosed loop of 2d points defining a polygon the function
   /// returns a 3d mesh with the polygon as it's base and top extruded to the
-  /// value of the given height. <summary>
+  /// value of the given height, at depth above ground. <summary>
   static Geometry extrude2dMesh(const std::vector<glm::vec2> &baseVertices,
-                                float height, int featureId = 0);
+                                float height, float depth, int featureId = 0);
 
   /// <summary>`
   /// Given a list of points as a line, creates a flat mesh along the line of
   /// the given width.
   /// </summary>
   static Geometry meshFromLine(const std::vector<glm::vec2> &line, float width,
-                               int featureId = 0);
+                               float depth, int featureId = 0);
 
   static Geometry meshFromJunction(const glm::vec2 &center,
                                    const std::vector<glm::vec2> &offroads,
-                                   float width);
+                                   float width, float depth);
 
   /// <summary>
   /// A boolean deciding the up axis as z
@@ -54,7 +54,7 @@ public:
 
   static glm::vec3 upNormal();
   static glm::vec3 posFromLoc(double lon, double lat, double height);
-  static glm::vec3 fromGround(const glm::vec2 &groundCoords);
+  static glm::vec3 fromGround(const glm::vec2 &groundCoords, float height);
 
   struct Data3D {
     std::vector<glm::vec3> mVertices;
@@ -70,14 +70,16 @@ public:
     FaceList mFaces;
 
     DataFlat &operator+(const DataFlat &other);
-    Data3D extrude3DFromFlat(float height, int featureId = 0);
+    Data3D extrude3DFromFlat(float height, float depth, int featureId = 0);
   };
 
-  //extrude3DFromFlat produces a 3d object of height, with the footprint of 
-  // the 2d flat poly.
-  // Calling extrude3DFromFlat with zero height, prodices a flat polygon in 3d space
-  Data3D &extrude3DFromFlat(float height, int featureId = 0) {
-    mData = mDataFlat.extrude3DFromFlat(height, featureId);
+  // extrude3DFromFlat produces a 3d object of height, with the footprint of
+  //  the 2d flat poly, at "depth" on the ground
+  //  Calling extrude3DFromFlat with zero height, prodices a flat polygon in 3d
+  //  space
+  // depth is its ground position ()
+  Data3D &extrude3DFromFlat(float height, float depth, int featureId = 0) {
+    mData = mDataFlat.extrude3DFromFlat(height, depth, featureId);
     return mData;
   }
 

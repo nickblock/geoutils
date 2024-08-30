@@ -37,14 +37,36 @@ TEST(Test, MeshFromLine) {
     EXPECT_TRUE(false);
   }
 }
+TEST(Test, ExtrudeMesh) {
 
+  std::vector<glm::vec2> vertices = {{2.0, 2.0}, {2.0, 4.0}, {3.0, 5.0},
+                                     {4.0, 4.0}, {4.0, 2.0}, {6.0, 6.0},
+                                     {6.0, 8.0}, {8.0, 8.0}, {8.0, 6.0}};
+
+  Geometry::DataFlat flatData;
+
+  flatData.mVertices = vertices;
+
+  flatData.mFaces.resize(2);
+  flatData.mFaces[0] = {0, 1, 2, 3, 4};
+  flatData.mFaces[1] = {5, 6, 7, 8};
+
+  auto data3d = flatData.extrude3DFromFlat(2.0f, 0.f);
+
+  EXPECT_EQ(data3d.mVertices.size(), 54);
+  EXPECT_EQ(data3d.mFaces.size(), 13);
+
+  AssimpWriter writer;
+  writer.addMesh(data3d.toMesh());
+  EXPECT_EQ(0, writer.write(testDir() / "ExtrudeMesh.obj"));
+}
 TEST(Test, JunctionGeometry) {
   auto center = glm::vec2(10.f, 10.f);
 
   auto spokes = std::vector<glm::vec2>{
       {0.f, 10.f}, {10.f, 20.f}, {20.f, 10.f}, {10.f, 0.f}};
 
-  auto geometry = Geometry::meshFromJunction(center, spokes, 2.0f);
+  auto geometry = Geometry::meshFromJunction(center, spokes, 2.0f, 0.0f);
 
   auto footprint = geometry.getFootprint();
   SVGWriter().addPolygons(footprint).write(testDir() / "Junction.svg");
@@ -260,8 +282,8 @@ std::vector<glm::vec2> makePointList(const glm::vec2 &begin,
 
 auto makeRoad = [](const Line &line, int numPoints, float width,
                    LiminalSpaces &liminalSpaces) {
-  auto road =
-      Geometry::meshFromLine(makePointList(line[0], line[1], numPoints), width);
+  auto road = Geometry::meshFromLine(makePointList(line[0], line[1], numPoints),
+                                     width, 0.0f);
   auto tri = Triangulate(road.getFootprint()).triangulate();
   liminalSpaces.addIslands(*tri);
 };
@@ -333,7 +355,7 @@ TEST(Test, LiminalSpacesLoop) {
   std::vector<glm::vec2> points = {
       {5.f, 5.f}, {5.f, 10.f}, {10.f, 10.f}, {10.f, 5.f}, {5.f, 5.f}};
 
-  auto road = Geometry::meshFromLine(points, width);
+  auto road = Geometry::meshFromLine(points, width, 0.0f);
   auto tri = Triangulate(road.getFootprint()).triangulate();
   liminalSpaces.addIslands(*tri);
 

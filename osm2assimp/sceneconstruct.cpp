@@ -4,7 +4,7 @@
 #include "common.h"
 #include "convertlatlng.h"
 #include "geometry.h"
-#include "ground.h"
+#include "liminalspaces.h"
 
 using std::cout;
 using std::endl;
@@ -55,7 +55,8 @@ SceneConstruct::~SceneConstruct() = default;
 
 void SceneConstruct::node(const osmium::Node &node) {}
 void SceneConstruct::addGround(const std::vector<glm::vec2> &groundCorners) {
-  mGround = std::make_unique<Ground>(groundCorners);
+  mLiminalSpaces =
+      std::make_unique<LiminalSpaces>(bBoxFromPoints2D(groundCorners));
 }
 int SceneConstruct::write(const std::filesystem::path &outFilePath,
                           AssimpWriter &writer, const OutputConfig &config) {
@@ -93,20 +94,21 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
       if (feature.type() & (OSMFeature::BUILDING | OSMFeature::WATER) &&
           feature.type() & OSMFeature::CLOSED) {
         geoms.emplace_back(Geometry::extrude2dMesh(
-            feature.coords(), feature.height(), featureIdx));
+            feature.coords(), feature.height(), 0.0f, featureIdx));
       }
 
       // if it's something that wants turning into a polygon spline
       else if (feature.type() & OSMFeature::HIGHWAY) {
 
-        geoms.emplace_back(Geometry::meshFromLine(
-            feature.coords(), OSMFeature::RoadWidth, featureIdx));
+        geoms.emplace_back(
+            Geometry::meshFromLine(feature.coords(), OSMFeature::RoadWidth,
+                                   config.mRoadDepth, featureIdx));
 
-        if (mGround) {
+        if (mLiminalSpaces) {
 
           auto triData =
               Triangulate(geoms[geoms.size() - 1].getFootprint()).triangulate();
-          mGround->addFootPrint(*triData, OSMFeature::HIGHWAY, feature.name());
+          mLiminalSpaces->addIslands(*triData, feature.name());
         }
       }
 
@@ -166,9 +168,11 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
     }
   }
 
-  if (mGround) {
+  if (mLiminalSpaces) {
 
-    aiMesh *mesh = mGround->getMesh();
+    aiMesh *mesh = mLiminalSpaces->getInternalSpaces()
+                       .extrude3DFromFlat(-config.mRoadDepth, config.mRoadDepth)
+                       .toMesh();
     if (mesh) {
       mesh->mMaterialIndex = writer.addMaterial("ground", mMatColors["ground"]);
       writer.addMesh(mesh, "ground");
@@ -176,7 +180,7 @@ int SceneConstruct::write(const std::filesystem::path &outFilePath,
       std::cout << "Ground Spaces = " << mesh->mNumFaces << std::endl;
 
       auto svgPath = outFilePath;
-      mGround->writeSvg(svgPath.replace_extension(".svg"));
+      mLiminalSpaces->writeSvg(svgPath.replace_extension(".svg"));
     } else {
       retVal = -1;
     }

@@ -1,5 +1,4 @@
 #include "assimpwriter.h"
-#include "ground.h"
 #include "osmfeature.h"
 #include "roadgraph.h"
 #include "viewfilter.h"
@@ -8,7 +7,7 @@
 
 namespace GeoUtils {
 
-class Ground;
+class LiminalSpaces;
 class SceneConstruct : public osmium::handler::Handler {
 public:
   SceneConstruct(const ViewFilterList &filters);
@@ -25,6 +24,7 @@ public:
   struct OutputConfig {
     bool mZUp = true;
     float mTexCoordScale = 0.0f;
+    float mRoadDepth = -0.2f;
   };
 
   // write file using assimp, returns assimp ret code
@@ -39,7 +39,7 @@ protected:
   // to geometry and saved out
   std::vector<OSMFeature> mFeatures;
 
-  std::unique_ptr<Ground> mGround;
+  std::unique_ptr<LiminalSpaces> mLiminalSpaces;
   std::unique_ptr<RoadGraph<osmium::NodeRef>> mRoadGraph;
 };
 
